@@ -22,12 +22,12 @@ Host 10.102.8.30
         Hostname 10.102.8.30
         DynamicForward 15005
 	ProxyJump SWE-Jump102
-
+{{ if .dtlabsuser }}
 Host a4-dtlabs
         User {{ .dtlabsuser }}
         Hostname 127.0.98.208
         DynamicForward 15006
-
+{{ end }}
 Host RCS
         User {{ .scedcnuser }}
         Hostname 10.215.191.90
@@ -57,13 +57,16 @@ Host telekom-image-builder
         ProxyJump RCS
 	
 Host 10.23.143.*
+	User {{ .scedcnuser }}
         ProxyJump 10.102.8.30
 
 Host 10.23.137.*
+	User {{ .scedcnuser }}
         ProxyJump 10.102.8.30
 
 Host 172.22.130.*
-        ProxyJump JOS-2011
+        User {{ .scedcnuser }}
+	ProxyJump JOS-2011
 
 Host CIL-Runner
         Hostname 172.22.135.4

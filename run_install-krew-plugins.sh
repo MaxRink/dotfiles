@@ -17,7 +17,7 @@ if command -v kubectl krew >/dev/null 2>&1; then
     kubectl krew install debug-shell
     kubectl krew install fleet
     kubectl krew install grep
-    kubectl krew install ingess-nginx
+    kubectl krew install ingress-nginx
     kubectl krew install kyverno
     kubectl krew install net-forward
     kubectl krew install node-admin
