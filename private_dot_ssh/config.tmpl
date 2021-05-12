@@ -1,0 +1,71 @@
+ForwardAgent yes
+ForwardX11 yes
+StrictHostKeyChecking no
+ControlMaster auto
+#ControlPath ~/.ssh/tmp/%h_%p_%r
+Host *
+	#ServerAliveCountMax 3
+	#ServerAliveInterval 15
+        StrictHostKeyChecking no
+
+Host JOS-2011
+        User {{ .scedcnuser }}
+        Hostname 10.90.164.18
+        DynamicForward 15000
+        LocalForward 8000 127.0.0.1:8000
+       # RemoteForward /run/user/1273627477/gnupg/S.gpg-agent {{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent.extra
+       # RemoteForward /home/SCE-DCN/{{ .scedcnuser }}/.gnupg/S.gpg-agent {{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent.extra
+	ProxyJump SWE-Jump102
+
+Host 10.102.8.30
+        User {{ .sweuser }}
+        Hostname 10.102.8.30
+        DynamicForward 15005
+	ProxyJump SWE-Jump102
+
+Host a4-dtlabs
+        User {{ .dtlabsuser }}
+        Hostname 127.0.98.208
+        DynamicForward 15006
+
+Host RCS
+        User {{ .scedcnuser }}
+        Hostname 10.215.191.90
+        DynamicForward 15003
+	ProxyJump SWE-Jump102
+
+Host SWE-Jump99
+        User {{ .sweuser }}
+        Hostname 10.1.210.99
+        DynamicForward 15007
+
+Host SWE-Jump102
+        User {{ .sweuser }}
+        Hostname 10.1.210.102
+        DynamicForward 15008
+
+Host JOS-2012
+        User {{ .chezmoi.group }}
+        Hostname 10.90.164.255
+        DynamicForward 15002
+	ProxyJump SWE-Jump102
+
+Host telekom-image-builder
+        User cil
+        Hostname 172.23.131.15
+        DynamicForward 15004
+        ProxyJump RCS
+	
+Host 10.23.143.*
+        ProxyJump 10.102.8.30
+
+Host 10.23.137.*
+        ProxyJump 10.102.8.30
+
+Host 172.22.130.*
+        ProxyJump JOS-2011
+
+Host CIL-Runner
+        Hostname 172.22.135.4
+        User cil
+        ProxyJump RCS
