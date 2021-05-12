@@ -7,6 +7,9 @@ Host *
 	#ServerAliveCountMax 3
 	#ServerAliveInterval 15
         StrictHostKeyChecking no
+Host gitlab.devops.telekom.de
+	User git
+	ProxyJump SWE-Jump102
 
 Host JOS-2011
         User {{ .scedcnuser }}
@@ -22,12 +25,12 @@ Host 10.102.8.30
         Hostname 10.102.8.30
         DynamicForward 15005
 	ProxyJump SWE-Jump102
-{{ if .dtlabsuser }}
+
 Host a4-dtlabs
         User {{ .dtlabsuser }}
         Hostname 127.0.98.208
         DynamicForward 15006
-{{ end }}
+
 Host RCS
         User {{ .scedcnuser }}
         Hostname 10.215.191.90
