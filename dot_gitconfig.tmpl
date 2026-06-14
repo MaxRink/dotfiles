@@ -1,7 +1,16 @@
 [init]
 	defaultBranch = main
+[credential]
+	helper = cache
 [user]
 	email = {{ .email }}
 	name = {{ .name }}
+	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwHYbOxsZ5RmoT3epji2OluzQwLQQpaLOvaB9Q+fUSX
+[gpg]
+	format = ssh
+[commit]
+	gpgsign = true
 [submodule]
 	recurse = true
+[url "git@gitlab.devops.telekom.de:"]
+	insteadOf = https://gitlab.devops.telekom.de/

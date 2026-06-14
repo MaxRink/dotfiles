@@ -1,0 +1,57 @@
+{
+	"inputs": [
+		{
+			"type": "promptString",
+			"id": "gitlab_token",
+			"description": "GitLab Personal Access Token",
+			"password": true
+		},
+		{
+			"type": "promptString",
+			"id": "gitlab_api_url",
+			"description": "GitLab API URL (optional)",
+			"default": "https://gitlab.com/api/v4"
+		},
+		{
+			"type": "promptString",
+			"id": "docker_allowed_containers",
+			"description": "Allowed Docker containers (comma-separated, use * for all)",
+			"default": "*"
+		}
+	],
+	"servers": {
+		"gitlab": {
+			"type": "stdio",
+			"command": "mcp-server-gitlab",
+			"env": {
+				"GITLAB_PERSONAL_ACCESS_TOKEN": "${input:gitlab_token}",
+				"GITLAB_API_URL": "${input:gitlab_api_url}"
+			}
+		},
+		"kubernetes": {
+			"type": "stdio",
+			"command": "mcp-server-kubernetes"
+		},
+		"docker": {
+			"type": "stdio",
+			"command": "mcp-server-docker",
+			"env": {
+				"ALLOWED_CONTAINERS": "${input:docker_allowed_containers}",
+				"COMMAND_TIMEOUT": "300000"
+			}
+		},
+		"security-scanner": {
+			"type": "stdio",
+			"command": "mcp-security-scanner"
+		},
+		"internal-docs": {
+			"type": "stdio",
+			"command": "mcp-server-filesystem",
+			"args": [
+				"${workspaceFolder}",
+				"{{ .chezmoi.homeDir }}/git/devops.telekom.de/cit/t-caas/docs",
+				"{{ .chezmoi.homeDir }}/git/devops.telekom.de/schiff/platform/clusters"
+			]
+		}
+	}
+}

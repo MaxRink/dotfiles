@@ -19,9 +19,9 @@ Persisted local preferences are imported with:
 python dot_agents/skills/codex-knowledge-curation/scripts/persist_os_config.py --apply
 ```
 
-The script currently persists shell preferences, Powerlevel10k prompt preferences, Atuin behavior config, Delve defaults, Git/GitHub/GitLab CLI non-auth preferences, Go private module settings, htop, k9s, Poetry, and MIME handler preferences. It writes `dot_codex/knowledge/local-os-config-inventory.json` with included and excluded paths.
+The script currently persists shell preferences, Powerlevel10k prompt preferences, Atuin behavior config, Delve defaults, VS Code MCP prompt-based server definitions, Git/GitHub/GitLab/JGit non-auth preferences, Go private module settings, htop, k9s, Poetry, Fish shell Atuin integration, and MIME handler preferences. It writes `dot_codex/knowledge/local-os-config-inventory.json` with included and excluded paths.
 
-Do not persist GitHub/GitLab host auth files, Helm repository caches, Mondoo config, SOPS age keys, kubeconfigs, Docker token state, Bitwarden state, shell histories, generated Ansible service units, raw Codex state, or live `.eget.toml`.
+Do not persist GitHub/GitLab host auth files, Helm repository caches, Mondoo config, SOPS age keys, kubeconfigs, Docker token state, Bitwarden state, shell histories, generated Ansible service units, generated update-check state, installer receipts, raw Codex state, or live `.eget.toml`.
 
 Validation command:
 
