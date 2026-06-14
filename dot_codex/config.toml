@@ -1,0 +1,53 @@
+model = "gpt-5.5"
+model_reasoning_effort = "xhigh"
+plan_mode_reasoning_effort = "xhigh"
+approvals_reviewer = "guardian_subagent"
+service_tier = "default"
+
+[features]
+terminal_resize_reflow = true
+memories = true
+mentions_v2 = true
+
+[tui]
+session_picker_view = "comfortable"
+
+# Keep the trusted surface intentionally compact in dotfiles. The local
+# workspace setup helpers can expand this into per-repository trust entries.
+[projects."/home/a92615428"]
+trust_level = "trusted"
+
+[projects."/home/a92615428/git/devops.telekom.de"]
+trust_level = "trusted"
+
+[projects."/home/a92615428/git/devops.telekom.de/cit/t-caas"]
+trust_level = "trusted"
+
+[plugins."codex-security@openai-curated"]
+enabled = true
+
+[mcp_servers.tcaas-filesystem]
+command = "/home/linuxbrew/.linuxbrew/bin/mcp-server-filesystem"
+args = ["/home/a92615428/git/devops.telekom.de/cit/t-caas"]
+
+[mcp_servers.tcaas-gitlab]
+command = "/usr/bin/env"
+args = ["GITLAB_API_URL=https://gitlab.devops.telekom.de/api/v4", "/home/linuxbrew/.linuxbrew/bin/mcp-server-gitlab"]
+enabled = false
+
+[mcp_servers.tcaas-kubernetes-non-destructive]
+command = "/usr/bin/env"
+args = ["ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS=true", "/home/linuxbrew/.linuxbrew/bin/mcp-server-kubernetes"]
+enabled = false
+
+[mcp_servers.Telecontext]
+url = "https://telecontext-internal.trap.prod.tap.telekom.de/mcp"
+
+# Integration candidates researched from official Codex docs:
+# - MCP: add Context7, Chrome DevTools, Playwright, GitHub, Linear, or Sentry
+#   with per-tool allowlists and approval modes instead of unrestricted access.
+# - GitHub PR review: keep repository-specific review guidance in AGENTS.md.
+# - GitHub Action: prefer openai/codex-action@v1 for CI automation and keep API
+#   keys scoped to the action, not job-wide environment variables.
+# - Non-interactive automation: prefer codex exec --json plus --output-schema for
+#   repeatable checks and machine-readable reports.

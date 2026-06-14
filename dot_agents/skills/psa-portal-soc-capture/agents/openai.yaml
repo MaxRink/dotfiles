@@ -1,0 +1,4 @@
+interface:
+  display_name: "PSA Portal SoC Capture"
+  short_description: "Capture, answer, and fill PSA Portal SoCs"
+  default_prompt: "Use $psa-portal-soc-capture to refresh T-CaaS PSA SoC exports or fill validated SoC answers."

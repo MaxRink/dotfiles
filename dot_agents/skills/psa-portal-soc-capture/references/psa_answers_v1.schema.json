@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "psa_answers_v1.schema.json",
+  "title": "PSA Answers v1",
+  "type": "object",
+  "required": ["schema", "system", "answers"],
+  "properties": {
+    "schema": {
+      "const": "psa_answers_v1"
+    },
+    "generatedAt": {
+      "type": "string"
+    },
+    "system": {
+      "type": "object",
+      "required": ["slug"],
+      "properties": {
+        "slug": {"type": "string"},
+        "systemId": {"type": "string"},
+        "name": {"type": "string"},
+        "baseUrl": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "allowedStatements": {
+      "type": "array",
+      "items": {"enum": ["SOC", "SOPC", "SONC", "NA"]}
+    },
+    "answers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["answerKey", "sheet", "requirement", "answer"],
+        "properties": {
+          "answerKey": {"type": "string", "minLength": 1},
+          "sheet": {
+            "type": "object",
+            "properties": {
+              "title": {"type": "string"},
+              "manifestName": {"type": "string"},
+              "sheetId": {"type": "string"},
+              "href": {"type": "string"}
+            },
+            "additionalProperties": true
+          },
+          "requirement": {
+            "type": "object",
+            "properties": {
+              "number": {"type": "string"},
+              "requirementId": {"type": "string"},
+              "exportId": {"type": "string"},
+              "section": {"type": "string"},
+              "text": {"type": "string"},
+              "details": {"type": "string"},
+              "motivation": {"type": "string"}
+            },
+            "additionalProperties": true
+          },
+          "current": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "portalFields": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "answer": {
+            "type": "object",
+            "required": ["statement"],
+            "properties": {
+              "statement": {"enum": ["", "SOC", "SOPC", "SONC", "NA"]},
+              "explanation": {"type": "string"},
+              "note": {"type": "string"},
+              "noteVisibleForOthers": {
+                "type": ["boolean", "null"]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "owner": {"type": "string"},
+              "status": {"type": "string"}
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

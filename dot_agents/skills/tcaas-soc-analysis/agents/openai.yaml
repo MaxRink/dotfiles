@@ -1,0 +1,4 @@
+interface:
+  display_name: "T-CaaS SoC Analysis"
+  short_description: "Research T-CaaS evidence for PSA SoCs"
+  default_prompt: "Use $tcaas-soc-analysis to inventory T-CaaS repos, scan evidence, and build PSA SoC answer workbooks."
