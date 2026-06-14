@@ -7,3 +7,4 @@
 * **Safety**: Persisted curated knowledge and sanitized config only; raw Codex auth/state, browser captures, Confluence exports, kubeconfigs, and transient databases stay out of dotfiles.
 * **OS Config**: Added a repeatable inventory/import script for local OS preferences not covered by the dev-notebook Ansible baseline.
 * **Skills**: Added a repeatable importer for local project skills, with provenance, duplicate/worktree avoidance, template-skill recording, and cache/binary filtering.
+* **Codex Integrations**: Refreshed Codex integration guidance against the current official Codex manual and added Browser, Chrome, Computer Use, app-server, SDK, Agents SDK, remote connections, Sites, and subagent surfaces.

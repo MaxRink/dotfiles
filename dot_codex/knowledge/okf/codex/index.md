@@ -1,6 +1,6 @@
 # Codex
 
-* [Integration Surfaces](integration-surfaces.md) - overview of local, cloud, CI, and connector options.
+* [Integration Surfaces](integration-surfaces.md) - overview of local, cloud, CI, browser, remote, hosted-site, subagent, and connector options.
 * [Workspace Setup](workspace-setup.md) - current T-CaaS Codex setup and repository trust model.
 * [MCP Servers](mcp-servers.md) - connector policy and server candidates.
 * [Agent Rules](agent-rules.md) - persisted approval and safety policy.
