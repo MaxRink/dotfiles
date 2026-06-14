@@ -1,0 +1,264 @@
+@startuml PDA_Nachrichtenabhaengigkeiten
+title ITEX-PDA Nachrichtentypen und Abhaengigkeiten\n(Basierend auf ITEX-PDA Spezifikation 20.0.0)
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam linetype ortho
+
+skinparam package {
+  BorderColor #333333
+  BorderThickness 2
+  FontSize 12
+  FontStyle bold
+  BackgroundColor #FAFAFA
+}
+
+skinparam component {
+  BorderThickness 2
+  FontSize 10
+  BackgroundColor #FFFFFF
+}
+
+skinparam arrow {
+  Color #555555
+  Thickness 2
+}
+
+' ===== HAUPT-PORTIERUNGSPROZESSE =====
+package "1. REGELVERFAHREN\n(Standard Portierungen)" #E3F2FD {
+
+  component "**P-Meldung**\n(Portierung)\n\nVon: TNB aufnehmend\nStatus: Rufnummer portiert\nPaarbildung mit L erforderlich\nZeitpunkt: Tag nach Portierung" as P #90EE90
+
+  component "**L-Meldung**\n(Loesung/Leaving)\n\nVon: TNB abgebend\nStatus: Rufnummer verlassen\nPaarbildung mit P erforderlich\nPortierungsdatum = P-Datum" as L #FFB6C1
+
+  component "**Z-Meldung**\n(Zurueckgabe)\n\nVon: Letzter Besitzer\nStatus: Rueckfall nach 65 AT\nPaarbildung mit P erforderlich\nZ-Datum = Veroeffentlichung - 1 KT" as Z #FFD700
+
+  note right of P
+    **Paarbildung erforderlich**
+    P + L = Validierte Portierung
+    P + Z = Validierte Rueckgabe
+
+    Beide Meldungen muessen
+    identisches Portierungsdatum haben
+  end note
+}
+
+' ===== RNB PROZESSE =====
+package "2. RNB-VERFAHREN\n(Rufnummernblock Verwaltung)" #F3E5F5 {
+
+  component "**E-Meldung**\n(Einrichtung RNB)\n\nZweck: RNB Setup\nVon: Eigentuemer TNB\nFrist: 5 AT vor Einrichtungstermin\nRouting: Automatisch\n\nAusloser:\n- Neue Zuteilung (BNetzA)\nStatus: E (Standalone)" as E #9370DB
+
+  component "**R-Meldung**\n(Rueckgabe RNB)\n\nZweck: RNB Return to BNetzA\nVon: Origin. Zuteilungsnehmer\nNach: D000 (BNetzA)\nFrist: 20 AT vor Rueckgabedatum\nStatus: R (Standalone)\n\nWichtig:\n- Nur ein Datensatz\n- Nicht gepaart\n- Frei = Keine Rufnummern vergeben" as R #8B4789
+
+  component "**P/L-Meldung**\n(RNB Uebernahme)\n\nZweck: RNB Transfer TNB->TNB\nVerfahren: Wie Portierung\nPaarbildung: P + L erforderlich\nBNetzA: Genehmigung noetig\n\nStatus:\n- P: Neuer Eigentuemer\n- L: Alter Eigentuemer" as RNB_PL #DA70D6
+
+  component "**C-Meldung**\n(RNB Korrektur)\n\nFuer: E-Meldungen\n\nKorrektur-Arten:\n- Einrichtungsdatum\n- Blockgroesse\n- PK-Zuordnung\n- Ruecknahme" as C #BA55D3
+
+  note bottom of E
+    **Wichtige Regel**
+    Portierungen (P/L) nur nach:
+    E-Datum + 1 KT minimum
+
+    **Massenmigration**
+    Max 20.000 RN/Tag (Standard)
+    Max 100.000 RN/Tag (mit Zustimmung)
+  end note
+}
+
+' ===== KORREKTUR PROZESSE =====
+package "3. KORREKTURVERFAHREN\n(Korrekturen und Ausnahmen)" #FFEBEE {
+
+  component "**K-Meldung**\n(Korrektur)\n\n**Ruecknahme (2XXX)**\n- 2000-2400: Eigene Meldung\n- 2500-2599: Widerspruch fremde\n\n**Korrektur (0XXX-1XXX)**\n- 0100: PK aufnehmend aendern\n- 0200: PK abgebend aendern\n- 0300: Portierungsdatum aendern\n- 0400: Mehrfachaenderung\n\n**Struktur (4XXX)**\n- 4100: Zusammenfuehrung\n- 4200: Erweiterung\n- 4300: Aufteilung\n- 4600-4730: Sperrungen\n\n**Nachtraeglich (3XXX/6XXX)**\n- 30XX: Nach Validierung\n- 6XXX: Singlemeldungen" as K #FF6B6B
+
+  component "**Single-Meldungen**\n(6XXX Codes)\n\nNach: 61 AT ohne Paar\nWiderspruchsfrist: 10 AT\n\n- 6000: Single P-Meldung\n- 6100: Single L-Meldung\n- 6200: Single Z-Meldung\n\nAutomatische Validierung\nwenn Gegenpartei fehlt" as SINGLE #FFA07A
+
+  note top of K
+    **K-Datei Struktur**
+    U: Ursprungs-Datensatz
+    K: Korrektur-Datensatz
+
+    Bestaetigung erforderlich
+    (ausser 2XXX, 4XXX Codes)
+  end note
+}
+
+' ===== SUPPORT PROZESSE =====
+package "4. SUPPORT-PROZESSE\n(Information und Datenabfragen)" #FFF3E0 {
+
+  component "**I-Meldung**\n(Information)\n\n**3i-Datei: Ansprechpartner**\n- 01: Fachlich\n- 02: Fachlich detailliert\n- 03: Technisch\n\n**4i-Datei: PK-Beziehungen**\n- HPK zu PK Mapping\n- Fusionen/Hierarchien\n\n**5i-Datei:**\n- Migrations-Ankuendigung\n\nAktualisierung: Taeglich" as I #20B2AA
+
+  component "**DR-Meldung**\n(Datenabfrage)\n\n**Request-File:**\nAbfrage bei anderen TNB\n\n**Response-File:**\n- Aktueller Bestand\n- Alle P/L/Z-Paare\n- K-Dateien (2 Monate)\n- E-Dateien (RNB)\n\n**Default-File:**\nKompletter Bestand\nohne Anfrage" as DR #48D1CC
+
+  component "**PK-Abschaltung**\n(TNB Betriebsende)\n\nAktionscodes:\n- Ankuendigung\n- Widerspruch\n- Bestaetigung\n\nFolgen:\n- RNB-Uebernahme\n- Portierungen umleiten\n- Routing anpassen" as PKA #FFE4B5
+}
+
+' ===== FRISTEN UND VALIDIERUNG =====
+package "5. ZEITLICHE ABLAEUFE\n(Fristen und Validierung)" #E8F5E9 {
+  component "**Fristen**\n\n**Portierung:**\n- Veroeffentlichung: Tag+1\n- Paarbildung: Sofort\n- RUZ: 2 Monate\n\n**Rueckgabe:**\n- Wartezeit: 65 AT\n- Z-Datum: Veroeffentl. - 1 KT\n- Sicherheitsfrist: 5 AT\n\n**Korrektur:**\n- Fruehestens: Tag+1\n- Widerspruch: 10 AT\n- Single: Nach 61 AT\n\n**RNB:**\n- Ankuendigung: 10 KT\n- P nach E: +1 KT minimum" as FRISTEN #98FB98
+
+  component "**Validierung**\n\n**Paarbildung:**\nP + L = Validiert\nP + Z = Validiert\nIdentisches Datum!\n\n**Ausnahmen:**\n- Single nach 61 AT\n- K-Codes 2XXX, 4XXX\n- Nachtraegliche 30XX\n\n**Verwerfung:**\n- Zukunftsmeldungen\n- Falsche PK\n- Datum-Inkonsistenz\n- Vor E-Datum" as VALID #87CEEB
+}
+
+' ========================================
+' ABHAENGIGKEITEN - GRUPPIERT NACH TYP
+' ========================================
+
+' === GRUPPE 1: PAARBILDUNG (PFLICHT) ===
+note as N_PAIR
+  **PAARBILDUNG (PFLICHT)**
+  Gruene durchgezogene Pfeile
+end note
+
+P -[#00AA00]-> L : **PAAR**\nValidiert wenn\nidentisches Datum
+Z -[#00AA00]-> P : **PAAR**\nValidiert wenn\nidentisches Datum
+
+N_PAIR .. P
+N_PAIR .. Z
+
+' === GRUPPE 2: RNB VORAUSSETZUNG ===
+note as N_RNB
+  **RNB VORAUSSETZUNG**
+  Lila durchgezogene Pfeile
+end note
+
+E -[#8B008B]-> P : **VORAUSSETZUNG**\nP/L erst nach\nE-Datum + 1 KT
+E -[#8B008B]-> L : **VORAUSSETZUNG**\nP/L erst nach\nE-Datum + 1 KT
+
+N_RNB .. E
+
+' === GRUPPE 3: KORREKTUREN ===
+note as N_KORR
+  **KORREKTUREN**
+  Rote gestrichelte Pfeile
+end note
+
+K .[#FF0000].> P : korrigiert/\nzieht zurueck
+K .[#FF0000].> L : korrigiert/\nzieht zurueck
+K .[#FF0000].> Z : korrigiert/\nzieht zurueck
+C .[#9400D3].> E : korrigiert/\nzieht zurueck
+
+N_KORR .. K
+N_KORR .. C
+
+' === GRUPPE 4: SINGLE VALIDIERUNG ===
+note as N_SINGLE
+  **SINGLE VALIDIERUNG**
+  Orange gestrichelte Pfeile
+  Nach 61 AT ohne Paar
+end note
+
+SINGLE .[#FF8C00].> P : validiert\nfalls kein L
+SINGLE .[#FF8C00].> L : validiert\nfalls kein P
+SINGLE .[#FF8C00].> Z : validiert\nfalls kein P
+
+N_SINGLE .. SINGLE
+
+' === GRUPPE 5: DATENABFRAGEN ===
+note as N_DR
+  **DATENABFRAGEN**
+  Tuerkis gestrichelte Pfeile
+end note
+
+DR .[#00CED1].> P : fragt ab
+DR .[#00CED1].> L : fragt ab
+DR .[#00CED1].> Z : fragt ab
+DR .[#00CED1].> E : fragt ab
+DR .[#00CED1].> K : fragt ab\n(2 Monate)
+
+N_DR .. DR
+
+' === GRUPPE 6: INFORMATIONEN ===
+note as N_INFO
+  **INFORMATIONEN**
+  Gruen gestrichelte Pfeile
+end note
+
+I .[#5F9EA0].> PKA : unterstuetzt
+PKA -[#DAA520]-> E : erzwingt\nRNB-Uebernahme
+
+N_INFO .. I
+N_INFO .. PKA
+
+' === GRUPPE 7: REGELWERK ===
+note as N_RULES
+  **REGELWERK**
+  Gruene gestrichelte Pfeile
+end note
+
+FRISTEN .[#228B22].> P : regelt
+FRISTEN .[#228B22].> L : regelt
+FRISTEN .[#228B22].> Z : regelt
+FRISTEN .[#228B22].> E : regelt
+FRISTEN .[#228B22].> K : regelt
+
+VALID .[#4169E1].> P : validiert
+VALID .[#4169E1].> L : validiert
+VALID .[#4169E1].> Z : validiert
+
+N_RULES .. FRISTEN
+N_RULES .. VALID
+
+' ===== LEGENDE =====
+legend bottom left
+  **PFEILTYPEN**
+  |= Pfeiltyp |= Bedeutung |= Beispiel |
+  | Durchgezogen gruen | Paarbildung (Pflicht) | P + L |
+  | Durchgezogen lila | Voraussetzung | E vor P/L |
+  | Gestrichelt rot | Korrektur/Ruecknahme | K korrigiert P |
+  | Gestrichelt orange | Single-Validierung | Single nach 61 AT |
+  | Gestrichelt tuerkis | Datenabfrage | DR fragt ab |
+  | Gestrichelt gruen | Information/Support | I unterstuetzt |
+  | Gestrichelt dunkelgruen | Regelwerk | Fristen regeln |
+
+  **NACHRICHTENTYPEN**
+  |= Typ |= Zweck |= Absender |= Datei |
+  | **P** | Portierungsbestaetigung | TNB aufnehmend | 1Dyymmdd.txt |
+  | **L** | Loesungsbestaetigung | TNB abgebend | 1Dyymmdd.txt |
+  | **Z** | Zurueckgabe-Meldung | Letzter Besitzer | 1Dyymmdd.txt |
+  | **E** | Einrichtung RNB | RNB Eigentuemer | 1Eyymmdd.txt |
+  | **K** | Korrektur (P/L/Z) | Fehlerverursacher | 1Kyymmdd.txt |
+  | **C** | Korrektur (E) | RNB Eigentuemer | 1Cyymmdd.txt |
+  | **I** | Information | Beliebiger TNB | 1Iyymmdd.txt |
+  | **DR** | Datenabfrage | Anfragender TNB | 1Ryymmdd.txt |
+endlegend
+
+' ===== ZUSAMMENFASSUNG =====
+note as N_SUMMARY
+  **WICHTIGSTE ABHAENGIGKEITEN**
+
+  **1. Paarbildung ist zwingend**
+     - P + L muessen identisches Datum haben (Portierung)
+     - P + Z muessen identisches Datum haben (Rueckgabe)
+     - Routing wird erst nach Paarbildung aktualisiert
+
+  **2. RNB-Einrichtung vor Portierung**
+     - E-Meldung muss 10 KT vor Nutzung veroeffentlicht werden
+     - P/L-Meldungen erst nach E-Datum + 1 KT moeglich
+     - Ohne E-Meldung werden P/L-Meldungen verworfen
+
+  **3. Korrekturen brauchen Basis**
+     - K-Meldung setzt P/L/Z Meldung voraus
+     - C-Meldung setzt E-Meldung voraus
+     - Fruehestens Tag+1 nach fehlerhafter Meldung
+
+  **4. Zeitliche Reihenfolge**
+     - Portierung -> 65 AT Wartezeit -> Rueckgabe
+     - Fehler -> +1 Tag -> Korrektur moeglich
+     - 61 AT ohne Paar -> Single-Validierung automatisch
+
+  **5. Fristen beachten**
+     - Portierung: Veroeffentlichung Tag+1, RUZ 2 Monate
+     - Rueckgabe: 65 AT + Z-Meldung, 5 AT Sicherheitsfrist
+     - Korrektur: Tag+1 minimum, 10 AT Widerspruchsfrist (4XXX)
+     - Single: 61 AT Wartezeit, 10 AT Widerspruchsfrist
+     - RNB: 10 KT Ankuendigung, +1 KT vor Portierungen
+
+  **6. Validierung und Verwerfung**
+     - Zukunftsmeldungen werden verworfen
+     - Meldungen vor E-Datum werden verworfen
+     - Falsche PK-Zuordnung fuehrt zur Verwerfung
+     - Datum-Inkonsistenz zwischen P und L fuehrt zur Verwerfung
+end note
+
+@enduml

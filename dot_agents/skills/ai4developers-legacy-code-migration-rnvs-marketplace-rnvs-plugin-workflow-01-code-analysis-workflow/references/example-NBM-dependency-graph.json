@@ -1,0 +1,188 @@
+{
+  "feature": "NBM",
+  "timestamp": "2025-12-15T12:30:00Z",
+  "nodes": [
+    {
+      "id": "pack_body_rnb.sql",
+      "type": "PL/SQL Package Body",
+      "relevance": "high",
+      "is_entry_point": true,
+      "file_path": "/rnvs/database/packages/pack_body_rnb.sql"
+    },
+    {
+      "id": "p_rnb.pks",
+      "type": "PL/SQL Package Specification",
+      "relevance": "high",
+      "is_entry_point": true,
+      "file_path": "/rnvs/database/packages/p_rnb.pks"
+    },
+    {
+      "id": "RnvsRnbManager.cpp",
+      "type": "C++ Manager Class",
+      "relevance": "high",
+      "is_entry_point": true,
+      "file_path": "/rnvs/components/RnvsRnbManager.cpp"
+    },
+    {
+      "id": "kcode_processor.tcl",
+      "type": "TCL Script",
+      "relevance": "high",
+      "is_entry_point": true,
+      "file_path": "/rnvs/tcl/rnb/kcode_processor.tcl"
+    },
+    {
+      "id": "RnvsBereichsInfo.cpp",
+      "type": "C++ Component Class",
+      "relevance": "high",
+      "is_entry_point": false,
+      "file_path": "/rnvs/components/RnvsBereichsInfo.cpp"
+    },
+    {
+      "id": "p_tnb",
+      "type": "PL/SQL Package",
+      "relevance": "medium",
+      "is_entry_point": false,
+      "file_path": "/rnvs/database/packages/p_tnb.pks"
+    },
+    {
+      "id": "pack_body_tnb.sql",
+      "type": "PL/SQL Package Body",
+      "relevance": "medium",
+      "is_entry_point": false,
+      "file_path": "/rnvs/database/packages/pack_body_tnb.sql"
+    },
+    {
+      "id": "rnb_validation.sql",
+      "type": "SQL Script",
+      "relevance": "medium",
+      "is_entry_point": false,
+      "file_path": "/rnvs/database/scripts/rnb_validation.sql"
+    },
+    {
+      "id": "RnvsTnbManager.hpp",
+      "type": "C++ Header",
+      "relevance": "medium",
+      "is_entry_point": false,
+      "file_path": "/rnvs/components/RnvsTnbManager.hpp"
+    },
+    {
+      "id": "rnb_utils.tcl",
+      "type": "TCL Utility Library",
+      "relevance": "medium",
+      "is_entry_point": false,
+      "file_path": "/rnvs/tcl/lib/rnb_utils.tcl"
+    },
+    {
+      "id": "BaseManager.hpp",
+      "type": "C++ Header",
+      "relevance": "low",
+      "is_entry_point": false,
+      "file_path": "/rnvs/components/BaseManager.hpp"
+    },
+    {
+      "id": "common_utils.tcl",
+      "type": "TCL Utility Library",
+      "relevance": "low",
+      "is_entry_point": false,
+      "file_path": "/rnvs/tcl/lib/common_utils.tcl"
+    }
+  ],
+  "edges": [
+    {
+      "from": "pack_body_rnb.sql",
+      "to": "p_tnb",
+      "relationship": "calls_procedure",
+      "details": "Calls p_tnb.get_operator(v_tnb_id) to validate operator eligibility before RNB assignment",
+      "source_location": "pack_body_rnb.sql:234"
+    },
+    {
+      "from": "pack_body_rnb.sql",
+      "to": "rnb_validation.sql",
+      "relationship": "executes_script",
+      "details": "Executes @rnb_validation.sql for business rule validation (KCODE format, date ranges, status checks)",
+      "source_location": "pack_body_rnb.sql:567"
+    },
+    {
+      "from": "pack_body_rnb.sql",
+      "to": "pack_body_tnb.sql",
+      "relationship": "calls_procedure",
+      "details": "Calls pack_body_tnb.update_capacity to adjust TNB allocation capacity after RNB assignment",
+      "source_location": "pack_body_rnb.sql:892"
+    },
+    {
+      "from": "RnvsRnbManager.cpp",
+      "to": "RnvsTnbManager.hpp",
+      "relationship": "includes_header",
+      "details": "#include dependency for operator management functionality",
+      "source_location": "RnvsRnbManager.cpp:12"
+    },
+    {
+      "from": "RnvsRnbManager.cpp",
+      "to": "RnvsBereichsInfo.cpp",
+      "relationship": "includes_header",
+      "details": "#include dependency for area allocation (Bereichsinformation) management",
+      "source_location": "RnvsRnbManager.cpp:15"
+    },
+    {
+      "from": "RnvsRnbManager.cpp",
+      "to": "BaseManager.hpp",
+      "relationship": "inherits_from",
+      "details": "RnvsRnbManager inherits from BaseManager for common manager functionality",
+      "source_location": "RnvsRnbManager.cpp:23"
+    },
+    {
+      "from": "kcode_processor.tcl",
+      "to": "rnb_utils.tcl",
+      "relationship": "sources_file",
+      "details": "source ../lib/rnb_utils.tcl - loads RNB utility functions",
+      "source_location": "kcode_processor.tcl:8"
+    },
+    {
+      "from": "kcode_processor.tcl",
+      "to": "p_rnb",
+      "relationship": "calls_procedure",
+      "details": "SqlStoPro p_rnb.process_kcode - invokes PL/SQL KCODE processing",
+      "source_location": "kcode_processor.tcl:145"
+    },
+    {
+      "from": "rnb_utils.tcl",
+      "to": "common_utils.tcl",
+      "relationship": "sources_file",
+      "details": "source ../lib/common_utils.tcl - loads common utility functions",
+      "source_location": "rnb_utils.tcl:3"
+    },
+    {
+      "from": "p_tnb",
+      "to": "pack_body_tnb.sql",
+      "relationship": "uses_package",
+      "details": "Package specification p_tnb.pks defines interface implemented by pack_body_tnb.sql",
+      "source_location": "p_tnb.pks:1"
+    }
+  ],
+  "external_dependencies": [
+    {
+      "name": "BNetzA Gateway",
+      "type": "External System",
+      "referenced_by": ["pack_body_rnb.sql", "kcode_processor.tcl"],
+      "integration_type": "KCODE message exchange via SFTP file drop and pickup"
+    },
+    {
+      "name": "CRM-T",
+      "type": "External System",
+      "referenced_by": ["RnvsRnbManager.cpp"],
+      "integration_type": "Customer Relationship Management system - operator data synchronization"
+    },
+    {
+      "name": "Number Block Registry Database",
+      "type": "Database",
+      "referenced_by": ["pack_body_rnb.sql", "p_rnb.pks"],
+      "integration_type": "Oracle database tables T_RNB, T_HRNB, T_BEREICHS_INFO"
+    }
+  ],
+  "dependency_closure": {
+    "is_complete": true,
+    "unresolved_internal_count": 0,
+    "coverage_percentage": 100,
+    "validation_message": "All internal dependencies resolved successfully. 2 external system dependencies identified and documented (BNetzA Gateway, CRM-T). Dependency graph is complete and ready for Phase 2 visualization."
+  }
+}

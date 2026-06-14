@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Code Generation Task List",
+  "description": "Schema for the machine-readable task list produced by the /code-generation skill. Tracks step-based TDD/BDD tasks, their statuses, dependencies, and retry attempts.",
+  "type": "object",
+  "required": ["feature_name", "steps", "tasks", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Name of the feature being generated (matches .migration/<feature-name>/)"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the task list was generated"
+    },
+    "source_artifacts": {
+      "type": "object",
+      "description": "References to the spec-specification artifacts used to generate tasks",
+      "properties": {
+        "functional_requirements_md": {
+          "type": "string",
+          "description": "Path to functional-requirements.md"
+        },
+        "technical_plan_md": {
+          "type": "string",
+          "description": "Path to technical-plan.md"
+        },
+        "nonfunctional_requirements_md": {
+          "type": "string",
+          "description": "Path to nonfunctional-requirements.md (optional)"
+        },
+        "contracts_md": {
+          "type": "string",
+          "description": "Path to contracts.md (optional)"
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "description": "Ordered list of execution steps",
+      "items": {
+        "type": "object",
+        "required": ["name", "status", "task_ids"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["setup", "tests", "core", "integration", "polish"],
+            "description": "Step identifier. Steps execute in this fixed order: setup → tests → core → integration → polish"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["not-started", "in-progress", "completed", "failed", "skipped"],
+            "description": "Current status of the step"
+          },
+          "task_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^T[0-9]{3}$"
+            },
+            "description": "Ordered list of task IDs belonging to this step"
+          }
+        }
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "tasks": {
+      "type": "array",
+      "description": "All tasks across all steps, ordered by execution sequence",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "step", "status", "dependencies", "acceptance_criteria"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^T[0-9]{3}$",
+            "description": "Unique task identifier (T001, T002, etc.)"
+          },
+          "title": {
+            "type": "string",
+            "description": "Short descriptive title of the task"
+          },
+          "step": {
+            "type": "string",
+            "enum": ["setup", "tests", "core", "integration", "polish"],
+            "description": "Which step this task belongs to"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["not-started", "in-progress", "passed", "failed", "skipped"],
+            "description": "Current execution status. 'passed' means tests pass. 'failed' means max retries exhausted."
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^T[0-9]{3}$"
+            },
+            "description": "Task IDs that must be completed before this task can start"
+          },
+          "acceptance_criteria": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of criteria that define when this task is complete"
+          },
+          "related_fr_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^FR-[0-9]{3}$"
+            },
+            "description": "Functional requirement IDs from functional-requirements.md that this task implements or tests"
+          },
+          "related_uc_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^UC-[0-9]{3}$"
+            },
+            "description": "Use case IDs from functional-requirements.md that this task implements or tests"
+          },
+          "related_br_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^BR[0-9]{3}$"
+            },
+            "description": "Business rule IDs from analysis.json (traced via FR IDs in traceability matrix)"
+          },
+          "related_gap_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^GAP-[0-9]{3}$"
+            },
+            "description": "Gap IDs from gap-analysis addressed by this task"
+          },
+          "output_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Relative paths of files generated by this task (relative to code-generation/)"
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3,
+            "default": 0,
+            "description": "Number of TDD attempts made (max 3)"
+          },
+          "failure_details": {
+            "type": ["string", "null"],
+            "default": null,
+            "description": "If status is 'failed', contains the test failure output and diagnostics from the last attempt"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total", "completed", "failed", "skipped"],
+      "description": "Aggregate progress counters",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "description": "Total number of tasks"
+        },
+        "completed": {
+          "type": "integer",
+          "description": "Tasks with status 'passed'"
+        },
+        "failed": {
+          "type": "integer",
+          "description": "Tasks with status 'failed'"
+        },
+        "skipped": {
+          "type": "integer",
+          "description": "Tasks with status 'skipped' (due to failed dependency)"
+        },
+        "halted_at": {
+          "type": ["string", "null"],
+          "pattern": "^T[0-9]{3}$",
+          "default": null,
+          "description": "Task ID where execution halted due to failure, or null if completed successfully"
+        }
+      }
+    }
+  }
+}

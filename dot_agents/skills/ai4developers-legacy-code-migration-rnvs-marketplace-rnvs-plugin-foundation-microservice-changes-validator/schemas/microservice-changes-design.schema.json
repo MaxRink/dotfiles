@@ -1,0 +1,339 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://telekom.de/rnvs/microservice-changes-design.schema.json",
+  "title": "Microservice Changes Design Schema",
+  "description": "Delta model for changes to existing VNRM microservices (Phase 7.1 output)",
+  "type": "object",
+  "required": [
+    "feature_name",
+    "phase",
+    "timestamp",
+    "baseline",
+    "requirements",
+    "change_type",
+    "complexity_score",
+    "is_breaking_change",
+    "changes"
+  ],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Feature identifier (e.g., FNPORT, NBM)",
+      "minLength": 2,
+      "maxLength": 50
+    },
+    "feature_full_name": {
+      "type": "string",
+      "description": "Full feature name in English"
+    },
+    "phase": {
+      "type": "number",
+      "description": "Phase number (7.1)",
+      "enum": [7.1]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when design was created"
+    },
+    "baseline": {
+      "type": "object",
+      "description": "Reference to Phase 6 analysis (what EXISTS)",
+      "required": ["source", "service_name"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Path to Phase 6 analysis.json"
+        },
+        "service_name": {
+          "type": "string",
+          "description": "VNRM microservice being modified"
+        },
+        "service_version": {
+          "type": "string",
+          "description": "Current version of the microservice"
+        }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "description": "Reference to Phase 5 requirements (what's NEEDED)",
+      "required": ["source"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Path to Phase 5 control-flow-mapping.json"
+        },
+        "feature_name": {
+          "type": "string",
+          "description": "Feature name from Phase 5"
+        }
+      }
+    },
+    "change_type": {
+      "type": "string",
+      "description": "Classification of change impact",
+      "enum": ["ADDITIVE", "ENHANCEMENT", "BREAKING", "REFACTORING"]
+    },
+    "change_description": {
+      "type": "string",
+      "description": "Human-readable description of change type"
+    },
+    "complexity_score": {
+      "type": "integer",
+      "description": "Weighted complexity calculation based on change counts",
+      "minimum": 0
+    },
+    "is_breaking_change": {
+      "type": "boolean",
+      "description": "Whether changes include API modifications or deprecations"
+    },
+    "quality_target": {
+      "type": "integer",
+      "description": "Target quality score based on change type (70-80)",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "changes": {
+      "type": "object",
+      "description": "Delta (changes needed) across all categories",
+      "required": [
+        "api_changes",
+        "database_changes",
+        "event_changes",
+        "state_machine_changes",
+        "dependency_changes"
+      ],
+      "properties": {
+        "api_changes": {
+          "type": "object",
+          "description": "API endpoint changes (OpenAPI 3.0 deltas)",
+          "properties": {
+            "endpoints_to_add": {
+              "type": "array",
+              "description": "New endpoints to be added",
+              "items": {
+                "type": "object",
+                "required": ["path", "method"],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "API endpoint path"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Endpoint purpose and behavior"
+                  },
+                  "schema": {
+                    "type": "object",
+                    "description": "Request/response schema"
+                  },
+                  "maps_from": {
+                    "type": "string",
+                    "description": "RNVS source (component, function, table)"
+                  }
+                }
+              }
+            },
+            "endpoints_to_modify": {
+              "type": "array",
+              "description": "Existing endpoints requiring schema changes",
+              "items": {
+                "type": "object",
+                "required": ["path", "method"],
+                "properties": {
+                  "path": {"type": "string"},
+                  "method": {"type": "string"},
+                  "description": {"type": "string"},
+                  "schema_changes": {
+                    "type": "string",
+                    "description": "Description of schema modifications"
+                  }
+                }
+              }
+            },
+            "endpoints_to_deprecate": {
+              "type": "array",
+              "description": "Endpoints to be deprecated (breaking change)",
+              "items": {
+                "type": "object",
+                "required": ["path", "method", "deprecation_reason"],
+                "properties": {
+                  "path": {"type": "string"},
+                  "method": {"type": "string"},
+                  "deprecation_reason": {"type": "string"},
+                  "replacement": {
+                    "type": "string",
+                    "description": "Replacement endpoint if applicable"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "database_changes": {
+          "type": "object",
+          "description": "Database schema changes (PostgreSQL DDL)",
+          "properties": {
+            "tables_to_add": {
+              "type": "array",
+              "description": "New tables to be created",
+              "items": {
+                "type": "object",
+                "required": ["table_name", "purpose"],
+                "properties": {
+                  "table_name": {"type": "string"},
+                  "purpose": {
+                    "type": "string",
+                    "description": "Business purpose of the table"
+                  },
+                  "source": {
+                    "type": "string",
+                    "description": "Where requirement came from (Phase 5 reference)"
+                  }
+                }
+              }
+            },
+            "columns_to_add": {
+              "type": "array",
+              "description": "New columns in existing tables",
+              "items": {
+                "type": "object",
+                "required": ["table_name", "column_name"],
+                "properties": {
+                  "table_name": {"type": "string"},
+                  "column_name": {"type": "string"},
+                  "data_type": {"type": "string"},
+                  "purpose": {"type": "string"}
+                }
+              }
+            },
+            "indexes_to_add": {
+              "type": "array",
+              "description": "New indexes for performance",
+              "items": {
+                "type": "object",
+                "required": ["table_name", "index_name", "columns"],
+                "properties": {
+                  "table_name": {"type": "string"},
+                  "index_name": {"type": "string"},
+                  "columns": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "event_changes": {
+          "type": "object",
+          "description": "Message Bus event flow changes (Avro schemas)",
+          "properties": {
+            "topics_to_add": {
+              "type": "array",
+              "description": "New Message Bus topics to be created",
+              "items": {
+                "type": "object",
+                "required": ["topic_name"],
+                "properties": {
+                  "topic_name": {"type": "string"},
+                  "description": {"type": "string"},
+                  "source": {
+                    "type": "string",
+                    "description": "Phase 5 reference"
+                  }
+                }
+              }
+            },
+            "subscriptions_to_add": {
+              "type": "array",
+              "description": "New event subscriptions",
+              "items": {
+                "type": "object",
+                "required": ["topic_name"],
+                "properties": {
+                  "topic_name": {"type": "string"},
+                  "source_service": {
+                    "type": "string",
+                    "description": "Service publishing the event"
+                  },
+                  "description": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "state_machine_changes": {
+          "type": "object",
+          "description": "State machine transition changes",
+          "properties": {
+            "new_states": {
+              "type": "array",
+              "description": "New states to be added",
+              "items": {"type": "string"}
+            },
+            "new_transitions": {
+              "type": "array",
+              "description": "New state transitions",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "from_state": {"type": "string"},
+                  "to_state": {"type": "string"},
+                  "trigger": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "dependency_changes": {
+          "type": "object",
+          "description": "Service dependency changes",
+          "properties": {
+            "new_internal_dependencies": {
+              "type": "array",
+              "description": "New service-to-service calls",
+              "items": {
+                "type": "object",
+                "required": ["target_service"],
+                "properties": {
+                  "target_service": {"type": "string"},
+                  "communication_pattern": {
+                    "type": "string",
+                    "description": "REST API, Message Bus event, etc."
+                  },
+                  "purpose": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "validation_report": {
+      "type": "object",
+      "description": "Mock validation results",
+      "properties": {
+        "overall_status": {
+          "type": "string",
+          "enum": ["COMPLETE", "PARTIAL", "INCOMPLETE"]
+        },
+        "overall_quality_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "validation_method": {
+          "type": "string",
+          "enum": ["MOCK"],
+          "description": "Validation approach (MOCK until real validator exists)"
+        }
+      }
+    }
+  }
+}

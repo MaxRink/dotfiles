@@ -14,7 +14,19 @@ Use this skill for dotfiles changes that touch Codex configuration, reusable ski
 3. Keep Codex config in `dot_codex/config.toml` and approval rules in `dot_codex/rules/default.rules`.
 4. Do not copy raw `~/.codex` state, auth, credentials, caches, shell snapshots, SQLite files, browser captures, kubeconfigs, or secrets.
 5. Prefer scripts over one-off prompt instructions when a check will be run more than once.
-6. After edits, run:
+6. Persist safe local OS preferences with:
+
+```bash
+python dot_agents/skills/codex-knowledge-curation/scripts/persist_os_config.py --apply
+```
+
+7. Persist project skills with:
+
+```bash
+python dot_agents/skills/codex-knowledge-curation/scripts/persist_project_skills.py --apply
+```
+
+8. After edits, run:
 
 ```bash
 python dot_agents/skills/codex-knowledge-curation/scripts/validate_codex_persistence.py .
@@ -34,3 +46,5 @@ Treat findings from the validator as blockers unless they are proven false posit
 - API keys, PATs, bearer tokens, private keys, kubeconfigs, or auth JSON.
 - Confluence or browser HTML exports that can contain transient tokens.
 - Codex SQLite, JSONL histories, shell snapshots, cache, tmp, or package state.
+- CLI host/auth files such as GitHub `hosts.yml`, GitLab `config.yml`, Mondoo config,
+  Bitwarden state, Docker token seed, SOPS age private keys, kubeconfigs, and shell history.

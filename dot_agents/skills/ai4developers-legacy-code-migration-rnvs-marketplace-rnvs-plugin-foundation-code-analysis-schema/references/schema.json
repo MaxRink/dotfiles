@@ -1,0 +1,568 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RNVS Phase 1 Code Analysis Schema",
+  "description": "Structured format for Phase 1 legacy code analysis in RNVS→VNRM migration workflow",
+  "type": "object",
+  "required": [
+    "feature_name",
+    "feature_description",
+    "analysis_timestamp",
+    "components",
+    "migration_assessment"
+  ],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Feature name in kebab-case"
+    },
+    "feature_description": {
+      "type": "string",
+      "minLength": 50,
+      "description": "High-level overview of feature purpose and scope"
+    },
+    "analysis_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp when analysis was performed"
+    },
+    "source_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "language", "purpose"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path to source file"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["Java", "PL/SQL", "C++", "TCL", "JavaScript", "Python", "Shell"],
+            "description": "Programming language"
+          },
+          "purpose": {
+            "type": "string",
+            "description": "File purpose in feature"
+          },
+          "lines_of_code": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total lines of code"
+          },
+          "last_modified": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last modification timestamp"
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "language", "source", "description", "pseudocode", "complexity", "confidence"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Component name (PascalCase)"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["controller", "service", "repository", "entity", "utility", "orchestrator", "processor", "validator"],
+            "description": "Component architectural type"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["Java", "PL/SQL", "C++", "TCL", "JavaScript", "Python", "Shell"]
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^.+:[0-9]+-[0-9]+$",
+            "description": "Source reference: file:line_start-line_end"
+          },
+          "description": {
+            "type": "string",
+            "description": "Component purpose and functionality"
+          },
+          "pseudocode": {
+            "type": "string",
+            "minLength": 50,
+            "description": "Language-agnostic pseudocode for component logic"
+          },
+          "complexity": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "description": "Analysis confidence level"
+          },
+          "business_rules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Business rules or constraints"
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Names of other components this depends on"
+          },
+          "database_access": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Database tables/views accessed"
+          },
+          "external_systems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "External systems integrated with"
+          },
+          "modernization_notes": {
+            "type": "object",
+            "properties": {
+              "technical_debt": {
+                "type": "string"
+              },
+              "refactoring_opportunities": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "modern_patterns": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional implementation notes"
+          }
+        }
+      }
+    },
+    "functions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "component", "signature", "purpose", "pseudocode", "complexity", "source_reference"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "component": {
+            "type": "string",
+            "description": "Name of parent component"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "pseudocode": {
+            "type": "string"
+          },
+          "complexity": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "source_reference": {
+            "type": "string",
+            "pattern": "^.+:[0-9]+$"
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "return_type": {
+            "type": "string"
+          },
+          "side_effects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "type"],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["calls", "uses", "extends", "implements", "triggers", "depends_on"]
+          },
+          "description": {
+            "type": "string"
+          },
+          "criticality": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "migration_impact": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "database_entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "accessed_by"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["table", "view", "procedure", "function", "sequence"]
+          },
+          "description": {
+            "type": "string"
+          },
+          "accessed_by": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "access_pattern": {
+            "type": "string",
+            "enum": ["read", "write", "read_write"]
+          },
+          "criticality": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "migration_strategy": {
+            "type": "string",
+            "enum": ["migrate", "replace", "consolidate", "split"]
+          }
+        }
+      }
+    },
+    "external_integrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["system", "protocol", "used_by"],
+        "properties": {
+          "system": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": ["REST", "SOAP", "Database", "MessageQueue", "FileSystem", "FTP", "Email", "Custom"]
+          },
+          "description": {
+            "type": "string"
+          },
+          "used_by": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "data_format": {
+            "type": "string",
+            "enum": ["JSON", "XML", "CSV", "Binary", "Custom"]
+          },
+          "frequency": {
+            "type": "string",
+            "enum": ["realtime", "batch", "scheduled", "event-driven"]
+          },
+          "criticality": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "migration_strategy": {
+            "type": "string",
+            "enum": ["preserve", "modernize", "replace"]
+          }
+        }
+      }
+    },
+    "translations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["german", "english", "context"],
+        "properties": {
+          "german": {
+            "type": "string"
+          },
+          "english": {
+            "type": "string"
+          },
+          "abbreviation": {
+            "type": "string"
+          },
+          "context": {
+            "type": "string"
+          },
+          "occurrences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "domain": {
+            "type": "string",
+            "enum": ["telecommunications", "business", "technical"]
+          }
+        }
+      }
+    },
+    "architecture_notes": {
+      "type": "object",
+      "properties": {
+        "data_flow": {
+          "type": "string"
+        },
+        "processing_model": {
+          "type": "string",
+          "enum": ["batch", "realtime", "scheduled", "event-driven", "hybrid"]
+        },
+        "key_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "performance_considerations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "error_handling": {
+          "type": "string"
+        },
+        "security_notes": {
+          "type": "string"
+        },
+        "scalability_notes": {
+          "type": "string"
+        },
+        "regulatory_compliance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "technology_stack": {
+          "type": "object",
+          "properties": {
+            "languages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "frameworks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "migration_assessment": {
+      "type": "object",
+      "required": ["overall_complexity", "estimated_effort_days", "risk_level", "migration_priority"],
+      "properties": {
+        "overall_complexity": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "very_high"]
+        },
+        "estimated_effort_days": {
+          "type": "number",
+          "minimum": 0
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "risk_factors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "migration_priority": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "testing_considerations": {
+          "type": "object",
+          "properties": {
+            "critical_paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "data_migration_complexity": {
+              "type": "string",
+              "enum": ["low", "medium", "high"]
+            },
+            "performance_test_requirements": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "regulatory_test_requirements": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "api_contracts": {
+          "type": "object",
+          "properties": {
+            "interfaces_to_preserve": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "consumers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "must_preserve": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "new_interfaces_needed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "purpose": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "modernization_opportunities": {
+          "type": "object",
+          "properties": {
+            "technical_debt_items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "performance_improvements": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "architecture_improvements": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "data_migration": {
+          "type": "object",
+          "properties": {
+            "historical_data_volume": {
+              "type": "string"
+            },
+            "migration_strategy": {
+              "type": "string",
+              "enum": ["parallel_run", "big_bang", "phased"]
+            },
+            "rollback_complexity": {
+              "type": "string",
+              "enum": ["low", "medium", "high"]
+            },
+            "data_validation_requirements": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

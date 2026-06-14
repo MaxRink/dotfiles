@@ -1,0 +1,111 @@
+@startuml dependencies_detailed
+title User Authentication - Detailed Component Dependencies
+
+' Java Components
+package "Java Components" {
+  [AuthenticationManager.java] as AUTH_MGR <<Service>>
+  [SessionManager.java] as SESS_MGR <<Service>>
+  [PasswordValidator.java] as PWD_VAL <<Utility>>
+  [UserRepository.java] as USER_REPO <<Repository>>
+  [TokenGenerator.java] as TOKEN_GEN <<Utility>>
+  [BaseService.java] as BASE_SVC <<Base Class>>
+}
+
+' SQL Components
+package "SQL Components" {
+  [user_schema.sql] as USER_SCHEMA <<DDL Script>>
+  [auth_procedures.sql] as AUTH_PROC <<Stored Procedures>>
+  [session_cleanup.sql] as SESS_CLEANUP <<Maintenance Script>>
+}
+
+' JavaScript/React Components
+package "Frontend Components" {
+  [LoginForm.jsx] as LOGIN_FORM <<Component>>
+  [AuthProvider.jsx] as AUTH_PROVIDER <<Context>>
+  [SessionMonitor.js] as SESS_MONITOR <<Service>>
+}
+
+' External Systems
+cloud "External Systems" {
+  [LDAP Directory] as LDAP
+  [Email Service] as EMAIL
+}
+
+database "Data Storage" {
+  [User Database\nUSERS, SESSIONS] as DB
+  [Redis Cache] as CACHE
+}
+
+' Java Dependencies
+AUTH_MGR --> PWD_VAL : validates password\n(validatePasswordPolicy)
+AUTH_MGR --> USER_REPO : retrieves user\n(findByUsername)
+AUTH_MGR --> SESS_MGR : creates session\n(createSession)
+AUTH_MGR --> BASE_SVC : inherits from\nbase functionality
+AUTH_MGR --> LDAP : LDAP authentication
+AUTH_MGR --> EMAIL : password reset emails
+
+SESS_MGR --> TOKEN_GEN : generates tokens\n(generateSessionToken)
+SESS_MGR --> CACHE : stores sessions\nRedis SET/GET
+SESS_MGR -down-> DB : persists sessions\nINSERT/UPDATE SESSIONS
+
+USER_REPO -down-> DB : user CRUD\nSELECT/UPDATE USERS
+
+' SQL Dependencies
+AUTH_PROC --> USER_SCHEMA : executes on\nUSERS, SESSIONS tables
+AUTH_PROC -down-> DB : stored procedures
+SESS_CLEANUP -down-> DB : DELETE expired\nSESSIONS
+
+' Frontend Dependencies
+LOGIN_FORM --> AUTH_PROVIDER : uses context\n(login, logout)
+LOGIN_FORM --> AUTH_MGR : POST /api/auth/login
+AUTH_PROVIDER --> SESS_MONITOR : monitors session\n(checkTimeout)
+SESS_MONITOR --> SESS_MGR : validates token\nGET /api/auth/validate
+
+' Cross-layer integration
+AUTH_MGR ..> AUTH_PROC : invokes via\nJDBC CallableStatement
+LOGIN_FORM ..> AUTH_MGR : REST API calls
+
+' Color coding by relevance (High = Green, Medium = Yellow)
+AUTH_MGR #LightGreen
+SESS_MGR #LightGreen
+PWD_VAL #LightGreen
+USER_REPO #LightGreen
+TOKEN_GEN #LightGreen
+LOGIN_FORM #LightGreen
+AUTH_PROVIDER #LightGreen
+
+AUTH_PROC #LightYellow
+USER_SCHEMA #LightYellow
+SESS_CLEANUP #LightYellow
+BASE_SVC #LightYellow
+SESS_MONITOR #LightYellow
+
+legend right
+  **Relevance Classification**
+  |= Color |= Relevance |= Score |
+  | <#LightGreen> | High | ≥ 70 |
+  | <#LightYellow> | Medium | 40-69 |
+
+  **Relationship Types**
+  |= Arrow |= Meaning |
+  | ——> | Direct dependency |
+  | ..> | Cross-layer invocation |
+endlegend
+
+note right of AUTH_MGR
+  **Core Authentication Service**
+
+  - 450 lines
+  - Login/logout handling
+  - Relevance Score: 95/100
+end note
+
+note right of SESS_MGR
+  **Session Management Service**
+
+  - 320 lines
+  - Session lifecycle management
+  - Relevance Score: 90/100
+end note
+
+@enduml

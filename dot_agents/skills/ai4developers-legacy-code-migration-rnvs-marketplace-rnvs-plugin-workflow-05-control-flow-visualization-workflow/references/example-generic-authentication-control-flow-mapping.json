@@ -1,0 +1,297 @@
+{
+  "feature_name": "USER-AUTH",
+  "mapping_timestamp": "2025-12-19T14:00:00Z",
+  "source_phase4": "results/USER-AUTH/phase4/business-process.json",
+  "source_phase3": "results/USER-AUTH/phase3/ruletable.json",
+
+  "diagram_plan": {
+    "strategy": "single_diagram",
+    "rationale": "Single business process (BP-AUTH-001) with 8 flow nodes and 3 decision points - manageable in one diagram",
+    "total_diagrams": 1,
+    "diagrams": [
+      {
+        "diagram_file": "control-flow-diagram-auth.puml",
+        "diagram_type": "single",
+        "scope": "Complete BP-AUTH-001 User Authentication workflow with full decision logic",
+        "processes_included": ["BP-AUTH-001"],
+        "flow_nodes_count": 8,
+        "decision_points_count": 2,
+        "swimlanes_count": 4
+      }
+    ]
+  },
+
+  "flow_diagram": {
+    "diagram_type": "activity",
+    "primary_diagram": "control-flow-diagram-auth.puml",
+    "total_flow_nodes": 8,
+    "total_decision_points": 2,
+    "total_swimlanes": 4,
+    "external_systems_count": 3
+  },
+
+  "business_processes": [
+    {
+      "process_id": "BP-AUTH-001",
+      "process_name": "User Authentication and Session Lifecycle",
+      "diagram_file": "control-flow-diagram-auth.puml",
+      "flow_nodes": [
+        {
+          "node_id": "AUTH-FLOW-001",
+          "node_label": "Enter Username and Password",
+          "node_type": "start",
+          "stakeholder": "Customer (End User)",
+          "source": "Phase 4 BP-AUTH-001 Step 1 (User Credential Validation)"
+        },
+        {
+          "node_id": "AUTH-FLOW-002",
+          "node_label": "Receive Login Request",
+          "node_type": "process",
+          "stakeholder": "Authentication Services Team",
+          "source": "Phase 4 BP-AUTH-001 Step 1"
+        },
+        {
+          "node_id": "AUTH-FLOW-003",
+          "node_label": "Validate Credentials",
+          "node_type": "process",
+          "stakeholder": "Authentication Services Team",
+          "rules_applied": ["AUTH-BR-001", "AUTH-BR-002"],
+          "source": "Phase 4 BP-AUTH-001 Step 1 + Phase 3 AUTH-BR-001, AUTH-BR-002",
+          "external_system": "Enterprise LDAP Server"
+        },
+        {
+          "node_id": "AUTH-FLOW-004",
+          "node_label": "Create Session Token",
+          "node_type": "process",
+          "stakeholder": "Authentication Services Team",
+          "rules_applied": ["AUTH-BR-010"],
+          "source": "Phase 4 BP-AUTH-001 Step 2 + Phase 3 AUTH-BR-010",
+          "external_system": "Session Database"
+        },
+        {
+          "node_id": "AUTH-FLOW-005",
+          "node_label": "Display Dashboard",
+          "node_type": "end",
+          "stakeholder": "Customer (End User)",
+          "source": "Phase 4 BP-AUTH-001 downstream process transition to BP-PROFILE-001"
+        },
+        {
+          "node_id": "AUTH-FLOW-006",
+          "node_label": "Increment Failed Attempt Counter",
+          "node_type": "process",
+          "stakeholder": "Authentication Services Team",
+          "source": "Phase 3 AUTH-BR-001 failed attempt tracking"
+        },
+        {
+          "node_id": "AUTH-FLOW-ERR-001",
+          "node_label": "Lock Account for 15 minutes",
+          "node_type": "error",
+          "stakeholder": "Authentication Services Team",
+          "rules_applied": ["AUTH-BR-001"],
+          "source": "Phase 3 AUTH-BR-001 (Failed Login Lockout rule)",
+          "external_system": "Audit Logging System"
+        },
+        {
+          "node_id": "AUTH-FLOW-ERR-002",
+          "node_label": "Display Invalid Credentials Error",
+          "node_type": "error",
+          "stakeholder": "Customer (End User)",
+          "source": "Phase 4 BP-AUTH-001 error handling path"
+        }
+      ],
+      "decision_points": [
+        {
+          "decision_id": "AUTH-DEC-001",
+          "decision_label": "Credentials Valid?",
+          "source": "Phase 3 AUTH-BR-002 (Password Validation Rule)",
+          "true_path": "AUTH-FLOW-004",
+          "true_path_description": "Create Session Token → Log Successful Authentication → Display Dashboard",
+          "false_path": "AUTH-FLOW-006",
+          "false_path_description": "Increment Failed Attempt Counter → Check Lockout Threshold"
+        },
+        {
+          "decision_id": "AUTH-DEC-002",
+          "decision_label": "Failed Attempts ≥ 5?",
+          "source": "Phase 3 AUTH-BR-001 (Failed Login Lockout threshold)",
+          "user_correction": "Threshold confirmed as 5 attempts based on user validation",
+          "true_path": "AUTH-FLOW-ERR-001",
+          "true_path_description": "Lock Account → Log Security Event → Monitor Lockout → Display Locked Message",
+          "false_path": "AUTH-FLOW-ERR-002",
+          "false_path_description": "Display Invalid Credentials Error → Allow Retry"
+        }
+      ]
+    }
+  ],
+
+  "technical_processes": [
+    {
+      "process_id": "TECH-AUTH-001",
+      "process_name": "LDAP Credential Validation",
+      "source": "Phase 2 dependencies.puml (External LDAP integration), Phase 1 AuthenticationManager.java",
+      "components_involved": [
+        "AuthenticationManager.java",
+        "LdapClient.java",
+        "pack_body_auth.sql (PL/SQL credential cache)"
+      ],
+      "description": "Technical implementation of credential validation using LDAPS protocol (port 636) with fallback to local cache if LDAP unavailable"
+    },
+    {
+      "process_id": "TECH-AUTH-002",
+      "process_name": "Session Token Management",
+      "source": "Phase 1 SessionManager.java, Phase 1 T_SESSION table",
+      "components_involved": [
+        "SessionManager.java",
+        "T_SESSION database table"
+      ],
+      "description": "Session token generation using JWT with 30-minute expiration, stored in T_SESSION table"
+    }
+  ],
+
+  "stakeholder_interaction": {
+    "swimlanes": [
+      {
+        "stakeholder_name": "Customer (End User)",
+        "stakeholder_type": "End User",
+        "source": "Phase 4 stakeholder_analysis (End User category)",
+        "activities": [
+          "Enter Username and Password",
+          "View Authentication Result",
+          "Display Dashboard (success)",
+          "Display Invalid Credentials Error (failure)",
+          "Display Account Locked Message (lockout)",
+          "Retry Login"
+        ],
+        "interaction_nodes": ["AUTH-FLOW-001", "AUTH-FLOW-005", "AUTH-FLOW-ERR-002"]
+      },
+      {
+        "stakeholder_name": "Authentication Services Team",
+        "stakeholder_type": "Technical Owner",
+        "source": "Phase 4 stakeholder_analysis SH-002",
+        "activities": [
+          "Receive Login Request",
+          "Validate Credentials",
+          "Create Session Token",
+          "Log Successful Authentication",
+          "Increment Failed Attempt Counter",
+          "Lock Account for 15 minutes",
+          "Log Security Event"
+        ],
+        "interaction_nodes": [
+          "AUTH-FLOW-002",
+          "AUTH-FLOW-003",
+          "AUTH-FLOW-004",
+          "AUTH-FLOW-006",
+          "AUTH-FLOW-ERR-001"
+        ]
+      },
+      {
+        "stakeholder_name": "IT Security Department",
+        "stakeholder_type": "Business Owner",
+        "source": "Phase 4 stakeholder_analysis SH-001",
+        "activities": [
+          "Monitor Lockout Events",
+          "Review Security Patterns",
+          "Define Security Policies"
+        ],
+        "interaction_nodes": []
+      },
+      {
+        "stakeholder_name": "Customer Service",
+        "stakeholder_type": "Affected Stakeholder",
+        "source": "User feedback - added as stakeholder for manual unlock capability",
+        "activities": [
+          "Handle Manual Unlock Requests",
+          "Verify Customer Identity",
+          "Manually Unlock Locked Accounts"
+        ],
+        "interaction_nodes": []
+      }
+    ],
+    "total_stakeholders": 4
+  },
+
+  "other_system_interaction": {
+    "external_systems": [
+      {
+        "system_name": "Enterprise LDAP Server",
+        "system_type": "External Directory Service",
+        "source": "Phase 2 dependencies.puml (external cloud component)",
+        "integration_protocol": "LDAPS (port 636)",
+        "interaction_points": [
+          {
+            "flow_node": "AUTH-FLOW-003",
+            "interaction_type": "query",
+            "description": "Validate user credentials against enterprise directory using LDAPS protocol"
+          }
+        ]
+      },
+      {
+        "system_name": "Session Database",
+        "system_type": "Internal Database",
+        "source": "Phase 1 dependency-graph.json (T_SESSION table reference)",
+        "integration_protocol": "SQL (Oracle DB)",
+        "interaction_points": [
+          {
+            "flow_node": "AUTH-FLOW-004",
+            "interaction_type": "insert",
+            "description": "Store session token with 30-minute expiration timestamp in T_SESSION table"
+          }
+        ]
+      },
+      {
+        "system_name": "Audit Logging System",
+        "system_type": "Internal Compliance System",
+        "source": "Phase 4 business-documentation.json (compliance requirement)",
+        "integration_protocol": "Syslog",
+        "interaction_points": [
+          {
+            "flow_node": "AUTH-FLOW-004",
+            "interaction_type": "log",
+            "description": "Record successful authentication event for compliance audit trail"
+          },
+          {
+            "flow_node": "AUTH-FLOW-ERR-001",
+            "interaction_type": "alert",
+            "description": "Trigger security alert on account lockout event for IT Security monitoring"
+          }
+        ]
+      }
+    ],
+    "total_external_systems": 3
+  },
+
+  "summary": {
+    "total_business_processes": 1,
+    "total_flow_nodes": 8,
+    "total_decision_points": 2,
+    "total_stakeholders": 4,
+    "total_external_systems": 3,
+    "total_diagrams_created": 1,
+    "user_validation_completed": true,
+    "rework_iterations": 1
+  },
+
+  "recommendations": [
+    "Control flow diagram validated by user - ready for Phase 6 microservice design",
+    "User feedback incorporated: Added Customer Service swimlane for manual unlock capability",
+    "User validated lockout threshold as 5 failed attempts (not 3)",
+    "All flow elements traced to Phase 3/4 sources - no hallucinated steps",
+    "External system integrations (LDAP, Session DB, Audit Log) clearly documented for migration planning",
+    "Consider adding Password Reset Request workflow in Phase 8 gap analysis as alternative to lockout wait"
+  ],
+
+  "user_validation": {
+    "validation_completed": true,
+    "validation_date": "2025-12-19T14:30:00Z",
+    "feedback_incorporated": true,
+    "rework_iterations": 1,
+    "user_approval_status": "Approved",
+    "user_comments": [
+      "Flow accurately represents authentication process from login to session creation",
+      "Stakeholder swimlanes correct after adding Customer Service for manual unlocks",
+      "Decision logic validated - lockout threshold is 5 attempts, not 3",
+      "External system integrations (LDAP, Session DB, Audit Log) accurately shown",
+      "Request: Add Password Reset workflow in Phase 8 gap analysis as alternative path when account locked"
+    ]
+  }
+}

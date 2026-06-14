@@ -1,0 +1,584 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://rnvs-marketplace.internal/schemas/vnrm-code-analysis.json",
+  "title": "VNRM Code Analysis Schema",
+  "description": "Schema for analyzing modern VNRM microservices architecture, APIs, and integration patterns",
+  "type": "object",
+  "required": [
+    "repository_path",
+    "service_name",
+    "service_description",
+    "analysis_timestamp",
+    "vnrm_submodule",
+    "technology_stack",
+    "api_contracts"
+  ],
+  "properties": {
+    "repository_path": {
+      "type": "string",
+      "description": "Absolute path to the VNRM repository being analyzed. Used by Phase 13.1 to apply code changes directly to the repository.",
+      "examples": ["/home/user/vnrm-num-api", "C:\\Projects\\vnrm-num-api", "/opt/vnrm/num-fcm-api"]
+    },
+    "source_structure": {
+      "type": "object",
+      "description": "Source code directory structure of the repository. Used by Phase 12/13.1 to apply changes to correct locations.",
+      "properties": {
+        "main_source_root": {
+          "type": "string",
+          "description": "Relative path to main source directory",
+          "examples": ["src/main/java", "src/main/kotlin", "app/src/main/java"],
+          "default": "src/main/java"
+        },
+        "test_source_root": {
+          "type": "string",
+          "description": "Relative path to test source directory. Used by Phase 12 to apply unit tests.",
+          "examples": ["src/test/java", "src/test/kotlin", "app/src/test/java"],
+          "default": "src/test/java"
+        },
+        "resources_root": {
+          "type": "string",
+          "description": "Relative path to resources directory",
+          "examples": ["src/main/resources", "app/src/main/resources"],
+          "default": "src/main/resources"
+        },
+        "test_resources_root": {
+          "type": "string",
+          "description": "Relative path to test resources directory",
+          "examples": ["src/test/resources", "app/src/test/resources"],
+          "default": "src/test/resources"
+        }
+      }
+    },
+    "service_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Microservice name in kebab-case (e.g., 'num-fcm-fixednet-callnumber-management-api')"
+    },
+    "service_description": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 500,
+      "description": "High-level description of service purpose and responsibilities"
+    },
+    "analysis_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp when analysis was performed"
+    },
+    "vnrm_submodule": {
+      "type": "string",
+      "enum": ["COM", "NUM", "PRT", "COR", "SPE", "NTW"],
+      "description": "VNRM submodule classification"
+    },
+    "technology_stack": {
+      "type": "object",
+      "required": ["spring_boot_version", "java_version", "database"],
+      "properties": {
+        "spring_boot_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Spring Boot version (e.g., '2.7.18')"
+        },
+        "java_version": {
+          "type": "string",
+          "pattern": "^\\d+$",
+          "description": "Java version (e.g., '17')"
+        },
+        "database": {
+          "type": "string",
+          "description": "Database type and version (e.g., 'PostgreSQL 13+')"
+        },
+        "messaging": {
+          "type": "string",
+          "description": "Messaging system (e.g., 'Apache Message Bus (Tardis Horizon)')"
+        },
+        "resilience": {
+          "type": "string",
+          "description": "Resilience library (e.g., 'Resilience4j')"
+        },
+        "authentication": {
+          "type": "string",
+          "description": "Authentication system (e.g., 'Tardis M2M (Iris + Stargate)')"
+        },
+        "monitoring": {
+          "type": "string",
+          "description": "Monitoring stack (e.g., 'Prometheus + ELK Stack')"
+        }
+      }
+    },
+    "api_contracts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["endpoint", "method", "description"],
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "pattern": "^/api/v\\d+/",
+            "description": "REST endpoint path with version"
+          },
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+            "description": "HTTP method"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "description": "Endpoint functionality description"
+          },
+          "request_schema": {
+            "type": "object",
+            "description": "JSON schema for request body"
+          },
+          "response_schema": {
+            "type": "object",
+            "description": "JSON schema for response body"
+          },
+          "status_codes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 599
+            },
+            "description": "Possible HTTP status codes"
+          },
+          "authentication": {
+            "type": "string",
+            "description": "Authentication requirements"
+          },
+          "rate_limiting": {
+            "type": "string",
+            "description": "Rate limiting configuration"
+          }
+        }
+      }
+    },
+    "database_schema": {
+      "type": "object",
+      "properties": {
+        "tables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "description", "columns"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z_]+$",
+                "description": "Table name in snake_case"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 10,
+                "description": "Table purpose and functionality"
+              },
+              "columns": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "type"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Column name"
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "PostgreSQL data type"
+                    },
+                    "nullable": {
+                      "type": "boolean",
+                      "default": true
+                    },
+                    "primary_key": {
+                      "type": "boolean",
+                      "default": false
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Column purpose"
+                    }
+                  }
+                }
+              },
+              "indexes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {"type": "string"},
+                    "columns": {"type": "array", "items": {"type": "string"}},
+                    "unique": {"type": "boolean", "default": false}
+                  }
+                }
+              },
+              "constraints": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {"type": "string", "enum": ["FOREIGN_KEY", "CHECK", "UNIQUE"]},
+                    "definition": {"type": "string"}
+                  }
+                }
+              },
+              "audit_columns": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Standard audit columns (created_date, updated_date, etc.)"
+              }
+            }
+          }
+        },
+        "state_machines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["entity", "states", "transitions"],
+            "properties": {
+              "entity": {
+                "type": "string",
+                "description": "Entity that has state transitions"
+              },
+              "states": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "All possible states"
+              },
+              "transitions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "from": {"type": "string"},
+                    "to": {"type": "string"},
+                    "trigger": {"type": "string"},
+                    "condition": {"type": "string"}
+                  }
+                }
+              },
+              "business_rules": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Business rules governing state transitions"
+              }
+            }
+          }
+        }
+      }
+    },
+    "integration_patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "target_service", "protocol"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["service_dependency", "external_integration", "event_driven", "database_integration"]
+          },
+          "target_service": {
+            "type": "string",
+            "description": "Target service or system name"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": ["REST", "gRPC", "Message Bus", "Database", "SOAP", "File"]
+          },
+          "circuit_breaker": {
+            "type": "boolean",
+            "default": false
+          },
+          "timeout": {
+            "type": "string",
+            "pattern": "^\\d+ms$",
+            "description": "Timeout configuration in milliseconds"
+          },
+          "retry_policy": {
+            "type": "string",
+            "enum": ["none", "fixed_delay", "exponential_backoff"],
+            "default": "none"
+          },
+          "criticality": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+            "description": "Integration criticality level"
+          },
+          "compliance": {
+            "type": "string",
+            "description": "Compliance or regulatory requirements"
+          }
+        }
+      }
+    },
+    "resilience_patterns": {
+      "type": "object",
+      "properties": {
+        "circuit_breakers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {"type": "string"},
+              "failure_threshold": {"type": "number"},
+              "timeout": {"type": "string"},
+              "fallback_strategy": {"type": "string"}
+            }
+          }
+        },
+        "retry_policies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "operation": {"type": "string"},
+              "max_attempts": {"type": "integer"},
+              "backoff_strategy": {"type": "string"},
+              "exceptions": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        },
+        "timeout_configurations": {
+          "type": "object",
+          "properties": {
+            "default_timeout": {"type": "string"},
+            "endpoint_timeouts": {
+              "type": "object",
+              "additionalProperties": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "operational_metrics": {
+      "type": "object",
+      "properties": {
+        "service_level": {
+          "type": "string",
+          "enum": ["HA", "OT", "BE"],
+          "description": "Service level: HA (24/7), OT (Office Time), BE (Best Effort)"
+        },
+        "availability_target": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+%$",
+          "description": "Availability SLA target"
+        },
+        "response_time_target": {
+          "type": "string",
+          "pattern": "^< \\d+ms$",
+          "description": "Response time SLA target"
+        },
+        "throughput_capacity": {
+          "type": "string",
+          "description": "Throughput capacity specification"
+        },
+        "monitoring": {
+          "type": "object",
+          "properties": {
+            "health_check": {"type": "string"},
+            "metrics": {"type": "string"},
+            "logging": {"type": "string"}
+          }
+        }
+      }
+    },
+    "compliance_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "requirements", "implementation"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["GDPR", "BNetzA", "TKG", "ISO27001", "SOC2"]
+          },
+          "requirements": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Specific compliance requirements"
+          },
+          "implementation": {
+            "type": "string",
+            "description": "How requirements are implemented in the service"
+          }
+        }
+      }
+    },
+    "enhancement_opportunities": {
+      "type": "object",
+      "properties": {
+        "performance": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Performance improvement opportunities"
+        },
+        "modernization": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Technology modernization opportunities"
+        },
+        "observability": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Observability enhancement opportunities"
+        },
+        "security": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Security improvement opportunities"
+        },
+        "architecture": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Architectural enhancement opportunities"
+        }
+      }
+    },
+    "test_infrastructure": {
+      "type": "object",
+      "description": "Existing test coverage and infrastructure in the VNRM microservice (for Phase 11/12 CHANGE mode)",
+      "properties": {
+        "test_framework": {
+          "type": "object",
+          "description": "Testing frameworks and libraries used",
+          "properties": {
+            "unit_testing": {
+              "type": "string",
+              "description": "Unit testing framework (e.g., 'JUnit 5.8.2')"
+            },
+            "mocking": {
+              "type": "string",
+              "description": "Mocking library (e.g., 'Mockito 4.x')"
+            },
+            "integration": {
+              "type": "string",
+              "description": "Integration testing stack (e.g., 'Spring Boot Test + TestContainers')"
+            },
+            "api_testing": {
+              "type": "string",
+              "description": "API testing approach (e.g., 'MockMvc + WebTestClient')"
+            },
+            "event_testing": {
+              "type": "string",
+              "description": "Event/Message Bus testing (e.g., 'EmbeddedMessageBus')"
+            }
+          }
+        },
+        "test_coverage_metrics": {
+          "type": "object",
+          "description": "Current test coverage measurements",
+          "properties": {
+            "line_coverage_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Line coverage percentage"
+            },
+            "branch_coverage_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Branch coverage percentage"
+            },
+            "method_coverage_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Method coverage percentage"
+            },
+            "last_measured": {
+              "type": "string",
+              "format": "date",
+              "description": "Date coverage was last measured"
+            }
+          }
+        },
+        "test_inventory": {
+          "type": "array",
+          "description": "Inventory of existing test classes with coverage mapping",
+          "items": {
+            "type": "object",
+            "required": ["test_class", "test_type", "production_class"],
+            "properties": {
+              "test_class": {
+                "type": "string",
+                "description": "Fully qualified test class name"
+              },
+              "test_type": {
+                "type": "string",
+                "enum": ["unit", "integration", "e2e", "performance", "security"],
+                "description": "Type of test"
+              },
+              "tests_count": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Number of test methods in class"
+              },
+              "production_class": {
+                "type": "string",
+                "description": "Production class being tested"
+              },
+              "workflows_covered": {
+                "type": "array",
+                "items": {"type": "string", "pattern": "^WF-[0-9]+$"},
+                "description": "Workflow IDs covered by this test (WF-XXX)"
+              },
+              "business_rules_tested": {
+                "type": "array",
+                "items": {"type": "string", "pattern": "^BR-[0-9]+$"},
+                "description": "Business rule IDs tested (BR-XXX)"
+              },
+              "api_endpoints_tested": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "API endpoints tested (e.g., 'POST /api/v1/callnumbers')"
+              }
+            }
+          }
+        },
+        "test_patterns": {
+          "type": "object",
+          "description": "Testing patterns and utilities used in the codebase",
+          "properties": {
+            "database_setup": {
+              "type": "string",
+              "description": "Database test setup pattern (e.g., 'TestContainers PostgreSQL')"
+            },
+            "fixture_strategy": {
+              "type": "string",
+              "description": "Test fixture approach (e.g., 'TestDataBuilder pattern')"
+            },
+            "mocking_strategy": {
+              "type": "string",
+              "description": "Mocking approach (e.g., 'Mockito inline mocks')"
+            }
+          }
+        },
+        "test_utilities": {
+          "type": "array",
+          "description": "Reusable test utility classes",
+          "items": {
+            "type": "object",
+            "properties": {
+              "utility_class": {
+                "type": "string",
+                "description": "Utility class name"
+              },
+              "purpose": {
+                "type": "string",
+                "description": "Purpose of the utility (e.g., 'Factory for test fixtures')"
+              },
+              "location": {
+                "type": "string",
+                "description": "Package/directory location"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

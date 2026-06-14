@@ -1,0 +1,43 @@
+@startuml
+!pragma layout smetana
+!theme plain
+title Example Activity Flow
+
+|Component1|
+start
+:Receive request;
+note right
+  Initial request validation
+end note
+
+if (Request valid?) then (yes)
+  |Component2|
+  :Process request;
+  note right
+    Business logic execution
+  end note
+
+  |Database|
+  :Update records;
+
+  |Component1|
+  :Return success;
+  stop
+
+else (no)
+  |Component1|
+  :Return error;
+  note left
+    Log error details
+  end note
+  stop
+endif
+
+legend right
+  |<#90EE90>  | Start |
+  |<#FFB6C1>  | End |
+  |<#E1F5C4>  | Activity/Process |
+  |<#FFD700>  | Decision Point |
+endlegend
+
+@enduml

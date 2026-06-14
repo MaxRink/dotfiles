@@ -1,0 +1,107 @@
+{
+  "title": "Deep Explore Output Schema",
+  "description": "Schema for .migration/docs/index.json — the mandatory manifest for deep-explore output",
+  "type": "object",
+  "required": ["repository", "scan", "output_files"],
+  "properties": {
+    "repository": {
+      "type": "object",
+      "required": ["path", "name"],
+      "properties": {
+        "path": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "scan": {
+      "type": "object",
+      "required": ["timestamp", "filesScanned", "directoriesScanned"],
+      "properties": {
+        "timestamp": { "type": "string", "format": "date-time" },
+        "tier": { "type": "string", "enum": ["small", "medium", "large", "xl"] },
+        "filesScanned": { "type": "integer", "minimum": 0 },
+        "directoriesScanned": { "type": "integer", "minimum": 0 },
+        "sourceFilesScanned": { "type": "integer", "minimum": 0 },
+        "truncated": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "project": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "path": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "path", "summary"],
+        "properties": {
+          "name": { "type": "string" },
+          "path": { "type": "string" },
+          "summary": { "type": "string" },
+          "doc_file": { "type": "string" },
+          "statistics": {
+            "type": "object",
+            "properties": {
+              "file_count": { "type": "integer" },
+              "class_count": { "type": "integer" },
+              "function_count": { "type": "integer" },
+              "api_count": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "file_index": {
+      "description": "Per-file or pattern-based module mapping. Required for all tiers. Small/Medium use per-file entries; Large/XL use glob-pattern entries.",
+      "type": "object"
+    },
+    "technology_stack": {
+      "type": "object",
+      "properties": {
+        "languages": { "type": "array" },
+        "frameworks": { "type": "array" },
+        "databases": { "type": "array" },
+        "build_tools": { "type": "array" },
+        "infrastructure": { "type": "array" },
+        "external_dependencies": { "type": "array" }
+      }
+    },
+    "cross_cutting": {
+      "type": "object",
+      "properties": {
+        "data_flow": { "type": "string" },
+        "dependencies": { "type": "string" },
+        "api_contracts": { "type": "string" },
+        "security": { "type": "string" },
+        "database_schema": { "type": "string" },
+        "testing": { "type": "string" },
+        "infrastructure": { "type": "string" },
+        "technical_debt": { "type": "string" }
+      }
+    },
+    "output_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "description"],
+        "properties": {
+          "path": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "generated_at": { "type": "string", "format": "date-time" },
+        "quality_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "coverage": { "type": "object" }
+      }
+    }
+  },
+  "additionalProperties": false
+}

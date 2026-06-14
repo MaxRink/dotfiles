@@ -1,0 +1,116 @@
+{
+  "title": "User Registration Workflow",
+  "use_swimlanes": true,
+  "swimlanes": ["User", "Frontend", "Backend", "Email Service"],
+  "steps": [
+    {
+      "name": "Start registration",
+      "type": "start",
+      "swimlane": "User",
+      "notes": "User clicks 'Sign Up' button"
+    },
+    {
+      "name": "Fill registration form",
+      "type": "process",
+      "swimlane": "User",
+      "notes": "Enter email, password, name"
+    },
+    {
+      "name": "Validate form input",
+      "type": "process",
+      "swimlane": "Frontend",
+      "notes": "Client-side validation"
+    },
+    {
+      "name": "Submit registration",
+      "type": "process",
+      "swimlane": "Frontend",
+      "notes": "POST /api/register"
+    },
+    {
+      "name": "Validate credentials",
+      "type": "process",
+      "swimlane": "Backend",
+      "notes": "Check email format, password strength"
+    },
+    {
+      "name": "Check email exists",
+      "type": "process",
+      "swimlane": "Backend",
+      "notes": "Query database for existing email"
+    },
+    {
+      "name": "Hash password",
+      "type": "process",
+      "swimlane": "Backend",
+      "notes": "BCrypt hashing with salt"
+    },
+    {
+      "name": "Create user account",
+      "type": "process",
+      "swimlane": "Backend",
+      "notes": "Insert user record in database"
+    },
+    {
+      "name": "Generate verification token",
+      "type": "process",
+      "swimlane": "Backend",
+      "notes": "Create unique token for email verification"
+    },
+    {
+      "name": "Send verification email",
+      "type": "process",
+      "swimlane": "Email Service",
+      "notes": "Email with verification link"
+    },
+    {
+      "name": "Display success message",
+      "type": "process",
+      "swimlane": "Frontend",
+      "notes": "Prompt user to check email"
+    },
+    {
+      "name": "Click verification link",
+      "type": "process",
+      "swimlane": "User",
+      "notes": "User opens email and clicks link"
+    },
+    {
+      "name": "Verify token",
+      "type": "process",
+      "swimlane": "Backend",
+      "notes": "Validate token and activate account"
+    },
+    {
+      "name": "Registration complete",
+      "type": "end",
+      "swimlane": "User",
+      "notes": "User can now login"
+    }
+  ],
+  "decisions": [
+    {
+      "condition": "Valid input?",
+      "yes_path": "Submit registration",
+      "no_path": "Show validation errors",
+      "swimlane": "Frontend"
+    },
+    {
+      "condition": "Email already registered?",
+      "yes_path": "Return error: Email exists",
+      "no_path": "Hash password",
+      "swimlane": "Backend"
+    },
+    {
+      "condition": "Password meets requirements?",
+      "yes_path": "Check email exists",
+      "no_path": "Return error: Weak password",
+      "swimlane": "Backend"
+    }
+  ],
+  "color_scheme": {
+    "start": "#D5E8D4",
+    "process": "#CCE5FF",
+    "end": "#F8CECC"
+  }
+}

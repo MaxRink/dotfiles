@@ -1,0 +1,70 @@
+{
+  "validated_at": "2025-01-15T10:30:10.000Z",
+  "validation_method": "PROPER",
+  "baseline": {
+    "source": "results/FNPORT/phase6/analysis.json",
+    "service_name": "prt-fcpm-fixed-callnumber-porting-management-api",
+    "service_version": "2.4.0"
+  },
+  "requirements": {
+    "source": "results/FNPORT/phase5/control-flow-mapping.json",
+    "feature_name": "FNPORT"
+  },
+  "change_type": "ENHANCEMENT",
+  "complexity_score": 24,
+  "overall_status": "COMPLETE",
+  "overall_quality_score": 82,
+  "quality_target": 75,
+  "gates_passed": 5,
+  "gates_total": 5,
+  "validation_gates": [
+    {
+      "gate": "Completeness",
+      "weight": 30,
+      "score": 30,
+      "passed": true,
+      "error_count": 0,
+      "warning_count": 0
+    },
+    {
+      "gate": "API Quality",
+      "weight": 30,
+      "score": 25,
+      "passed": true,
+      "error_count": 0,
+      "warning_count": 1
+    },
+    {
+      "gate": "Database Quality",
+      "weight": 20,
+      "score": 20,
+      "passed": true,
+      "error_count": 0,
+      "warning_count": 0
+    },
+    {
+      "gate": "Integration Quality",
+      "weight": 10,
+      "score": 7,
+      "passed": true,
+      "error_count": 0,
+      "warning_count": 1
+    },
+    {
+      "gate": "Schema Validation",
+      "weight": 10,
+      "score": 10,
+      "passed": true,
+      "error_count": 0,
+      "warning_count": 0
+    }
+  ],
+  "errors": [],
+  "warnings": [
+    "1 endpoints missing request/response schemas",
+    "1 integrations missing source attribution"
+  ],
+  "recommendations": [
+    "All validation gates passed. Delta design is ready for review."
+  ]
+}

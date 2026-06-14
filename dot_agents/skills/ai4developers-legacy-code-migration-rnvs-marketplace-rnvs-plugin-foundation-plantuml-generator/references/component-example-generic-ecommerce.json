@@ -1,0 +1,98 @@
+{
+  "title": "E-Commerce Platform Architecture",
+  "components": [
+    {
+      "name": "order-service",
+      "type": "business",
+      "description": "Manages order lifecycle and orchestration"
+    },
+    {
+      "name": "payment-service",
+      "type": "business",
+      "description": "Processes payments via external gateway"
+    },
+    {
+      "name": "inventory-service",
+      "type": "business",
+      "description": "Tracks product availability and reservations"
+    },
+    {
+      "name": "notification-service",
+      "type": "business",
+      "description": "Sends email and SMS notifications to customers"
+    },
+    {
+      "name": "order-db",
+      "type": "database",
+      "description": "PostgreSQL database for order data"
+    },
+    {
+      "name": "inventory-db",
+      "type": "database",
+      "description": "PostgreSQL database for inventory data"
+    },
+    {
+      "name": "payment-gateway",
+      "type": "external",
+      "description": "Third-party payment processor (Stripe/PayPal)"
+    },
+    {
+      "name": "message-queue",
+      "type": "infrastructure",
+      "description": "RabbitMQ for async messaging"
+    },
+    {
+      "name": "api-gateway",
+      "type": "infrastructure",
+      "description": "API Gateway for routing and rate limiting"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "api-gateway",
+      "to": "order-service",
+      "label": "HTTP/REST"
+    },
+    {
+      "from": "order-service",
+      "to": "order-db",
+      "label": "Read/Write"
+    },
+    {
+      "from": "order-service",
+      "to": "inventory-service",
+      "label": "Reserve stock"
+    },
+    {
+      "from": "order-service",
+      "to": "payment-service",
+      "label": "Process payment"
+    },
+    {
+      "from": "order-service",
+      "to": "message-queue",
+      "label": "Publish events"
+    },
+    {
+      "from": "inventory-service",
+      "to": "inventory-db",
+      "label": "Read/Write"
+    },
+    {
+      "from": "payment-service",
+      "to": "payment-gateway",
+      "label": "HTTPS/API"
+    },
+    {
+      "from": "message-queue",
+      "to": "notification-service",
+      "label": "Subscribe events"
+    }
+  ],
+  "color_scheme": {
+    "business": "#CCE5FF",
+    "database": "#FFE6CC",
+    "infrastructure": "#E1D5E7",
+    "external": "#F8CECC"
+  }
+}

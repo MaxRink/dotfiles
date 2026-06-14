@@ -1,0 +1,8 @@
+Test_ID,Scenario_Name,Test_Type,Priority,Parent_Story,Services_Involved,Automation,Status,Business_Rules,Depends_On,Classification
+FNPORT-T001-SC001,Export Porting - Happy Path,E2E,Critical,FNPORT-T001,"prt-fcpm,spe-coms",Yes,Pending,"BR-015,BR-016,BR-017",,NEW
+FNPORT-T001-SC002,Export Porting - Existing Test,E2E,High,FNPORT-T001,"prt-fcpm",Yes,Pending,"BR-015",,REUSE
+FNPORT-T001-SC007,Export Porting - Invalid Carrier ID,E2E,High,FNPORT-T001,"prt-fcpm",Yes,Pending,"BR-016",FNPORT-T001-SC001,MODIFY
+INT-001,prt-fcpm calls num-fcm API,Integration,High,NEW,"prt-fcpm,num-fcm",Yes,Pending,"BR-020",,NEW
+PERF-LOAD-001,Bulk API - Normal Load,Performance,High,FNPORT-T005,"prt-fcpm",Yes,Pending,"BR-015,BR-020",,NEW
+SEC-AUTH-001,JWT Token - Expired Token,Security,Critical,NEW,"prt-fcpm,spe-coms",Yes,Pending,,,NEW
+WF003-E2E-001,Re-import Porting - Happy Path,E2E,High,NEW,"prt-fcpm",Yes,Pending,"BR-035,BR-036,BR-037",,NEW

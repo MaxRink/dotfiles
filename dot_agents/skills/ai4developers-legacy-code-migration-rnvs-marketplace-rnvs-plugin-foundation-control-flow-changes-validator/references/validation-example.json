@@ -1,0 +1,91 @@
+{
+  "overall_status": "COMPLETE",
+  "overall_quality_score": 78,
+  "quality_target": 75,
+  "gates_passed": 5,
+  "total_gates": 5,
+  "validation_gates": [
+    {
+      "gate_name": "Completeness",
+      "weight": 30,
+      "score": 25,
+      "max_score": 30,
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "details": {
+        "categories_populated": 4,
+        "has_sequences": true,
+        "has_activities": true,
+        "has_sagas": true,
+        "has_event_flows": true
+      }
+    },
+    {
+      "gate_name": "PlantUML Quality",
+      "weight": 30,
+      "score": 24,
+      "max_score": 30,
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "details": {
+        "sequences_checked": 2,
+        "activities_checked": 1,
+        "sagas_checked": 1,
+        "event_flows_checked": 1,
+        "sequence_score": 12,
+        "activity_score": 7,
+        "saga_score": 7,
+        "event_score": 7
+      }
+    },
+    {
+      "gate_name": "Documentation Quality",
+      "weight": 20,
+      "score": 15,
+      "max_score": 20,
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "details": {
+        "total_changes": 5,
+        "changes_with_rationale": 5,
+        "rationale_coverage": "100%"
+      }
+    },
+    {
+      "gate_name": "Traceability",
+      "weight": 10,
+      "score": 8,
+      "max_score": 10,
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "details": {
+        "total_changes": 5,
+        "changes_with_source": 4,
+        "source_coverage": "80%",
+        "has_requirements_link": true
+      }
+    },
+    {
+      "gate_name": "Schema Validation",
+      "weight": 10,
+      "score": 10,
+      "max_score": 10,
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "details": {
+        "has_baseline": true,
+        "has_requirements": true,
+        "has_changes": true
+      }
+    }
+  ],
+  "errors": [],
+  "warnings": [],
+  "recommendations": [],
+  "validated_at": "2026-01-06T10:00:00.000Z"
+}

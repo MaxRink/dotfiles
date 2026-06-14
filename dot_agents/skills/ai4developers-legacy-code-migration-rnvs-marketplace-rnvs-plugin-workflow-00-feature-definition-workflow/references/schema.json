@@ -1,0 +1,242 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RNVS Feature Definition",
+  "description": "Schema for feature-definition.json - defines scope and context for RNVS code analysis",
+  "type": "object",
+  "required": [
+    "feature_name",
+    "feature_full_name",
+    "feature_description",
+    "analysis_purpose",
+    "scope",
+    "business_context",
+    "keywords",
+    "sources",
+    "timestamp",
+    "approved_by_user"
+  ],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Short identifier for the feature (3-10 uppercase chars)",
+      "minLength": 3,
+      "maxLength": 10,
+      "pattern": "^[A-Z0-9-]+$",
+      "examples": ["NBM", "FNPORT", "PDA-EXPORT", "RNB-MGMT"]
+    },
+    "feature_full_name": {
+      "type": "string",
+      "description": "Human-readable full name of the feature",
+      "minLength": 5,
+      "examples": ["Number Block Management", "Fixed Number Porting", "PDA Export Processing"]
+    },
+    "feature_description": {
+      "type": "string",
+      "description": "Comprehensive business-oriented description (minimum 100 chars, explain WHY not just WHAT)",
+      "minLength": 100
+    },
+    "analysis_purpose": {
+      "type": "string",
+      "description": "Primary purpose for analyzing this feature",
+      "enum": ["migration", "documentation", "bug-investigation", "business-analysis", "compliance-audit", "other"]
+    },
+    "scope": {
+      "type": "object",
+      "description": "Defines what is included and excluded from analysis",
+      "required": ["primary_focus", "included_components", "included_processes", "excluded_scope"],
+      "properties": {
+        "primary_focus": {
+          "type": "string",
+          "description": "Main focus of this analysis in one sentence",
+          "minLength": 20
+        },
+        "included_components": {
+          "type": "array",
+          "description": "RNVS components to analyze (classes, packages, modules)",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          },
+          "minItems": 1
+        },
+        "included_processes": {
+          "type": "array",
+          "description": "Business processes or workflows to analyze",
+          "items": {
+            "type": "string",
+            "minLength": 5
+          },
+          "minItems": 1
+        },
+        "included_kcodes": {
+          "type": "array",
+          "description": "KCODE values in scope (if applicable)",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9]{1,4}$"
+          }
+        },
+        "excluded_scope": {
+          "type": "string",
+          "description": "What is explicitly NOT in scope (prevents scope creep)",
+          "minLength": 20
+        },
+        "exclusion_patterns": {
+          "type": "array",
+          "description": "File glob patterns to exclude from RLM analysis (e.g., test/**, *_migration.sql)",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "examples": ["test/**", "*_fusion*.sql", "migrations/**", "*_test.sql"]
+        }
+      }
+    },
+    "business_context": {
+      "type": "object",
+      "description": "Business and regulatory context for this feature",
+      "required": ["customer_impact"],
+      "properties": {
+        "regulatory_authority": {
+          "type": ["string", "null"],
+          "description": "Regulatory authority if applicable (BNetzA, GDPR, etc.)",
+          "examples": ["BNetzA (German Federal Network Agency)", "GDPR", null]
+        },
+        "business_owner": {
+          "type": "string",
+          "description": "Department or stakeholder owning this feature",
+          "minLength": 3,
+          "examples": ["Number Block Management Department", "Porting Coordination Team", "To be determined"]
+        },
+        "customer_impact": {
+          "type": "string",
+          "description": "How this feature affects end customers",
+          "minLength": 20
+        },
+        "related_systems": {
+          "type": "array",
+          "description": "External systems this feature integrates with",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      }
+    },
+    "keywords": {
+      "type": "object",
+      "description": "Search terms for Phase 1 code discovery",
+      "required": ["german_terms", "english_terms", "technical_terms"],
+      "properties": {
+        "german_terms": {
+          "type": "array",
+          "description": "German business terms relevant to this feature",
+          "items": {
+            "type": "string",
+            "minLength": 2
+          }
+        },
+        "english_terms": {
+          "type": "array",
+          "description": "English translations of business terms",
+          "items": {
+            "type": "string",
+            "minLength": 2
+          }
+        },
+        "technical_terms": {
+          "type": "array",
+          "description": "Technical keywords for code search (component names, function names, etc.)",
+          "items": {
+            "type": "string",
+            "minLength": 2
+          }
+        }
+      }
+    },
+    "uncertainty_flags": {
+      "type": "array",
+      "description": "Areas needing clarification or validation (empty array if all resolved)",
+      "items": {
+        "type": "string",
+        "minLength": 10
+      }
+    },
+    "rule_patterns": {
+      "type": "object",
+      "description": "Configuration for Phase 3 business rule extraction (optional, defaults applied if missing)",
+      "properties": {
+        "pattern_types": {
+          "type": "array",
+          "description": "Types of business rules to extract",
+          "items": {
+            "type": "string",
+            "enum": ["validation", "error_code", "state_transition", "constraint", "calculation", "security", "integration"]
+          },
+          "default": ["validation", "error_code", "state_transition"]
+        },
+        "focus_areas": {
+          "type": "array",
+          "description": "Specific areas to focus rule extraction on (optional)",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "error_code_prefixes": {
+          "type": "array",
+          "description": "Error code prefixes to look for (e.g., RNBFM, ECRM, PFM)",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z0-9]+$"
+          }
+        },
+        "exclude_patterns": {
+          "type": "array",
+          "description": "Patterns to exclude from rule extraction",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "description": "Documents where information came from (anti-hallucination)",
+      "required": ["user_input", "skill_references"],
+      "properties": {
+        "user_input": {
+          "type": "string",
+          "description": "Quote or summary of what user said",
+          "minLength": 20
+        },
+        "skill_references": {
+          "type": "array",
+          "description": "Skills consulted for domain context",
+          "items": {
+            "type": "string",
+            "minLength": 5
+          }
+        },
+        "documentation_references": {
+          "type": "array",
+          "description": "Documentation files consulted",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "description": "ISO 8601 timestamp when definition was finalized",
+      "format": "date-time"
+    },
+    "approved_by_user": {
+      "type": "boolean",
+      "description": "User explicitly approved this definition",
+      "const": true
+    }
+  }
+}

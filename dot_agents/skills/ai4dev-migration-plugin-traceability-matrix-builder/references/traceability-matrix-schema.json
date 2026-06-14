@@ -1,0 +1,150 @@
+{
+  "title": "Traceability Matrix",
+  "description": "Single source of truth for business rule traceability. Phase 1 populates artifact-level fields (spec_coverage, requirement_id, target_component). Phase 2 enriches each entry in-place with code-level findings (implementation_evidence, logic_verified, test_evidence, implementation_status).",
+  "type": "object",
+  "required": ["feature", "artifact_coverage", "entries"],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "description": "Feature name from plan.json."
+    },
+    "artifact_coverage": {
+      "type": "object",
+      "required": ["total_brs", "in_scope", "fully_traced", "partially_traced", "untraced", "artifact_coverage_pct"],
+      "properties": {
+        "total_brs": {
+          "type": "integer",
+          "description": "Total business rules in analysis.json."
+        },
+        "in_scope": {
+          "type": "integer",
+          "description": "BRs within plan.json scope — denominator for artifact_coverage_pct."
+        },
+        "fully_traced": {
+          "type": "integer",
+          "description": "In-scope BRs with both requirement_id and target_component mapped."
+        },
+        "partially_traced": {
+          "type": "integer",
+          "description": "In-scope BRs with either requirement_id or target_component mapped, but not both."
+        },
+        "untraced": {
+          "type": "integer",
+          "description": "In-scope BRs with neither requirement_id nor target_component mapped."
+        },
+        "artifact_coverage_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Artifact-level coverage: fully_traced / in_scope * 100. Measures documentation completeness, not code correctness."
+        }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "description": "One entry per in-scope business rule.",
+      "items": {
+        "type": "object",
+        "required": ["br_id", "summary", "pseudocode", "requirement_id", "target_component", "expected_test_areas", "spec_coverage", "issues"],
+        "properties": {
+          "br_id": {
+            "type": "string",
+            "description": "Business rule identifier, e.g. BR001."
+          },
+          "summary": {
+            "type": "string",
+            "description": "One-line description from analysis.json. Used in issue messages."
+          },
+          "pseudocode": {
+            "type": "string",
+            "description": "Expected business logic from analysis.json. Authoritative reference for logic verification in Phase 2."
+          },
+          "requirement_id": {
+            "type": ["string", "null"],
+            "description": "Mapped FR-### from spec.json traceability[br_id].functional_requirement. null if absent."
+          },
+          "target_component": {
+            "type": ["string", "null"],
+            "description": "Target component responsible for this rule, from spec.json traceability[br_id].component. Tells Phase 2 where to search for implementation. null if absent."
+          },
+          "expected_test_areas": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Test coverage types expected for this BR — derived from functional-requirements.md Section 5 (unit if FR mapped, bdd if CF mapped) with fallback to BR type from analysis.json. Drives targeted test search in Phase 2."
+          },
+          "spec_coverage": {
+            "type": "string",
+            "enum": ["COMPLETE", "PARTIAL", "MISSING"],
+            "description": "COMPLETE = requirement_id and target_component both mapped. PARTIAL = one mapped. MISSING = neither mapped."
+          },
+          "implementation_evidence": {
+            "type": "object",
+            "description": "Phase 2 — populated after code search.",
+            "required": ["found", "file", "line", "evidence_type"],
+            "properties": {
+              "found":         { "type": "boolean" },
+              "file":          { "type": ["string", "null"] },
+              "line":          { "type": ["integer", "null"], "minimum": 0 },
+              "evidence_type": {
+                "type": ["string", "null"],
+                "enum": ["comment_reference", "logic_match", null]
+              }
+            }
+          },
+          "logic_verified": {
+            "type": ["boolean", "null"],
+            "description": "Phase 2 — true if implementation matches pseudocode. null when implementation was not found and verification was skipped."
+          },
+          "test_evidence": {
+            "type": "object",
+            "description": "Phase 2 — populated after test search.",
+            "required": ["found", "references"],
+            "properties": {
+              "found":      { "type": "boolean" },
+              "references": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "implementation_status": {
+            "type": "string",
+            "enum": ["IMPLEMENTED", "PARTIAL", "MISSING"],
+            "description": "Phase 2 — code-level status. IMPLEMENTED = impl found + logic verified + test evidence. PARTIAL = impl or test found but not both. MISSING = no implementation found."
+          },
+          "issues": {
+            "type": "array",
+            "description": "Artifact-level issues for this BR entry.",
+            "items": {
+              "type": "object",
+              "required": ["severity", "description"],
+              "properties": {
+                "severity":    { "type": "string", "enum": ["critical", "warning", "info"] },
+                "description": { "type": "string" },
+                "evidence":    { "type": "string", "description": "File path with line number or quoted value. Required when available." },
+                "remediation": { "type": "string", "description": "Recommended fix. Required when available." }
+              }
+            }
+          }
+        }
+      }
+    },
+    "out_of_scope_brs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "BR IDs from analysis.json outside plan.json scope. Not validated."
+    },
+    "issues": {
+      "type": "array",
+      "description": "Matrix-level issues that do not belong to any specific BR entry (e.g. Section 8 entirely absent, ambiguous scope warnings).",
+      "items": {
+        "type": "object",
+        "required": ["br_id", "severity", "description"],
+        "properties": {
+          "br_id":       { "type": ["string", "null"] },
+          "severity":    { "type": "string", "enum": ["critical", "warning", "info"] },
+          "description": { "type": "string" },
+          "evidence":    { "type": "string", "description": "File path with line number or quoted value. Required when available." },
+          "remediation": { "type": "string", "description": "Recommended fix. Required when available." }
+        }
+      }
+    }
+  }
+}

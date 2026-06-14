@@ -1,0 +1,426 @@
+{
+  "title": "Migration Analysis Output",
+  "description": "Schema for analysis.json — extracted business rules with pseudocode, control flows, entities, and components from source code. Designed for LLM consumption with rich descriptions, test oracle data, and cross-references. STRICT: only the properties defined here are allowed — no additional fields.",
+  "type": "object",
+  "required": ["feature_name", "feature_description", "business_rules", "components", "control_flows", "entities", "dependencies", "test_coverage_summary", "migration_notes"],
+  "additionalProperties": false,
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Name of the feature being analyzed, matching the migration plan feature name."
+    },
+    "feature_description": {
+      "type": "string",
+      "description": "Business-level summary of what this feature does — enough context for an LLM to understand its purpose without reading source code."
+    },
+    "business_rules": {
+      "type": "array",
+      "description": "Extracted business rules with unique IDs, evidence-based locations, pseudocode, and test oracle data.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "summary", "type", "location", "confidence", "details", "pseudocode", "test_oracle"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^BR[0-9]{3}$",
+            "description": "Unique business rule identifier (BR001, BR002, ...)."
+          },
+          "summary": {
+            "type": "string",
+            "description": "Concise one-line description of the business rule."
+          },
+          "type": {
+            "type": "string",
+            "description": "Category of business rule (e.g., data-protection, lifecycle-management, concurrency-control, fault-tolerance, validation, calculation, decision, transformation, configuration)."
+          },
+          "location": {
+            "type": "object",
+            "required": ["file", "line_start", "line_end", "function", "class"],
+            "additionalProperties": false,
+            "description": "Source file location with precise line range and context.",
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "Path to source file."
+              },
+              "line_start": {
+                "type": "integer",
+                "description": "Starting line number."
+              },
+              "line_end": {
+                "type": "integer",
+                "description": "Ending line number."
+              },
+              "function": {
+                "type": "string",
+                "description": "Function/method name(s) implementing this rule."
+              },
+              "class": {
+                "type": "string",
+                "description": "Class name containing the implementation."
+              }
+            }
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"],
+            "description": "Confidence in extraction accuracy."
+          },
+          "details": {
+            "type": "string",
+            "description": "Full explanation: conditions, edge cases, implementation approach, formulas."
+          },
+          "pseudocode": {
+            "type": "string",
+            "description": "Language-agnostic pseudocode capturing the rule's complete logic — all branches, error handling, constants. Written for direct use by LLMs during code generation."
+          },
+          "related_rules": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^BR[0-9]{3}$"
+            },
+            "description": "Cross-references to other business rules this rule depends on or affects."
+          },
+          "test_oracle": {
+            "type": "object",
+            "required": ["type", "location", "test_methods", "behavioral_contracts", "edge_cases"],
+            "additionalProperties": false,
+            "description": "Test evidence for this business rule.",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Type of test coverage: unit-tests, integration-required, manual-integration, configuration-validation."
+              },
+              "location": {
+                "type": "string",
+                "description": "Path to test file, or descriptive text if no tests exist."
+              },
+              "test_methods": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Names of test methods that cover this business rule."
+              },
+              "behavioral_contracts": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string" },
+                "description": "GIVEN/WHEN/THEN contracts describing the expected behavior of this business rule. MUST have at least 1 happy-path + 1 failure contract. Empty array is NOT valid."
+              },
+              "edge_cases": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string" },
+                "description": "Edge cases and boundary conditions that should be tested. MUST have at least 1 entry. Empty array is NOT valid."
+              }
+            }
+          }
+        }
+      }
+    },
+    "control_flows": {
+      "type": "array",
+      "description": "Documented control flows showing how business processes execute step by step.",
+      "items": {
+        "type": "object",
+        "required": ["id", "summary", "type", "entry_point", "steps", "business_rules", "affected_by_migration", "migration_impact"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^CF[0-9]{3}$",
+            "description": "Unique control flow identifier (CF001, CF002, ...)."
+          },
+          "summary": {
+            "type": "string",
+            "description": "Concise description of what this flow does."
+          },
+          "type": {
+            "type": "string",
+            "description": "Category of flow (e.g., data-retrieval, data-modification, health-monitoring, request-processing)."
+          },
+          "entry_point": {
+            "type": "object",
+            "required": ["component", "function", "line"],
+            "additionalProperties": false,
+            "description": "Where this flow starts in the code.",
+            "properties": {
+              "component": {
+                "type": "string",
+                "description": "Component class name containing the entry point."
+              },
+              "function": {
+                "type": "string",
+                "description": "Method name that starts this flow."
+              },
+              "line": {
+                "type": "integer",
+                "description": "Line number of the entry point."
+              }
+            }
+          },
+          "steps": {
+            "type": "array",
+            "description": "Ordered sequence of actions in this flow.",
+            "items": {
+              "type": "object",
+              "required": ["step", "action", "component", "function", "decision"],
+              "additionalProperties": false,
+              "properties": {
+                "step": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Step sequence number."
+                },
+                "action": {
+                  "type": "string",
+                  "description": "What happens at this step."
+                },
+                "component": {
+                  "type": "string",
+                  "description": "Component class performing this step."
+                },
+                "function": {
+                  "type": "string",
+                  "description": "Method name executing this step."
+                },
+                "decision": {
+                  "type": "string",
+                  "description": "Decision logic or description of what this step does and its branching behavior."
+                }
+              }
+            }
+          },
+          "business_rules": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^BR[0-9]{3}$" },
+            "description": "Business rules involved in this flow."
+          },
+          "affected_by_migration": {
+            "type": "boolean",
+            "description": "Whether this flow is directly affected by the migration."
+          },
+          "migration_impact": {
+            "type": "string",
+            "description": "Description of how migration will affect this flow."
+          }
+        }
+      }
+    },
+    "entities": {
+      "type": "array",
+      "description": "Data entities/models used in the system.",
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "attributes", "storage_location", "related_rules"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Entity name."
+          },
+          "description": {
+            "type": "string",
+            "description": "What this entity represents and how it's used."
+          },
+          "attributes": {
+            "type": "array",
+            "description": "Fields/properties of this entity.",
+            "items": {
+              "type": "object",
+              "required": ["name", "type", "description"],
+              "additionalProperties": false,
+              "properties": {
+                "name": { "type": "string", "description": "Attribute name." },
+                "type": { "type": "string", "description": "Data type." },
+                "description": { "type": "string", "description": "What this attribute represents." }
+              }
+            }
+          },
+          "storage_location": {
+            "type": "string",
+            "description": "Where this entity is stored (e.g., Redis hash, local ConcurrentHashMap, database table)."
+          },
+          "related_rules": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^BR[0-9]{3}$" },
+            "description": "Business rules that involve this entity."
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "description": "Internal and external dependencies of the system.",
+      "additionalProperties": false,
+      "properties": {
+        "internal": {
+          "type": "array",
+          "description": "Dependencies between components within the system.",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "type", "description"],
+            "additionalProperties": false,
+            "properties": {
+              "from": { "type": "string", "description": "Source component name." },
+              "to": { "type": "string", "description": "Target component name." },
+              "type": { "type": "string", "description": "Dependency type (e.g., service-dependency, configuration-dependency)." },
+              "description": { "type": "string", "description": "Why this dependency exists." }
+            }
+          }
+        },
+        "external": {
+          "type": "array",
+          "description": "External system dependencies.",
+          "items": {
+            "type": "object",
+            "required": ["name", "type", "description", "affected_components"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "description": "External system/library name." },
+              "type": { "type": "string", "description": "Type (infrastructure, library, framework, external-service, observability)." },
+              "description": { "type": "string", "description": "What this dependency provides." },
+              "affected_components": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Components that depend on this external system."
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "In-scope software components with their responsibilities, methods, and owned business rules.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "path", "type", "description", "functions", "dependencies", "business_rules"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Component name (class/module name)."
+          },
+          "path": {
+            "type": "string",
+            "description": "Path to source file."
+          },
+          "type": {
+            "type": "string",
+            "description": "Architectural role (service, configuration, infrastructure, controller, repository, utility, processor, validator, orchestrator)."
+          },
+          "description": {
+            "type": "string",
+            "description": "What this component does and why it exists."
+          },
+          "functions": {
+            "type": "array",
+            "description": "Key functions/methods in this component.",
+            "items": {
+              "type": "object",
+              "required": ["name", "line_start", "line_end", "returns", "description"],
+              "additionalProperties": false,
+              "properties": {
+                "name": { "type": "string", "description": "Method name." },
+                "line_start": { "type": "integer", "description": "Starting line." },
+                "line_end": { "type": "integer", "description": "Ending line." },
+                "returns": { "type": "string", "description": "Return type." },
+                "description": { "type": "string", "description": "What this method does." }
+              }
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Class names or component names this depends on."
+          },
+          "business_rules": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^BR[0-9]{3}$" },
+            "description": "Business rules this component owns or enforces."
+          }
+        }
+      }
+    },
+    "test_coverage_summary": {
+      "type": "object",
+      "description": "Comprehensive test coverage analysis.",
+      "additionalProperties": false,
+      "properties": {
+        "total_tests": { "type": "integer", "description": "Total number of test methods found." },
+        "coverage_percentage": { "type": "integer", "description": "Estimated coverage percentage (0-100)." },
+        "test_framework": { "type": "string", "description": "Test frameworks used (e.g., JUnit 5.11.4 + Mockito 5.12.0)." },
+        "test_command": { "type": "string", "description": "Command to run all tests (e.g., ./gradlew test, mvn test)." },
+        "tests_by_module": {
+          "type": "array",
+          "description": "Test breakdown by module/layer.",
+          "items": {
+            "type": "object",
+            "required": ["module", "test_count", "test_files", "coverage_notes"],
+            "additionalProperties": false,
+            "properties": {
+              "module": { "type": "string", "description": "Module or layer name." },
+              "test_count": { "type": "integer", "description": "Number of test files in this module." },
+              "test_files": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Test file names."
+              },
+              "coverage_notes": { "type": "string", "description": "Coverage assessment and gaps for this module." }
+            }
+          }
+        },
+        "critical_test_gaps": {
+          "type": "array",
+          "description": "Components with insufficient test coverage.",
+          "items": {
+            "type": "object",
+            "required": ["component", "gap", "risk"],
+            "additionalProperties": false,
+            "properties": {
+              "component": { "type": "string", "description": "Component with gap." },
+              "gap": { "type": "string", "description": "What's missing." },
+              "risk": { "type": "string", "description": "Risk level and explanation." }
+            }
+          }
+        },
+        "recommended_test_additions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Recommended tests to add for migration safety."
+        }
+      }
+    },
+    "migration_notes": {
+      "type": "object",
+      "description": "Migration-specific observations and recommendations.",
+      "additionalProperties": false,
+      "properties": {
+        "primary_changes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Key changes required for migration."
+        },
+        "preserved_behavior": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Business rules and behaviors that must remain unchanged."
+        },
+        "testing_strategy": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Testing approach for validating migration."
+        },
+        "rollback_plan": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Steps to revert if migration fails."
+        }
+      }
+    }
+  }
+}

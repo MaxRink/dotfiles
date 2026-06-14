@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "feature": "core",
+    "timestamp": "2024-01-15T10:30:00Z",
+    "artifacts_analyzed": [
+      "plan/plan.json",
+      "analysis/analysis.json",
+      "architect/target-architecture.md"
+    ],
+    "quality_score": 72
+  },
+  "summary": {
+    "total_gaps": 2,
+    "status": "gaps_found",
+    "approval_status": "pending_review",
+    "approval_notes": "",
+    "categories": {
+      "missing_business_rules": 1,
+      "missing_dependencies": 0,
+      "uncovered_scope": 1,
+      "contradictions": 0,
+      "missing_integrations": 0
+    }
+  },
+  "gap_files": [
+    {
+      "category": "missing_business_rules",
+      "file": "business-rules-gaps.md",
+      "gap_count": 1,
+      "severity_breakdown": {"high": 1, "medium": 0, "low": 0}
+    },
+    {
+      "category": "uncovered_scope",
+      "file": "scope-gaps.md",
+      "gap_count": 1,
+      "severity_breakdown": {"high": 0, "medium": 1, "low": 0}
+    }
+  ],
+  "gaps": [
+    {
+      "id": "GAP-001",
+      "category": "missing_business_rules",
+      "description": "Input validation business rule BR002 not addressed in target architecture",
+      "severity": "high",
+      "source_artifact": "analysis/analysis.json → business_logic_analysis.validation_rules[0] (BR002)",
+      "target_artifact": "architect/target-architecture.md",
+      "recommendation": "Define input validation middleware or service layer in target architecture",
+      "details": {
+        "business_rule": "BR002: Player input must be validated before processing move commands",
+        "plan_context": "Input validation critical for multiplayer game integrity",
+        "impact": "Game state corruption and cheating vulnerabilities in target system"
+      }
+    },
+    {
+      "id": "GAP-002",
+      "category": "uncovered_scope",
+      "description": "Target module 'multiplayer-networking' from plan not covered in analysis",
+      "severity": "medium",
+      "source_artifact": "plan/plan.json → modules[1] (multiplayer-networking)",
+      "target_artifact": "analysis/analysis.json → code_references section",
+      "recommendation": "Analyze networking module or adjust plan scope if module not relevant",
+      "details": {
+        "scope_component": "multiplayer-networking - networking and communication components",
+        "current_coverage": "No business rules or components found in analysis.json",
+        "impact": "Incomplete analysis coverage for planned migration scope"
+      }
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Define input validation patterns in target architecture for business rule BR002",
+      "priority": "high",
+      "affected_gaps": ["GAP-001"]
+    },
+    {
+      "action": "Analyze networking module or adjust plan scope to match analysis coverage",
+      "priority": "medium",
+      "affected_gaps": ["GAP-002"]
+    }
+  ]
+}

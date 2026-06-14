@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# kubectl plugin: kubectl cpu-utilization
+#
+# Shows worker CPU utilization by QoS pool for the current cluster.
+# Uses $KUBECONFIG (or kubectl default ~/.kube/config).
+#
+# Install:
+#   ln -s "$(pwd)/scripts/kubectl-cpu_utilization" /usr/local/bin/kubectl-cpu_utilization
+#
+# Usage:
+#   kubectl cpu-utilization              # text output
+#   kubectl cpu-utilization --format json
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+PYTHON="${PROJECT_ROOT}/.venv/bin/python"
+UTIL_SCRIPT="${SCRIPT_DIR}/cluster-utilization.py"
+
+# Resolve kubeconfig: explicit $KUBECONFIG or kubectl default
+KUBE="${KUBECONFIG:-${HOME}/.kube/config}"
+
+if [[ ! -f "$KUBE" ]]; then
+  echo "Error: kubeconfig not found at $KUBE" >&2
+  echo "Set KUBECONFIG or ensure ~/.kube/config exists." >&2
+  exit 1
+fi
+
+exec "$PYTHON" "$UTIL_SCRIPT" --kubeconfig "$KUBE" "$@"

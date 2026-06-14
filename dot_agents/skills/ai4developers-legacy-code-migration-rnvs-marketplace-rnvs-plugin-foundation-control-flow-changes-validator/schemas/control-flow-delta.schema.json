@@ -1,0 +1,227 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "control-flow-delta.schema.json",
+  "title": "Control Flow Delta Schema",
+  "description": "Schema for Phase 8.1 computed control flow delta output",
+  "type": "object",
+  "required": ["baseline", "requirements", "changes"],
+  "properties": {
+    "baseline": {
+      "type": "object",
+      "description": "Baseline information (no baseline assumed in CHANGE workflow)",
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Description of baseline source"
+        },
+        "assumption": {
+          "type": "string",
+          "description": "Baseline assumption for CHANGE workflow"
+        },
+        "phase7_1_source": {
+          "type": "string",
+          "description": "Path to Phase 7.1 microservice changes file"
+        },
+        "phase5_source": {
+          "type": "string",
+          "description": "Path to Phase 5 control flow mapping file"
+        }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "description": "Links to requirement sources",
+      "properties": {
+        "control_flow_mapping": {
+          "type": "string",
+          "description": "Path to Phase 5 control flow mapping"
+        },
+        "microservice_changes": {
+          "type": "string",
+          "description": "Path to Phase 7.1 microservice changes"
+        }
+      }
+    },
+    "changes": {
+      "type": "object",
+      "description": "Control flow changes to design",
+      "properties": {
+        "sequences_to_add": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/sequenceToAdd"
+          }
+        },
+        "sequences_to_modify": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/sequenceToModify"
+          }
+        },
+        "activities_to_add": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/activityToAdd"
+          }
+        },
+        "activities_to_modify": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/activityToModify"
+          }
+        },
+        "sagas_to_add": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/sagaToAdd"
+          }
+        },
+        "event_flows_to_modify": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/eventFlowToModify"
+          }
+        }
+      }
+    },
+    "computed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when delta was computed"
+    }
+  },
+  "definitions": {
+    "sequenceToAdd": {
+      "type": "object",
+      "required": ["diagram_name", "use_case", "rationale"],
+      "properties": {
+        "diagram_name": {
+          "type": "string",
+          "pattern": "^sequence-.*\\.puml$"
+        },
+        "use_case": {
+          "type": "string"
+        },
+        "participants": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "source_change": {
+          "type": "string"
+        }
+      }
+    },
+    "sequenceToModify": {
+      "type": "object",
+      "required": ["diagram_name", "modifications"],
+      "properties": {
+        "diagram_name": {
+          "type": "string"
+        },
+        "modifications": {
+          "type": "object",
+          "properties": {
+            "new_participants": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "new_interactions": {
+              "type": "array"
+            },
+            "rationale": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "activityToAdd": {
+      "type": "object",
+      "required": ["diagram_name", "operation", "rationale"],
+      "properties": {
+        "diagram_name": {
+          "type": "string",
+          "pattern": "^activity-.*\\.puml$"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "source_change": {
+          "type": "string"
+        }
+      }
+    },
+    "activityToModify": {
+      "type": "object",
+      "required": ["diagram_name"],
+      "properties": {
+        "diagram_name": {
+          "type": "string"
+        },
+        "modifications": {
+          "type": "object"
+        }
+      }
+    },
+    "sagaToAdd": {
+      "type": "object",
+      "required": ["diagram_name", "saga_name", "rationale"],
+      "properties": {
+        "diagram_name": {
+          "type": "string",
+          "pattern": "^saga-.*\\.puml$"
+        },
+        "saga_name": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "integer"
+        },
+        "compensation_required": {
+          "type": "boolean"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "source_change": {
+          "type": "string"
+        }
+      }
+    },
+    "eventFlowToModify": {
+      "type": "object",
+      "required": ["diagram_name", "rationale"],
+      "properties": {
+        "diagram_name": {
+          "type": "string"
+        },
+        "new_topics": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "new_subscriptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "consumer": { "type": "string" },
+              "topic": { "type": "string" }
+            }
+          }
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "source_change": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

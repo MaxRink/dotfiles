@@ -1,0 +1,210 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "traceability-matrix.schema.json",
+  "title": "Gap Analysis Traceability Matrix Schema",
+  "description": "Schema for Phase 9 traceability_matrix.json output file",
+  "type": "object",
+  "required": ["feature", "phase", "generated_at", "workflow_mode", "overall_coverage", "coverage_by_category", "traceability_matrix", "gaps"],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "description": "Feature name (e.g., FNPORT, NBM)"
+    },
+    "phase": {
+      "type": "number",
+      "const": 9
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp"
+    },
+    "workflow_mode": {
+      "type": "string",
+      "enum": ["GREENFIELD", "CHANGE"],
+      "description": "Workflow mode detected by wrapper script"
+    },
+    "vnrm_source": {
+      "type": "object",
+      "description": "Source files for VNRM capabilities",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["phase7", "phase6+phase7.1"]
+        },
+        "files": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "overall_coverage": {
+      "type": "object",
+      "required": ["total_rnvs_components", "fully_covered", "partially_covered", "not_covered", "not_needed", "coverage_percentage"],
+      "properties": {
+        "total_rnvs_components": { "type": "integer", "minimum": 0 },
+        "fully_covered": { "type": "integer", "minimum": 0 },
+        "partially_covered": { "type": "integer", "minimum": 0 },
+        "not_covered": { "type": "integer", "minimum": 0 },
+        "not_needed": { "type": "integer", "minimum": 0 },
+        "coverage_percentage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Calculated as (fully + 0.5*partially) / (total - not_needed) * 100, rounded to 2 decimals"
+        }
+      }
+    },
+    "coverage_by_category": {
+      "type": "object",
+      "properties": {
+        "business_rules": { "$ref": "#/definitions/category_coverage" },
+        "api_endpoints": { "$ref": "#/definitions/category_coverage" },
+        "database_tables": { "$ref": "#/definitions/category_coverage" },
+        "integrations": { "$ref": "#/definitions/category_coverage" },
+        "async_operations": { "$ref": "#/definitions/category_coverage" }
+      }
+    },
+    "traceability_matrix": {
+      "type": "array",
+      "description": "MUST contain entries for ALL RNVS components, not just gaps",
+      "items": { "$ref": "#/definitions/traceability_entry" }
+    },
+    "gaps": {
+      "type": "array",
+      "description": "List of identified gaps (partially covered or not covered)",
+      "items": { "$ref": "#/definitions/gap_entry" }
+    },
+    "risks": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/risk_entry" }
+    },
+    "implementation_backlog": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/backlog_entry" }
+    },
+    "recommendations": {
+      "type": "object",
+      "properties": {
+        "immediate_actions": { "type": "array", "items": { "$ref": "#/definitions/action_entry" } },
+        "short_term_actions": { "type": "array", "items": { "$ref": "#/definitions/action_entry" } },
+        "long_term_actions": { "type": "array", "items": { "$ref": "#/definitions/action_entry" } }
+      }
+    }
+  },
+  "definitions": {
+    "category_coverage": {
+      "type": "object",
+      "required": ["total", "fully_covered", "partially_covered", "not_covered", "not_needed", "coverage_percentage"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "fully_covered": { "type": "integer", "minimum": 0 },
+        "partially_covered": { "type": "integer", "minimum": 0 },
+        "not_covered": { "type": "integer", "minimum": 0 },
+        "not_needed": { "type": "integer", "minimum": 0 },
+        "coverage_percentage": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "traceability_entry": {
+      "type": "object",
+      "required": ["rnvs_component_id", "rnvs_component_type", "rnvs_component_name", "coverage_status"],
+      "properties": {
+        "rnvs_component_id": { "type": "string", "description": "e.g., BR-001, WF-001, TBL-001" },
+        "rnvs_component_type": {
+          "type": "string",
+          "enum": ["Business Rule", "Workflow", "API Endpoint", "Database Table", "Integration", "Async Operation"]
+        },
+        "rnvs_component_name": { "type": "string" },
+        "rnvs_source_file": { "type": ["string", "null"] },
+        "rnvs_source_function": { "type": ["string", "null"] },
+        "vnrm_component_id": { "type": ["string", "null"] },
+        "vnrm_component_type": { "type": ["string", "null"] },
+        "vnrm_component_name": { "type": ["string", "null"] },
+        "vnrm_service": { "type": ["string", "null"] },
+        "vnrm_database_table": { "type": ["string", "null"] },
+        "vnrm_message_topic": { "type": ["string", "null"] },
+        "coverage_status": {
+          "type": "string",
+          "enum": ["fully_covered", "partially_covered", "not_covered", "not_needed"]
+        },
+        "coverage_percentage": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+        "gap_description": { "type": ["string", "null"] },
+        "priority": { "type": ["string", "null"], "enum": ["P0", "P1", "P2", "P3", null] },
+        "effort": { "type": ["string", "null"], "enum": ["XS", "S", "M", "L", "XL", null] },
+        "task_id": { "type": ["string", "null"] },
+        "change_type": {
+          "type": ["string", "null"],
+          "enum": ["existing", "new_in_delta", "modified_in_delta", null],
+          "description": "Only present in CHANGE workflow mode"
+        },
+        "delta_source": { "type": ["string", "null"], "description": "Source file for delta (CHANGE mode only)" }
+      }
+    },
+    "gap_entry": {
+      "type": "object",
+      "required": ["gap_id", "gap_category", "gap_type", "rnvs_component_id", "priority", "effort"],
+      "properties": {
+        "gap_id": { "type": "string", "pattern": "^GAP-[0-9]+$" },
+        "gap_category": { "type": "string" },
+        "gap_type": { "type": "string", "enum": ["not_covered", "partially_covered"] },
+        "rnvs_component_id": { "type": "string" },
+        "rnvs_component_name": { "type": "string" },
+        "rnvs_source": { "type": "string" },
+        "gap_description": { "type": "string" },
+        "business_impact": { "type": "string", "enum": ["high", "medium", "low"] },
+        "technical_complexity": { "type": "string", "enum": ["high", "medium", "low"] },
+        "risk_level": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+        "priority": { "type": "string", "enum": ["P0", "P1", "P2", "P3"] },
+        "effort": { "type": "string", "enum": ["XS", "S", "M", "L", "XL"] },
+        "probability": { "type": "string" },
+        "recommendation": { "type": "string" },
+        "mitigation_strategy": { "type": "string" },
+        "task_id": { "type": "string", "pattern": "^TASK-[0-9]+$" }
+      }
+    },
+    "risk_entry": {
+      "type": "object",
+      "required": ["risk_id", "risk_category", "risk_description", "risk_level"],
+      "properties": {
+        "risk_id": { "type": "string", "pattern": "^RISK-[0-9]+$" },
+        "risk_category": { "type": "string" },
+        "risk_description": { "type": "string" },
+        "business_impact": { "type": "string", "enum": ["high", "medium", "low"] },
+        "technical_complexity": { "type": "string", "enum": ["high", "medium", "low"] },
+        "risk_level": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+        "probability": { "type": "string" },
+        "mitigation_strategy": { "type": "string" },
+        "owner": { "type": "string" },
+        "deadline": { "type": "string" },
+        "related_gaps": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "backlog_entry": {
+      "type": "object",
+      "required": ["task_id", "sprint", "priority", "task_description", "effort_days"],
+      "properties": {
+        "task_id": { "type": "string", "pattern": "^TASK-[0-9]+$" },
+        "sprint": { "type": "integer", "minimum": 1 },
+        "priority": { "type": "string", "enum": ["P0", "P1", "P2", "P3"] },
+        "task_description": { "type": "string" },
+        "gap_reference": { "type": "array", "items": { "type": "string" } },
+        "vnrm_service": { "type": "string" },
+        "effort_days": { "type": "number", "minimum": 0 },
+        "assignee": { "type": "string" },
+        "dependencies": { "type": "array", "items": { "type": "string" } },
+        "acceptance_criteria": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "action_entry": {
+      "type": "object",
+      "required": ["action", "owner"],
+      "properties": {
+        "action": { "type": "string" },
+        "owner": { "type": "string" },
+        "deadline": { "type": "string" },
+        "success_criteria": { "type": "string" }
+      }
+    }
+  }
+}

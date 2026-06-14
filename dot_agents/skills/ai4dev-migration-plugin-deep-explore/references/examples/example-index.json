@@ -1,0 +1,141 @@
+{
+  "repository": {
+    "path": "/Users/dev/projects/ecommerce-platform",
+    "name": "ecommerce-platform"
+  },
+  "scan": {
+    "timestamp": "2026-02-26T10:30:00Z",
+    "tier": "medium",
+    "filesScanned": 1250,
+    "directoriesScanned": 85,
+    "sourceFilesScanned": 420,
+    "truncated": false
+  },
+  "project": {
+    "name": "ecommerce-platform",
+    "path": "/Users/dev/projects/ecommerce-platform",
+    "description": "Multi-tenant e-commerce platform with order management, inventory, and payment processing"
+  },
+  "modules": [
+    {
+      "name": "order-service",
+      "path": "src/main/java/com/company/order",
+      "summary": "Manages order creation, processing, and fulfillment workflows including cart operations and checkout logic.",
+      "doc_file": "modules/order-service.md",
+      "statistics": {
+        "file_count": 23,
+        "class_count": 18,
+        "function_count": 127,
+        "api_count": 12
+      }
+    },
+    {
+      "name": "user-service",
+      "path": "src/main/java/com/company/user",
+      "summary": "Handles user authentication, authorization, profile management, and role-based access control.",
+      "doc_file": "modules/user-service.md",
+      "statistics": {
+        "file_count": 15,
+        "class_count": 12,
+        "function_count": 89,
+        "api_count": 8
+      }
+    },
+    {
+      "name": "payment-service",
+      "path": "src/main/java/com/company/payment",
+      "summary": "Integrates with payment gateways for transaction processing, refunds, and payment method management.",
+      "doc_file": "modules/payment-service.md",
+      "statistics": {
+        "file_count": 18,
+        "class_count": 14,
+        "function_count": 95,
+        "api_count": 6
+      }
+    }
+  ],
+  "file_index": {
+    "src/main/java/com/company/order/OrderService.java": {
+      "module": "order-service",
+      "type": "source"
+    },
+    "src/main/java/com/company/order/OrderController.java": {
+      "module": "order-service",
+      "type": "source"
+    },
+    "src/main/java/com/company/user/UserService.java": {
+      "module": "user-service",
+      "type": "source"
+    },
+    "src/test/java/com/company/order/OrderServiceTest.java": {
+      "module": "order-service",
+      "type": "test"
+    },
+    "src/main/resources/application.yml": {
+      "module": "root",
+      "type": "config"
+    }
+  },
+  "technology_stack": {
+    "languages": [
+      { "name": "Java", "version": "17" },
+      { "name": "TypeScript", "version": "5.0" }
+    ],
+    "frameworks": [
+      { "name": "Spring Boot", "version": "3.2.0" },
+      { "name": "React", "version": "18.2.0" }
+    ],
+    "databases": ["PostgreSQL", "Redis"],
+    "build_tools": ["Maven", "npm"],
+    "infrastructure": ["Docker", "Kubernetes"],
+    "external_dependencies": [
+      { "name": "stripe-java", "version": "23.4.0" },
+      { "name": "jackson-databind", "version": "2.15.2" },
+      { "name": "lombok", "version": "1.18.30" }
+    ]
+  },
+  "cross_cutting": {
+    "data_flow": "cross-cutting/data-flow.md",
+    "dependencies": "cross-cutting/dependencies.md",
+    "api_contracts": "cross-cutting/api-contracts.md",
+    "security": "cross-cutting/security.md",
+    "database_schema": "cross-cutting/database-schema.md",
+    "testing": "cross-cutting/testing.md",
+    "infrastructure": "cross-cutting/infrastructure.md",
+    "technical_debt": "cross-cutting/technical-debt.md"
+  },
+  "output_files": [
+    { "path": "overview/tech-stack.md", "description": "Programming languages, frameworks, databases, build tools" },
+    { "path": "overview/folder-structure.md", "description": "Directory layout and organization pattern" },
+    { "path": "overview/entry-points.md", "description": "Application, configuration, build, and test entry points" },
+    { "path": "overview/components.md", "description": "Main components, services, and module organization" },
+    { "path": "overview/dependency-graph.md", "description": "Mermaid diagram of inter-module dependencies" },
+    { "path": "modules/order-service.md", "description": "Order management module — classes, APIs, data models, business logic" },
+    { "path": "modules/user-service.md", "description": "User authentication and profile management module" },
+    { "path": "modules/payment-service.md", "description": "Payment gateway integration module" },
+    { "path": "cross-cutting/data-flow.md", "description": "System-wide data sources, transformations, and sinks" },
+    { "path": "cross-cutting/dependencies.md", "description": "External libraries, internal module graph, migration order" },
+    { "path": "cross-cutting/api-contracts.md", "description": "REST endpoint catalog with request/response shapes" },
+    { "path": "cross-cutting/security.md", "description": "Authentication, authorization, secrets management, data protection" },
+    { "path": "cross-cutting/database-schema.md", "description": "Complete database schema, migrations, ERD, access patterns" },
+    { "path": "cross-cutting/testing.md", "description": "Test pyramid, frameworks, CI pipeline, coverage gaps" },
+    { "path": "cross-cutting/infrastructure.md", "description": "Deployment topology, containers, CI/CD, scaling, monitoring" },
+    { "path": "cross-cutting/technical-debt.md", "description": "TODOs, deprecated code, workarounds, coupling hotspots, dead code" }
+  ],
+  "metadata": {
+    "generated_at": "2026-02-26T10:45:00Z",
+    "quality_score": 92,
+    "coverage": {
+      "files_documented": 56,
+      "files_total": 56,
+      "modules_documented": 3,
+      "modules_detected": 3,
+      "apis_documented": 26,
+      "apis_detected": 26,
+      "models_documented": 12,
+      "models_detected": 12,
+      "cross_cutting_produced": 8,
+      "cross_cutting_applicable": 8
+    }
+  }
+}

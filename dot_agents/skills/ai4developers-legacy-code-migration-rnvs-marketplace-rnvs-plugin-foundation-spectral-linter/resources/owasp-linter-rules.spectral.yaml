@@ -1,0 +1,97 @@
+# (C) 2025 Deutsche Telekom IT GmbH
+# Author: G-API-Management (api@telekom.de)
+# Build API-Ruleset: 2.11.1  (raoul.piechatzek@telekom.de <raoul.piechatzek@telekom.de>) at 2025-12-09T06:43:47Z Contact api@telekom.de
+#  (Commit b40e6b06)
+# Based on Config file: config-owasp-linter-rules.spectral.yaml
+# OWASP Config file
+# Comments about OWASP Config file:
+# * All rules and their severities are evaluated by Group Security (April 2025).
+# * Please see: https://yam-united.telekom.com/pages/psa/apps/content/home
+# * Please see: https://owasp.org/API-Security/editions/2023/en/0x00-header/
+# * Please see: https://github.com/stoplightio/spectral-owasp-ruleset
+documentationUrl: >-
+  https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/api-linting/
+extends:
+  - '@stoplight/spectral-owasp-ruleset'
+formats:
+  - oas2
+  - oas3
+functions: []
+functionsDir: ''
+rules:
+  owasp:api2:2023-short-lived-access-tokens: 'off'
+  owasp:api4:2023-string-limit:
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    description: >-
+      Schema of type string must specify maxLength, enum, or const. MaxLength
+      can be omitted when using format:date-time, date, time, uuid, ipv4 or ipv6
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $..[?(@.type=="string")]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          anyOf:
+            - required:
+                - enum
+            - required:
+                - const
+            - allOf:
+                - required:
+                    - maxLength
+                - properties:
+                    format: {}
+            - allOf:
+                - required:
+                    - format
+                - properties:
+                    format:
+                      type: string
+                      enum:
+                        - date-time
+                        - date
+                        - time
+                        - uuid
+                        - ipv4
+                        - ipv6
+            - allOf:
+                - required:
+                    - maxLength
+                    - format
+                - properties:
+                    format:
+                      type: string
+  owasp:api9:2023-inventory-access: 'off'
+  owasp:api1:2023-no-numeric-ids: info
+  owasp:api2:2023-no-http-basic: error
+  owasp:api2:2023-no-api-keys-in-url: error
+  owasp:api2:2023-no-credentials-in-url: error
+  owasp:api2:2023-auth-insecure-schemes: error
+  owasp:api2:2023-jwt-best-practices: 'off'
+  owasp:api2:2023-write-restricted: warn
+  owasp:api2:2023-read-restricted: warn
+  owasp:api3:2023-no-additionalProperties: warn
+  owasp:api3:2023-constrained-additionalProperties: warn
+  owasp:api3:2023-no-unevaluatedProperties: warn
+  owasp:api3:2023-constrained-unevaluatedProperties: warn
+  owasp:api4:2023-rate-limit: warn
+  owasp:api4:2023-rate-limit-retry-after: warn
+  owasp:api4:2023-rate-limit-responses-429: 'off'
+  owasp:api4:2023-array-limit: warn
+  owasp:api4:2023-string-restricted: warn
+  owasp:api4:2023-integer-limit: error
+  owasp:api4:2023-integer-limit-legacy: error
+  owasp:api4:2023-integer-format: error
+  owasp:api5:2023-admin-security-unique: info
+  owasp:api7:2023-concerning-url-parameter: info
+  owasp:api8:2023-define-cors-origin: 'off'
+  owasp:api8:2023-no-scheme-http: error
+  owasp:api8:2023-define-error-validation: error
+  owasp:api8:2023-define-error-responses-401: 'off'
+  owasp:api8:2023-define-error-responses-500: 'off'
+  owasp:api9:2023-inventory-environment: info

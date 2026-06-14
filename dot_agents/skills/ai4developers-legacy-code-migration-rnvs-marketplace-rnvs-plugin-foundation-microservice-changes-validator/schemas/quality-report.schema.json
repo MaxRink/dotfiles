@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://telekom.de/rnvs/microservice-changes-quality-report.schema.json",
+  "title": "Microservice Changes Quality Report Schema",
+  "description": "Validation report for microservice changes design (Phase 7.1 validation output)",
+  "type": "object",
+  "required": [
+    "validated_at",
+    "validation_method",
+    "baseline",
+    "requirements",
+    "change_type",
+    "complexity_score",
+    "overall_status",
+    "overall_quality_score",
+    "quality_target",
+    "gates_passed",
+    "gates_total",
+    "validation_gates"
+  ],
+  "properties": {
+    "validated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when validation was performed"
+    },
+    "validation_method": {
+      "type": "string",
+      "enum": ["MOCK"],
+      "description": "Validation approach (MOCK = heuristic scoring, no real validator yet)"
+    },
+    "baseline": {
+      "type": "object",
+      "description": "Phase 6 baseline reference",
+      "required": ["source", "service_name"],
+      "properties": {
+        "source": {"type": "string"},
+        "service_name": {"type": "string"},
+        "service_version": {"type": "string"}
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "description": "Phase 5 requirements reference",
+      "required": ["source"],
+      "properties": {
+        "source": {"type": "string"},
+        "feature_name": {"type": "string"}
+      }
+    },
+    "change_type": {
+      "type": "string",
+      "description": "Change classification from classify-change-type.js",
+      "enum": ["ADDITIVE", "ENHANCEMENT", "BREAKING", "REFACTORING"]
+    },
+    "complexity_score": {
+      "type": "integer",
+      "description": "Weighted complexity from classify-change-type.js",
+      "minimum": 0
+    },
+    "overall_status": {
+      "type": "string",
+      "description": "Validation result status",
+      "enum": ["COMPLETE", "PARTIAL", "INCOMPLETE"]
+    },
+    "overall_quality_score": {
+      "type": "integer",
+      "description": "Aggregate quality score (0-100) from all gates",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "quality_target": {
+      "type": "integer",
+      "description": "Target score based on change type (ADDITIVE: 80, BREAKING: 70, etc.)",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "gates_passed": {
+      "type": "integer",
+      "description": "Number of validation gates that passed",
+      "minimum": 0
+    },
+    "gates_total": {
+      "type": "integer",
+      "description": "Total number of validation gates (5)",
+      "enum": [5]
+    },
+    "validation_gates": {
+      "type": "array",
+      "description": "Individual gate results",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["gate", "weight", "score", "passed", "error_count", "warning_count"],
+        "properties": {
+          "gate": {
+            "type": "string",
+            "description": "Gate name",
+            "enum": [
+              "Completeness",
+              "API Quality",
+              "Database Quality",
+              "Integration Quality",
+              "Schema Validation"
+            ]
+          },
+          "weight": {
+            "type": "integer",
+            "description": "Gate weight percentage (sum = 100)",
+            "enum": [10, 20, 30]
+          },
+          "score": {
+            "type": "integer",
+            "description": "Gate score (0 to weight)",
+            "minimum": 0
+          },
+          "passed": {
+            "type": "boolean",
+            "description": "Whether gate passed threshold"
+          },
+          "error_count": {
+            "type": "integer",
+            "description": "Number of errors found",
+            "minimum": 0
+          },
+          "warning_count": {
+            "type": "integer",
+            "description": "Number of warnings found",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "description": "All errors across all gates",
+      "items": {"type": "string"}
+    },
+    "warnings": {
+      "type": "array",
+      "description": "All warnings across all gates",
+      "items": {"type": "string"}
+    },
+    "recommendations": {
+      "type": "array",
+      "description": "Actionable recommendations for improvement",
+      "items": {"type": "string"}
+    }
+  }
+}

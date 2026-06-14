@@ -1,0 +1,80 @@
+{
+  "feature_name": "NBM",
+  "feature_full_name": "Number Block Management",
+  "feature_description": "Number Block Management (NBM) handles the lifecycle of thousand-number blocks (RNB - Rufnummernblock) in the RNVS system. This includes BNetzA regulatory assignments (KCODE 20-26), ownership transfers between telecommunications operators, capacity management, and block allocation/deallocation. NBM ensures compliance with German Federal Network Agency regulations and coordinates number block inventory across the telecommunications network.",
+  "analysis_purpose": "migration",
+  "scope": {
+    "primary_focus": "BNetzA KCODE message processing and number block lifecycle management including validation, persistence, and TNB operator coordination",
+    "included_components": [
+      "RnvsRnbManager (Java - main RNB controller)",
+      "pack_body_rnb.sql (PL/SQL - RNB package body)",
+      "p_rnb.pks (PL/SQL - RNB package spec)",
+      "RnvsTnbManager (Java - TNB operator integration)",
+      "pack_body_tnb.sql (PL/SQL - TNB package body)"
+    ],
+    "included_processes": [
+      "New Assignment (KCODE 20) - BNetzA assigns new blocks to operators",
+      "Owner Change (KCODE 21) - Transfer block ownership between operators",
+      "Expansion (KCODE 22) - Extend existing block ranges",
+      "Reduction (KCODE 25) - Reduce block ranges",
+      "Return (KCODE 26) - Return blocks to BNetzA",
+      "PMR error handling for invalid KCODE messages"
+    ],
+    "included_kcodes": ["20", "21", "22", "25", "26"],
+    "excluded_scope": "Fusion operations (KCODE 60/61), 11-digit migration functionality, individual callnumber management (FCM feature), number porting workflows (PRT feature)",
+    "exclusion_patterns": [
+      "*_fusion*.sql",
+      "*_migration*.sql",
+      "pack_body_fcm*.sql",
+      "test/**"
+    ]
+  },
+  "business_context": {
+    "regulatory_authority": "BNetzA (German Federal Network Agency)",
+    "business_owner": "Number Block Management Department",
+    "customer_impact": "Affects telecommunications providers managing number allocations. Failed block assignments prevent new number ranges from being used. Ownership transfer failures block carrier changes.",
+    "related_systems": [
+      "BNetzA Gateway (regulatory message exchange)",
+      "TNB Operator Database (carrier management)",
+      "RNB Registry (number block inventory)"
+    ]
+  },
+  "keywords": {
+    "german_terms": [
+      "Rufnummernblock",
+      "Eigentuemerwechsel",
+      "Zuteilung",
+      "Rueckgabe",
+      "Erweiterung",
+      "Reduzierung"
+    ],
+    "english_terms": [
+      "number block",
+      "owner change",
+      "assignment",
+      "return",
+      "expansion",
+      "reduction"
+    ],
+    "technical_terms": [
+      "RnvsRnbManager",
+      "RnvsTnbManager",
+      "pack_body_rnb",
+      "p_rnb",
+      "KCODE",
+      "SqlStoPro",
+      "T_RNB",
+      "T_TNB"
+    ]
+  },
+  "uncertainty_flags": [],
+  "sources": {
+    "user_input": "User requested: 'I want to analyze number block management, specifically how RNVS handles BNetzA assignments with KCODE 20-26. Include PMR error handling but exclude fusion and 11-digit migration.'",
+    "skill_references": [
+      "porting-data-exchange-specialist (KCODE 20-26 regulatory context)"
+    ],
+    "documentation_references": []
+  },
+  "timestamp": "2025-12-16T10:00:00Z",
+  "approved_by_user": true
+}

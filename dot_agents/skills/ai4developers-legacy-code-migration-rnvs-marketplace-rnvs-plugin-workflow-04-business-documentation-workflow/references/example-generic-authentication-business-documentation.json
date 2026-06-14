@@ -1,0 +1,508 @@
+{
+  "feature_name": "USER-AUTH",
+  "documentation_timestamp": "2025-12-19T10:30:00Z",
+  "phase3_source": "results/USER-AUTH/phase3/ruletable.json",
+  "enhancement_sources": [
+    "security-policy-specialist: Business context for authentication and security rules",
+    "Phase 1 analysis.json: Component ownership for technical stakeholders",
+    "Phase 2 dependencies.puml: Process flow for stakeholder identification"
+  ],
+
+  "business_rules_enhanced": [
+    {
+      "_comment": "Phase 3 technical fields PRESERVED",
+      "rule_id": "AUTH-BR-001",
+      "rule_name": "Failed Login Lockout",
+      "rule_description": "After 5 consecutive failed login attempts, user account is locked for 15 minutes",
+      "rule_category": "security",
+      "business_process": "User Authentication",
+      "source_location": "AuthenticationManager.java:156",
+      "source_type": "source_code",
+      "source_evidence": "if (failedAttempts >= MAX_FAILED_ATTEMPTS) { lockAccount(userId, LOCKOUT_DURATION); }",
+      "confidence_score": 5,
+      "confidence_rationale": "Explicit code with named constants confirms rule",
+      "business_impact": "Prevents brute-force password attacks while allowing legitimate users to regain access after timeout",
+      "regulatory_context": "Aligns with NIST SP 800-63B authentication guidelines",
+      "compliance_requirements": ["NIST SP 800-63B", "PCI DSS Requirement 8.1.6"],
+      "implementation_notes": "Lockout counter resets on successful login. Admin can manually unlock accounts.",
+      "related_rules": ["AUTH-BR-002", "AUTH-BR-003"],
+      "migration_priority": "high",
+      "validation_status": "user_confirmed",
+      "user_feedback": "Confirmed accurate. Critical security rule.",
+
+      "_comment": "Phase 4 business enhancements ADDED",
+      "business_objective": "Prevent automated brute-force password attacks while maintaining user accessibility through temporary lockout mechanism. Balances security requirements with user experience.",
+      "business_terminology": "When a user fails to log in 5 times in a row, the system temporarily blocks their account for 15 minutes to protect against automated password guessing attacks. After 15 minutes, the user can try again. This prevents hackers from trying thousands of password combinations while allowing real users to regain access quickly.",
+      "stakeholder_owner": {
+        "business_owner": "IT Security Department",
+        "technical_owner": "Authentication Services Team",
+        "decision_authority": "CISO (Chief Information Security Officer)"
+      },
+      "regulatory_rationale": "Implements NIST SP 800-63B Section 5.2.2 requirements for authentication rate limiting and account lockout to prevent online guessing attacks. Aligns with PCI DSS Requirement 8.1.6 for limiting repeated access attempts.",
+      "enhancement_sources": {
+        "business_objective": "security-policy-specialist: NIST SP 800-63B authentication security guidance",
+        "stakeholder_owner": "Derived from rule category (security) mapping to IT Security Department",
+        "regulatory_rationale": "security-policy-specialist: NIST SP 800-63B Section 5.2.2 and PCI DSS 8.1.6"
+      }
+    },
+    {
+      "rule_id": "AUTH-BR-002",
+      "rule_name": "Failed Attempt Counter Reset",
+      "rule_description": "Failed login attempt counter resets to 0 after successful login",
+      "rule_category": "security",
+      "business_process": "User Authentication",
+      "source_location": "AuthenticationManager.java:172",
+      "source_type": "source_code",
+      "source_evidence": "if (authenticationSuccess) { resetFailedAttempts(userId); }",
+      "confidence_score": 5,
+      "confidence_rationale": "Explicit code confirms counter reset",
+      "business_impact": "Prevents permanent lockout for users who occasionally mistype passwords",
+      "validation_status": "user_confirmed",
+
+      "business_objective": "Allow users who successfully authenticate to start with clean slate, preventing accumulation of old failed attempts that could lead to unnecessary lockouts",
+      "business_terminology": "Once a user successfully logs in, the system forgets all previous failed login attempts. This means occasional typos or forgotten passwords won't accumulate over time and eventually lock out the user.",
+      "stakeholder_owner": {
+        "business_owner": "IT Security Department",
+        "technical_owner": "Authentication Services Team",
+        "decision_authority": "IT Security Department"
+      },
+      "regulatory_rationale": "Supports NIST SP 800-63B usability requirements by not penalizing users for historical failed attempts after successful authentication",
+      "enhancement_sources": {
+        "business_objective": "security-policy-specialist: Balance security with usability",
+        "stakeholder_owner": "Derived from rule category (security)"
+      }
+    },
+    {
+      "rule_id": "AUTH-BR-005",
+      "rule_name": "Password Complexity Requirements",
+      "rule_description": "Passwords must be at least 8 characters and include uppercase, lowercase, number, and special character",
+      "rule_category": "validation",
+      "business_process": "Password Management",
+      "source_location": "PasswordValidator.java:45",
+      "source_type": "source_code",
+      "source_evidence": "Pattern.compile(\"^(?=.*[a-z])(?=.*[A-Z])(?=.*\\\\d)(?=.*[@$!%*?&])[A-Za-z\\\\d@$!%*?&]{8,}$\")",
+      "confidence_score": 5,
+      "confidence_rationale": "Explicit regex pattern confirms all complexity requirements",
+      "business_impact": "Enforces strong password policy to prevent easy-to-guess passwords",
+      "regulatory_context": "NIST SP 800-63B password requirements",
+      "compliance_requirements": ["NIST SP 800-63B", "GDPR Data Protection"],
+      "validation_status": "user_confirmed",
+
+      "business_objective": "Enforce strong password creation to protect customer accounts from compromise due to weak, easily guessable passwords. Reduces risk of account takeover and unauthorized access to sensitive customer data.",
+      "business_terminology": "When creating a new password, users must include a mix of uppercase letters (A-Z), lowercase letters (a-z), numbers (0-9), and special characters (!@#$%, etc.) with a minimum length of 8 characters. This makes passwords harder to guess and protects accounts from hackers.",
+      "stakeholder_owner": {
+        "business_owner": "IT Security Department",
+        "technical_owner": "Authentication Services Team",
+        "decision_authority": "IT Security Department with Data Protection Officer approval"
+      },
+      "regulatory_rationale": "Implements NIST SP 800-63B Section 5.1.1 password composition requirements. Supports GDPR Article 32 requirement for appropriate technical measures to ensure data security.",
+      "enhancement_sources": {
+        "business_objective": "security-policy-specialist: Password strength requirements",
+        "stakeholder_owner": "Derived from rule category (validation) and security context",
+        "regulatory_rationale": "security-policy-specialist: NIST SP 800-63B Section 5.1.1 and GDPR Article 32"
+      }
+    },
+    {
+      "rule_id": "AUTH-BR-006",
+      "rule_name": "Password Hashing with bcrypt",
+      "rule_description": "Passwords must be hashed using bcrypt algorithm with cost factor 12 before database storage",
+      "rule_category": "security",
+      "business_process": "Password Management",
+      "source_location": "PasswordHasher.java:28",
+      "source_type": "source_code",
+      "source_evidence": "BCrypt.hashpw(password, BCrypt.gensalt(12))",
+      "confidence_score": 5,
+      "confidence_rationale": "Explicit use of bcrypt library with cost factor",
+      "business_impact": "Protects passwords even if database is compromised",
+      "regulatory_context": "Industry best practice for password storage",
+      "compliance_requirements": ["NIST SP 800-63B", "OWASP Secure Coding", "PCI DSS 8.2.1"],
+      "validation_status": "user_confirmed",
+
+      "business_objective": "Ensure customer passwords remain secure even if database is breached. One-way hashing prevents password recovery by attackers who gain database access, protecting customer accounts across all systems where they may reuse passwords.",
+      "business_terminology": "The system never stores actual passwords. Instead, it converts passwords into a scrambled format (hash) using a secure algorithm that cannot be reversed. Even if someone steals the database, they cannot recover the original passwords.",
+      "stakeholder_owner": {
+        "business_owner": "Data Protection Officer and IT Security Department",
+        "technical_owner": "Authentication Services Team",
+        "decision_authority": "Data Protection Officer (DPO)"
+      },
+      "regulatory_rationale": "Implements NIST SP 800-63B Section 5.1.1.2 requirement for approved password hashing algorithms. Aligns with GDPR Article 32 requirement for pseudonymization and encryption of personal data. Satisfies PCI DSS Requirement 8.2.1 for rendering authentication credentials unreadable.",
+      "enhancement_sources": {
+        "business_objective": "security-policy-specialist: Password storage security best practices",
+        "stakeholder_owner": "Data Protection Officer ownership derived from GDPR compliance requirements",
+        "regulatory_rationale": "security-policy-specialist: NIST, OWASP, PCI DSS password storage standards"
+      }
+    },
+    {
+      "rule_id": "AUTH-BR-010",
+      "rule_name": "Session Creation After Successful Login",
+      "rule_description": "Upon successful credential validation, a new session token must be created with 30-minute expiration and stored in session database",
+      "rule_category": "integration",
+      "business_process": "Session Management",
+      "source_location": "SessionManager.java:112",
+      "source_type": "source_code",
+      "source_evidence": "Session session = sessionRepository.create(userId, LocalDateTime.now().plusMinutes(30));",
+      "confidence_score": 5,
+      "confidence_rationale": "Explicit session creation with timeout configuration",
+      "business_impact": "Enables stateful user sessions for authenticated requests without re-authentication",
+      "validation_status": "user_confirmed",
+
+      "business_objective": "Enable seamless user experience by maintaining authentication state across multiple requests without requiring users to re-enter credentials for each action. Balances usability with security through time-limited sessions.",
+      "business_terminology": "After successfully logging in, the system gives the user a temporary access pass (session) that lasts for 30 minutes. This allows the user to navigate the application and perform actions without logging in again for each page. The session automatically expires after 30 minutes of inactivity for security.",
+      "stakeholder_owner": {
+        "business_owner": "User Experience Team and IT Security Department (shared)",
+        "technical_owner": "Authentication Services Team",
+        "decision_authority": "IT Security Department (for timeout settings)"
+      },
+      "regulatory_rationale": "Supports NIST SP 800-63B Section 7.2 session management requirements including timeout for inactivity. Aligns with SOC 2 CC6.1 for logical access security.",
+      "enhancement_sources": {
+        "business_objective": "Derived from rule category (integration) and session management context",
+        "stakeholder_owner": "Shared ownership: UX team (experience) and IT Security (timeout policy)",
+        "regulatory_rationale": "security-policy-specialist: NIST SP 800-63B Section 7.2 and SOC 2 CC6.1"
+      }
+    },
+    {
+      "rule_id": "AUTH-BR-011",
+      "rule_name": "Session Timeout and Renewal",
+      "rule_description": "Sessions expire after 30 minutes of inactivity. Active sessions renew timeout automatically with each request.",
+      "rule_category": "security",
+      "business_process": "Session Management",
+      "source_location": "SessionManager.java:156",
+      "source_type": "source_code",
+      "source_evidence": "if (session.isExpired()) { sessionRepository.delete(session); } else { session.renewTimeout(); }",
+      "confidence_score": 4,
+      "confidence_rationale": "Clear logic from code structure, implementation confirms timeout renewal",
+      "business_impact": "Protects inactive sessions from unauthorized use while minimizing user re-authentication burden",
+      "validation_status": "user_confirmed",
+
+      "business_objective": "Automatically terminate inactive user sessions to prevent unauthorized access if user walks away from computer, while keeping active users logged in for continuous work without interruption",
+      "business_terminology": "If a user is actively using the application, their session stays alive and they remain logged in. However, if the user is inactive for 30 minutes (no clicks, no page loads), the system automatically logs them out to protect their account if they forgot to log out or left their computer unattended.",
+      "stakeholder_owner": {
+        "business_owner": "IT Security Department",
+        "technical_owner": "Authentication Services Team",
+        "decision_authority": "IT Security Department (for timeout duration)"
+      },
+      "regulatory_rationale": "Implements NIST SP 800-63B Section 7.2 requirement for reauthentication after period of inactivity. Supports SOC 2 CC6.1 logical access security controls for automatic session termination.",
+      "enhancement_sources": {
+        "business_objective": "security-policy-specialist: Session timeout security requirements",
+        "stakeholder_owner": "Derived from rule category (security) and session management",
+        "regulatory_rationale": "security-policy-specialist: NIST SP 800-63B Section 7.2 and SOC 2"
+      }
+    },
+    {
+      "rule_id": "AUTH-BR-020",
+      "rule_name": "LDAP Authentication for Corporate Users",
+      "rule_description": "Corporate user accounts must authenticate against enterprise LDAP directory using LDAPS protocol",
+      "rule_category": "integration",
+      "business_process": "User Authentication",
+      "source_location": "AuthenticationManager.java:89",
+      "source_type": "source_code",
+      "source_evidence": "if (user.isCorporateAccount()) { ldapService.authenticate(username, password); }",
+      "confidence_score": 5,
+      "confidence_rationale": "Explicit LDAP integration for corporate accounts",
+      "business_impact": "Enables single sign-on for corporate users, centralizes credential management",
+      "regulatory_context": "Enterprise SSO policy requirement",
+      "compliance_requirements": ["Enterprise SSO Policy", "LDAP Protocol RFC 4511"],
+      "validation_status": "user_confirmed",
+      "user_feedback": "LDAP authentication is required by our enterprise security policy, not just implementation choice",
+
+      "business_objective": "Enable corporate employees to use their existing company credentials (same username/password they use for email, network login, etc.) to access the application. Centralizes user management in IT department and ensures consistent security policies across all corporate systems.",
+      "business_terminology": "Corporate employees log in using their company credentials (the same ones they use for email and network access). The system checks these credentials against the company's central user directory (LDAP) rather than maintaining separate passwords. This provides single sign-on convenience and centralized security management.",
+      "stakeholder_owner": {
+        "business_owner": "Enterprise IT Department",
+        "technical_owner": "Authentication Services Team and Directory Services Team (shared)",
+        "decision_authority": "Enterprise IT Architecture (mandated requirement)"
+      },
+      "regulatory_rationale": "Enterprise Security Policy mandates LDAP authentication for all corporate users to ensure centralized credential management, consistent password policies, and compliance with SOC 2 CC6.1 logical access requirements. LDAPS (LDAP over SSL) required for encryption of credentials in transit per Enterprise Network Security Policy.",
+      "enhancement_sources": {
+        "business_objective": "User feedback: Enterprise security policy mandate for centralized authentication",
+        "stakeholder_owner": "Enterprise IT Architecture (from compliance_requirements field)",
+        "regulatory_rationale": "User feedback: Enterprise SSO Policy requirement and security-policy-specialist for SOC 2 context"
+      }
+    }
+  ],
+
+  "business_processes": [
+    {
+      "process_id": "BP-AUTH-001",
+      "process_name": "User Authentication and Session Lifecycle",
+      "process_description": "Complete workflow for user login, session creation, and session management. Ensures only authorized users access the system while maintaining seamless user experience through persistent sessions.",
+
+      "process_steps": [
+        {
+          "step_number": 1,
+          "step_name": "User Credential Validation",
+          "step_description": "System validates username and password against stored credentials (or LDAP for corporate users). Failed attempts are tracked to prevent brute-force attacks.",
+          "rules_applied": ["AUTH-BR-001", "AUTH-BR-002", "AUTH-BR-020"],
+          "business_rationale": "Ensures only authorized users access the system and protects against automated password guessing attacks",
+          "stakeholder_value": "Protects customer data and prevents unauthorized access while allowing legitimate users to authenticate efficiently"
+        },
+        {
+          "step_number": 2,
+          "step_name": "Session Token Creation",
+          "step_description": "Upon successful validation, system creates secure session token with 30-minute expiration and stores in session database",
+          "rules_applied": ["AUTH-BR-010"],
+          "business_rationale": "Enables stateful user interactions without re-authentication for each request",
+          "stakeholder_value": "Improves user experience through persistent login sessions while maintaining security"
+        },
+        {
+          "step_number": 3,
+          "step_name": "Session Lifecycle Management",
+          "step_description": "System monitors session validity, handles timeouts (30 minutes inactivity), and manages session renewal on user activity",
+          "rules_applied": ["AUTH-BR-011"],
+          "business_rationale": "Balances security (automatic logout of inactive sessions) with usability (session renewal on activity)",
+          "stakeholder_value": "Protects inactive sessions from unauthorized use while minimizing user re-authentication burden"
+        }
+      ],
+
+      "total_rules": 5,
+      "process_owner": "IT Security Department and Authentication Services Team",
+      "process_priority": "Critical",
+      "regulatory_compliance": ["NIST SP 800-63B", "SOC 2 Access Control", "Enterprise SSO Policy"],
+
+      "dependencies": {
+        "upstream_processes": [],
+        "downstream_processes": ["BP-PROFILE-001", "BP-AUTHORIZATION-001"]
+      }
+    },
+    {
+      "process_id": "BP-PASSWORD-001",
+      "process_name": "Password Management and Validation",
+      "process_description": "Workflow for password policy enforcement, password validation, hashing, and secure storage. Ensures all passwords meet security requirements and are stored securely.",
+
+      "process_steps": [
+        {
+          "step_number": 1,
+          "step_name": "Password Complexity Validation",
+          "step_description": "System validates password meets minimum complexity requirements (8+ characters, uppercase, lowercase, number, special character)",
+          "rules_applied": ["AUTH-BR-005"],
+          "business_rationale": "Enforces strong password policy to prevent easy-to-guess passwords that could be cracked by attackers",
+          "stakeholder_value": "Protects customer accounts from unauthorized access due to weak passwords"
+        },
+        {
+          "step_number": 2,
+          "step_name": "Password Hashing and Storage",
+          "step_description": "System hashes password using bcrypt algorithm (cost factor 12) before storing in database. Original password never stored.",
+          "rules_applied": ["AUTH-BR-006"],
+          "business_rationale": "Protects passwords even if database is compromised through one-way hashing that cannot be reversed",
+          "stakeholder_value": "Ensures customer credentials remain secure even in database breach scenarios"
+        }
+      ],
+
+      "total_rules": 2,
+      "process_owner": "IT Security Department and Data Protection Officer",
+      "process_priority": "Critical",
+      "regulatory_compliance": ["NIST SP 800-63B", "GDPR Data Protection", "PCI DSS 8.2.1"],
+
+      "dependencies": {
+        "upstream_processes": ["BP-REGISTRATION-001"],
+        "downstream_processes": ["BP-AUTH-001"]
+      }
+    }
+  ],
+
+  "glossary": {
+    "business_terms": [
+      {
+        "term": "Session Token",
+        "definition": "A unique identifier generated by the system after successful user login, allowing the user to access protected resources without re-authenticating for each request",
+        "technical_equivalent": "JWT (JSON Web Token) or session ID stored in session database",
+        "business_context": "Enables seamless user experience - user logs in once and can navigate the entire application for 30 minutes without entering password again. Similar to a temporary access badge that expires."
+      },
+      {
+        "term": "Account Lockout",
+        "definition": "Temporary suspension of login capability for a user account after repeated failed authentication attempts",
+        "technical_equivalent": "failedAttempts >= MAX_FAILED_ATTEMPTS → lockAccount() for LOCKOUT_DURATION",
+        "business_context": "Security measure to prevent automated password guessing attacks (brute-force). Temporarily blocks account for 15 minutes after 5 failed attempts, then allows user to try again."
+      },
+      {
+        "term": "Password Hashing",
+        "definition": "One-way cryptographic transformation of a password into a scrambled format that cannot be reversed to recover the original password",
+        "technical_equivalent": "bcrypt algorithm with cost factor 12",
+        "business_context": "Protects customer passwords even if someone steals the database. The system never stores actual passwords, only hashed versions. This prevents password recovery by attackers."
+      },
+      {
+        "term": "Session Timeout",
+        "definition": "Automatic expiration of a user's login session after a period of inactivity (30 minutes)",
+        "technical_equivalent": "session.expiresAt < currentTime → session invalidated",
+        "business_context": "Security feature that logs users out automatically if they leave their computer unattended. Prevents unauthorized access if user forgets to log out. Active users remain logged in indefinitely as long as they continue using the system."
+      },
+      {
+        "term": "LDAP Authentication",
+        "definition": "Verification of user credentials against a centralized enterprise directory server using LDAP protocol",
+        "technical_equivalent": "ldapService.authenticate(username, password) against enterprise Active Directory",
+        "business_context": "Allows corporate employees to use their company credentials (same as email/network login) for single sign-on. Centralizes user management in IT department and ensures consistent password policies."
+      },
+      {
+        "term": "Brute-Force Attack",
+        "definition": "Automated attempt to guess user passwords by trying many combinations in rapid succession",
+        "technical_equivalent": "Automated scripts sending multiple authentication requests with different password guesses",
+        "business_context": "Account lockout rule (AUTH-BR-001) protects against this attack type by limiting login attempts and introducing delays, making password guessing impractical for attackers."
+      }
+    ],
+    "technical_terms_translated": [
+      {
+        "technical_term": "AuthenticationManager.authenticateUser()",
+        "business_description": "System component that validates user credentials (username and password) against stored values or LDAP directory"
+      },
+      {
+        "technical_term": "SessionManager.create()",
+        "business_description": "System component that generates and stores session tokens after successful login"
+      },
+      {
+        "technical_term": "PasswordValidator.validate()",
+        "business_description": "System component that checks if password meets complexity requirements (length, character types)"
+      },
+      {
+        "technical_term": "BCrypt.hashpw()",
+        "business_description": "Security function that converts password into one-way hash for secure storage"
+      },
+      {
+        "technical_term": "session.isExpired()",
+        "business_description": "System check to determine if session timeout period (30 minutes) has elapsed"
+      }
+    ]
+  },
+
+  "stakeholder_analysis": {
+    "stakeholder_groups": [
+      {
+        "stakeholder_id": "SH-001",
+        "stakeholder_name": "IT Security Department",
+        "stakeholder_type": "Business Owner",
+        "responsibilities": [
+          "Define and maintain authentication security policies",
+          "Approve changes to login, password, and session management rules",
+          "Monitor security compliance and incident response for authentication vulnerabilities",
+          "Set security parameters (lockout duration, session timeout, password complexity)"
+        ],
+        "affected_processes": ["BP-AUTH-001", "BP-PASSWORD-001"],
+        "affected_rules": ["AUTH-BR-001", "AUTH-BR-002", "AUTH-BR-005", "AUTH-BR-006", "AUTH-BR-011"],
+        "decision_authority": "High - Can approve security rule changes and set security policy parameters",
+        "communication_needs": "Monthly security review meetings, immediate notification of security incidents, change approval workflow for authentication rule modifications"
+      },
+      {
+        "stakeholder_id": "SH-002",
+        "stakeholder_name": "Authentication Services Team",
+        "stakeholder_type": "Technical Owner",
+        "responsibilities": [
+          "Implement and maintain authentication services (login, session management)",
+          "Troubleshoot authentication failures and user lockout issues",
+          "Deploy authentication rule updates and security patches",
+          "Monitor authentication service performance and availability"
+        ],
+        "affected_processes": ["BP-AUTH-001", "BP-PASSWORD-001"],
+        "affected_rules": ["AUTH-BR-001", "AUTH-BR-002", "AUTH-BR-005", "AUTH-BR-006", "AUTH-BR-010", "AUTH-BR-011", "AUTH-BR-020"],
+        "decision_authority": "Medium - Can propose technical improvements and implement approved changes",
+        "communication_needs": "Daily operational updates, change notifications before deployments, incident reports for authentication outages"
+      },
+      {
+        "stakeholder_id": "SH-003",
+        "stakeholder_name": "Data Protection Officer (DPO)",
+        "stakeholder_type": "Regulatory Authority",
+        "responsibilities": [
+          "Ensure GDPR compliance for password storage and user data protection",
+          "Approve password hashing algorithms and data protection measures",
+          "Oversee data breach response for credential compromise",
+          "Review privacy impact of authentication rule changes"
+        ],
+        "affected_processes": ["BP-PASSWORD-001"],
+        "affected_rules": ["AUTH-BR-005", "AUTH-BR-006"],
+        "decision_authority": "High - Must approve any changes affecting personal data protection (passwords)",
+        "communication_needs": "Quarterly compliance reviews, immediate notification of data breaches, approval workflow for changes to password handling"
+      },
+      {
+        "stakeholder_id": "SH-004",
+        "stakeholder_name": "Customer Service Department",
+        "stakeholder_type": "Affected Stakeholder",
+        "responsibilities": [
+          "Handle user inquiries about login issues and account lockouts",
+          "Manually unlock user accounts when customers contact support",
+          "Explain password requirements and authentication policies to customers",
+          "Escalate authentication system outages to technical teams"
+        ],
+        "affected_processes": ["BP-AUTH-001", "BP-PASSWORD-001"],
+        "affected_rules": ["AUTH-BR-001", "AUTH-BR-005"],
+        "decision_authority": "Low - No decision authority, but impacted by rule changes and must communicate them to customers",
+        "communication_needs": "Advance notice of authentication policy changes (for customer communication), training on new authentication procedures, access to admin tools for account unlocking"
+      },
+      {
+        "stakeholder_id": "SH-005",
+        "stakeholder_name": "Enterprise IT Department",
+        "stakeholder_type": "Business Owner",
+        "responsibilities": [
+          "Maintain enterprise LDAP directory for corporate user authentication",
+          "Define enterprise SSO policy and LDAP integration requirements",
+          "Manage corporate user provisioning and deprovisioning",
+          "Ensure LDAP availability and performance for authentication services"
+        ],
+        "affected_processes": ["BP-AUTH-001"],
+        "affected_rules": ["AUTH-BR-020"],
+        "decision_authority": "High - Mandates LDAP authentication for corporate users via Enterprise SSO Policy",
+        "communication_needs": "Coordination on LDAP directory changes, notification of LDAP outages, collaboration on corporate user authentication requirements"
+      },
+      {
+        "stakeholder_id": "SH-006",
+        "stakeholder_name": "User Experience Team",
+        "stakeholder_type": "Affected Stakeholder",
+        "responsibilities": [
+          "Design user-friendly login and password creation interfaces",
+          "Balance security requirements with usability in authentication flows",
+          "Monitor user feedback on authentication experience (lockouts, password complexity)",
+          "Propose improvements to reduce authentication friction"
+        ],
+        "affected_processes": ["BP-AUTH-001", "BP-PASSWORD-001"],
+        "affected_rules": ["AUTH-BR-001", "AUTH-BR-005", "AUTH-BR-010", "AUTH-BR-011"],
+        "decision_authority": "Low - Can propose usability improvements but must align with security requirements",
+        "communication_needs": "User research findings on authentication pain points, collaboration on authentication UI design, notification of security requirement changes affecting user experience"
+      }
+    ],
+
+    "stakeholder_matrix": {
+      "business_owners": [
+        "IT Security Department",
+        "Data Protection Officer",
+        "Enterprise IT Department"
+      ],
+      "technical_owners": [
+        "Authentication Services Team",
+        "Directory Services Team"
+      ],
+      "regulatory_authorities": [
+        "Data Protection Officer (DPO)"
+      ],
+      "affected_stakeholders": [
+        "Customer Service Department",
+        "User Experience Team",
+        "End Users (Customers and Corporate Employees)"
+      ]
+    }
+  },
+
+  "summary": {
+    "total_rules_enhanced": 7,
+    "total_business_processes": 2,
+    "total_stakeholder_groups": 6,
+    "glossary_terms": 11,
+    "critical_processes": 2,
+    "high_confidence_rules": 6,
+    "regulatory_compliance_areas": [
+      "NIST SP 800-63B",
+      "SOC 2 Access Control",
+      "GDPR Data Protection",
+      "PCI DSS 8.2.1",
+      "Enterprise SSO Policy",
+      "OWASP Secure Coding"
+    ]
+  },
+
+  "recommendations": [
+    "All 7 rules successfully enhanced with business context and stakeholder ownership - ready for stakeholder presentation",
+    "Business processes BP-AUTH-001 and BP-PASSWORD-001 are both Critical priority - prioritize in migration planning and ensure zero downtime during transition",
+    "IT Security Department and Data Protection Officer should jointly review enhanced security and password rules (AUTH-BR-001, AUTH-BR-005, AUTH-BR-006) for final approval",
+    "Customer Service Department requires training on enhanced authentication policies before migration - particularly account lockout procedures and password complexity requirements",
+    "Consider stakeholder workshop with IT Security, DPO, and UX Team to validate business objectives and discuss potential usability improvements (e.g., adjusting lockout duration from 15 to 10 minutes)",
+    "High confidence in all technical rules (6 rules at score 5, 1 rule at score 4) - technical accuracy validated in Phase 3",
+    "Enterprise LDAP integration (AUTH-BR-020) flagged as mandatory requirement - ensure LDAP availability and failover procedures in VNRM migration design (Phase 5)",
+    "Glossary successfully translates 6 business terms and 5 technical terms - suitable for stakeholder documentation and training materials"
+  ]
+}

@@ -1,0 +1,260 @@
+{
+  "feature": "NBM",
+  "timestamp": "2025-12-15T12:30:00Z",
+  "discovery_method": {
+    "module_references_available": true,
+    "module_folders_used": ["/modules/rnb", "/modules/tnb"],
+    "keyword_search_performed": true,
+    "keywords_used": [
+      "Rufnummernblock",
+      "RNB",
+      "Eigentuemerwechsel",
+      "Number Block",
+      "KCODE",
+      "assignment",
+      "p_rnb",
+      "pack_body_rnb"
+    ],
+    "dependency_extraction_depth": 2
+  },
+  "summary": {
+    "total_files_discovered": 47,
+    "high_relevance_files": 12,
+    "medium_relevance_files": 18,
+    "low_relevance_files": 17,
+    "dependency_discovered_files": 8,
+    "excluded_files": 3
+  },
+  "files": [
+    {
+      "file_path": "/rnvs/database/packages/pack_body_rnb.sql",
+      "language": "PL/SQL",
+      "file_type": "Package Body",
+      "relevance_score": 95,
+      "classification": "high",
+      "discovery_method": "module_reference + keyword_search",
+      "keyword_matches": ["Rufnummernblock", "RNB", "assignment", "p_rnb", "KCODE", "Eigentuemerwechsel"],
+      "scoring_breakdown": {
+        "module_reference": 30,
+        "component_match": 25,
+        "keyword_density": 25,
+        "language_priority": 10,
+        "exclusion_penalty": 0,
+        "dependency_indicator": 5
+      },
+      "dependencies": [
+        "p_tnb",
+        "pack_body_tnb.sql",
+        "rnb_validation.sql",
+        "bereichs_info_utils.sql"
+      ],
+      "line_count": 2847,
+      "reason": "Core PL/SQL package body for RNB management. Listed in /modules/rnb/components.txt, matches all major keywords from feature definition, contains KCODE processing logic (20-26)."
+    },
+    {
+      "file_path": "/rnvs/components/RnvsRnbManager.cpp",
+      "language": "C++",
+      "file_type": "Manager Class",
+      "relevance_score": 90,
+      "classification": "high",
+      "discovery_method": "module_reference",
+      "keyword_matches": ["RNB", "assignment", "Number Block"],
+      "scoring_breakdown": {
+        "module_reference": 30,
+        "component_match": 25,
+        "keyword_density": 15,
+        "language_priority": 10,
+        "exclusion_penalty": 0,
+        "dependency_indicator": 10
+      },
+      "dependencies": [
+        "RnvsTnbManager.hpp",
+        "BaseManager.hpp",
+        "RnvsBereichsInfo.hpp"
+      ],
+      "line_count": 1523,
+      "reason": "C++ manager class coordinating RNB operations. Expected component from feature definition scope. Listed in /modules/rnb/components.txt."
+    },
+    {
+      "file_path": "/rnvs/database/packages/p_rnb.pks",
+      "language": "PL/SQL",
+      "file_type": "Package Specification",
+      "relevance_score": 88,
+      "classification": "high",
+      "discovery_method": "module_reference",
+      "keyword_matches": ["RNB", "p_rnb"],
+      "scoring_breakdown": {
+        "module_reference": 30,
+        "component_match": 25,
+        "keyword_density": 15,
+        "language_priority": 10,
+        "exclusion_penalty": 0,
+        "dependency_indicator": 8
+      },
+      "dependencies": [],
+      "line_count": 456,
+      "reason": "PL/SQL package specification defining public interface for RNB operations. Listed in /modules/rnb/packages.txt."
+    },
+    {
+      "file_path": "/rnvs/database/scripts/rnb_validation.sql",
+      "language": "SQL",
+      "file_type": "SQL Script",
+      "relevance_score": 60,
+      "classification": "medium",
+      "discovery_method": "dependency",
+      "keyword_matches": ["RNB", "validation"],
+      "scoring_breakdown": {
+        "module_reference": 0,
+        "component_match": 10,
+        "keyword_density": 15,
+        "language_priority": 10,
+        "exclusion_penalty": 0,
+        "dependency_indicator": 0
+      },
+      "dependencies": [],
+      "line_count": 234,
+      "reason": "SQL validation script for RNB business rules. Discovered as dependency of pack_body_rnb.sql (executed via @rnb_validation.sql statement)."
+    },
+    {
+      "file_path": "/rnvs/tcl/lib/rnb_utils.tcl",
+      "language": "TCL",
+      "file_type": "Utility Library",
+      "relevance_score": 55,
+      "classification": "medium",
+      "discovery_method": "keyword_search",
+      "keyword_matches": ["RNB", "assignment"],
+      "scoring_breakdown": {
+        "module_reference": 0,
+        "component_match": 10,
+        "keyword_density": 15,
+        "language_priority": 5,
+        "exclusion_penalty": 0,
+        "dependency_indicator": 0
+      },
+      "dependencies": [
+        "common_utils.tcl"
+      ],
+      "line_count": 187,
+      "reason": "TCL utility library for RNB helper functions. Found via keyword search, contains RNB formatting and validation utilities."
+    },
+    {
+      "file_path": "/rnvs/components/RnvsBereichsInfo.cpp",
+      "language": "C++",
+      "file_type": "Component Class",
+      "relevance_score": 75,
+      "classification": "high",
+      "discovery_method": "keyword_search + dependency",
+      "keyword_matches": ["Bereichsinformation", "RNB", "allocation"],
+      "scoring_breakdown": {
+        "module_reference": 0,
+        "component_match": 15,
+        "keyword_density": 20,
+        "language_priority": 10,
+        "exclusion_penalty": 0,
+        "dependency_indicator": 10
+      },
+      "dependencies": [
+        "BaseComponent.hpp"
+      ],
+      "line_count": 892,
+      "reason": "C++ component managing area allocation information (Bereichsinformation). Expected component from feature definition, discovered via keyword search and as dependency of RnvsRnbManager.cpp."
+    },
+    {
+      "file_path": "/rnvs/database/packages/pack_body_tnb.sql",
+      "language": "PL/SQL",
+      "file_type": "Package Body",
+      "relevance_score": 68,
+      "classification": "medium",
+      "discovery_method": "dependency",
+      "keyword_matches": ["TNB", "operator"],
+      "scoring_breakdown": {
+        "module_reference": 0,
+        "component_match": 10,
+        "keyword_density": 15,
+        "language_priority": 10,
+        "exclusion_penalty": 0,
+        "dependency_indicator": 8
+      },
+      "dependencies": [
+        "p_tnb"
+      ],
+      "line_count": 1654,
+      "reason": "PL/SQL package body for TNB (operator) management. Discovered as dependency of pack_body_rnb.sql (RNB operations validate operator eligibility via TNB)."
+    },
+    {
+      "file_path": "/rnvs/tcl/rnb/kcode_processor.tcl",
+      "language": "TCL",
+      "file_type": "Script",
+      "relevance_score": 72,
+      "classification": "high",
+      "discovery_method": "keyword_search",
+      "keyword_matches": ["KCODE", "RNB", "assignment", "20", "21"],
+      "scoring_breakdown": {
+        "module_reference": 0,
+        "component_match": 15,
+        "keyword_density": 25,
+        "language_priority": 5,
+        "exclusion_penalty": 0,
+        "dependency_indicator": 5
+      },
+      "dependencies": [
+        "rnb_utils.tcl",
+        "SqlStoPro p_rnb.process_kcode"
+      ],
+      "line_count": 567,
+      "reason": "TCL script processing BNetzA KCODE messages (20-26) for RNB operations. High keyword density for KCODE-related terms from feature definition."
+    },
+    {
+      "file_path": "/rnvs/database/scripts/migration_11digit.sql",
+      "language": "SQL",
+      "file_type": "Migration Script",
+      "relevance_score": 25,
+      "classification": "low",
+      "discovery_method": "keyword_search",
+      "keyword_matches": ["RNB", "migration"],
+      "scoring_breakdown": {
+        "module_reference": 0,
+        "component_match": 0,
+        "keyword_density": 5,
+        "language_priority": 5,
+        "exclusion_penalty": 0,
+        "dependency_indicator": 0
+      },
+      "dependencies": [],
+      "line_count": 123,
+      "reason": "11-digit migration script. Low relevance - contains RNB references but migration is excluded from feature scope per feature-definition.json."
+    }
+  ],
+  "excluded_files": [
+    {
+      "file_path": "/rnvs/database/packages/pack_body_fusion.sql",
+      "reason": "Matches excluded_scope: 'fusion operations (KCODE 60/61)'",
+      "keyword_matches": ["RNB", "fusion", "KCODE"],
+      "would_be_score": 45
+    },
+    {
+      "file_path": "/rnvs/tcl/fusion/fusion_manager.tcl",
+      "reason": "Matches excluded_scope: 'fusion operations'",
+      "keyword_matches": ["RNB", "fusion"],
+      "would_be_score": 38
+    },
+    {
+      "file_path": "/rnvs/components/RnvsFusionProcessor.cpp",
+      "reason": "Matches excluded_scope: 'fusion operations'",
+      "keyword_matches": ["RNB", "fusion", "KCODE", "60"],
+      "would_be_score": 52
+    }
+  ],
+  "unresolved_dependencies": [
+    {
+      "dependency_name": "external_bnetz_gateway",
+      "referenced_by": ["pack_body_rnb.sql", "kcode_processor.tcl"],
+      "reason": "External system integration - BNetzA Gateway not in RNVS codebase (expected external dependency)"
+    },
+    {
+      "dependency_name": "crm_t_interface",
+      "referenced_by": ["RnvsRnbManager.cpp"],
+      "reason": "External system integration - CRM-T system interface (expected external dependency)"
+    }
+  ]
+}

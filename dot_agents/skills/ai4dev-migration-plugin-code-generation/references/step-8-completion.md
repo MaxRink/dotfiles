@@ -1,0 +1,708 @@
+# Step 8 — Completion
+
+Final verification and completion report.
+
+## Overview
+
+Completion step performs final checks and reports results:
+
+- Run full test suite one final time
+- Verify all tests pass
+- Count final metrics
+- Update final state
+- Print completion report
+
+## Prerequisites
+
+All Polish step tasks must have status `passed`.
+
+**Load deferred references:**
+
+- Read `references/bdd-tdd-documentation.md` before generating traceability matrix and living documentation
+
+## Generate Traceability Matrix
+
+Before final verification, generate comprehensive traceability documentation.
+
+### Extract Traceability Data
+
+```text
+1. Extract all BR IDs from spec artifacts:
+   - Read functional-requirements.md (new structure) or requirements.md (old structure)
+   - Parse traceability matrix
+
+2. Find all BDD scenarios with @BR tags:
+   - Parse all .feature files
+   - Extract @BR-XXX and @FR-XXX tags
+   - Record scenario names, status, and file locations
+
+3. Find all unit tests with BR references:
+   - Parse test files for @DisplayName with "BR-XXX" (Java)
+   - Parse test files for "BR-XXX" in docstrings (Python)
+   - Record test names and locations
+
+4. Find implementation code with BR documentation:
+   - Parse JavaDoc for @see BR-XXX (Java)
+   - Parse docstrings for BR references (Python)
+   - Record class/method locations
+```
+
+### Generate Traceability Matrix JSON
+
+Create `.migration/<feature>/code-generation/traceability-matrix.json`:
+
+```json
+{
+  "traceability_matrix": {
+    "generated_at": "2026-04-13T11:06:30Z",
+    "feature": "user-registration",
+    "coverage": {
+      "business_rules": {
+        "total": 5,
+        "covered": 5,
+        "percentage": 100
+      },
+      "functional_requirements": {
+        "total": 8,
+        "covered": 8,
+        "percentage": 100
+      },
+      "bdd_scenarios": {
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "percentage": 100
+      },
+      "unit_tests": {
+        "total": 45,
+        "passed": 45,
+        "failed": 0,
+        "percentage": 100
+      }
+    },
+    "mappings": [
+      {
+        "br_id": "BR-001",
+        "fr_ids": ["FR-001"],
+        "bdd_scenarios": [
+          {
+            "feature": "features/auth/user-registration.feature",
+            "scenario": "Valid email should be accepted",
+            "status": "passed",
+            "tags": ["@BR-001", "@FR-001", "@smoke"]
+          }
+        ],
+        "unit_tests": [
+          {
+            "test_class": "EmailValidatorTest",
+            "test_method": "validEmailShouldPassValidation",
+            "status": "passed",
+            "location": "src/test/java/.../EmailValidatorTest.java:15"
+          }
+        ],
+        "implementation": [
+          {
+            "class": "EmailValidator",
+            "method": "validate",
+            "location": "src/main/java/.../EmailValidator.java:20"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Generate Traceability Matrix HTML
+
+Create `.migration/<feature>/code-generation/traceability-matrix.html`:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Traceability Matrix - User Registration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .coverage-100 { background: #d4edda; color: #155724; }
+        .passed { color: green; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Traceability Matrix</h1>
+    <p>Generated: 2026-04-13 11:06:30</p>
+
+    <section>
+        <h2>Coverage Summary</h2>
+        <table>
+            <tr>
+                <th>Category</th>
+                <th>Total</th>
+                <th>Covered</th>
+                <th>Coverage</th>
+            </tr>
+            <tr class="coverage-100">
+                <td>Business Rules</td>
+                <td>5</td>
+                <td>5</td>
+                <td>100%</td>
+            </tr>
+            <tr class="coverage-100">
+                <td>Functional Requirements</td>
+                <td>8</td>
+                <td>8</td>
+                <td>100%</td>
+            </tr>
+            <tr class="coverage-100">
+                <td>BDD Scenarios</td>
+                <td>12</td>
+                <td>12 passed</td>
+                <td>100%</td>
+            </tr>
+            <tr class="coverage-100">
+                <td>Unit Tests</td>
+                <td>45</td>
+                <td>45 passed</td>
+                <td>100%</td>
+            </tr>
+        </table>
+    </section>
+
+    <section>
+        <h2>Detailed Mapping</h2>
+        <!-- Full traceability details for each BR -->
+    </section>
+</body>
+</html>
+```
+
+## Generate Living Documentation
+
+Create always-current documentation from BDD scenarios and test results.
+
+### Generate BDD HTML Reports
+
+**Java (Cucumber):**
+
+```bash
+# Reports are auto-generated by maven-cucumber-reporting plugin
+# Location: target/cucumber-reports/cucumber-html-reports/overview-features.html
+```
+
+**Python (behave):**
+
+```bash
+# Generate HTML report
+behave -f html -o .migration/<feature>/code-generation/bdd-report.html
+```
+
+**Python (pytest-bdd):**
+
+```bash
+# Generate HTML report with pytest-html
+pytest tests/bdd/ --html=.migration/<feature>/code-generation/bdd-report.html --self-contained-html
+```
+
+### Generate Living Documentation Dashboard
+
+Create `.migration/<feature>/code-generation/living-documentation.html`:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Living Documentation - User Registration</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+        header { background: #1976d2; color: white; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0; }
+        .metric-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .metric-value { font-size: 36px; font-weight: bold; margin: 10px 0; color: #4caf50; }
+        .metric-label { color: #666; font-size: 14px; }
+        .nav-links a { display: inline-block; padding: 10px 20px; margin: 5px; background: #2196f3; color: white; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📚 Living Documentation</h1>
+        <p>User Registration - Generated 2026-04-13 11:06:30</p>
+    </header>
+
+    <div class="container">
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="metric-label">BDD Scenarios</div>
+                <div class="metric-value">12/12</div>
+                <div class="metric-label">100% Passing</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Unit Tests</div>
+                <div class="metric-value">45/45</div>
+                <div class="metric-label">100% Passing</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Code Coverage</div>
+                <div class="metric-value">87%</div>
+                <div class="metric-label">Lines Covered</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Requirements</div>
+                <div class="metric-value">8/8</div>
+                <div class="metric-label">100% Traced</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Documentation Sections</h2>
+            <div class="nav-links">
+                <a href="bdd-report.html">🎭 BDD Scenarios</a>
+                <a href="traceability-matrix.html">🔗 Traceability Matrix</a>
+                <a href="../../target/site/jacoco/index.html">📊 Code Coverage</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+```
+
+### Update Documentation Locations
+
+```text
+Documentation output locations:
+
+.migration/<feature>/code-generation/
+├── traceability-matrix.json          # Machine-readable traceability
+├── traceability-matrix.html          # Human-readable traceability
+├── living-documentation.html         # Main dashboard
+├── bdd-report.html                   # BDD test results
+└── README.md                         # Setup and usage guide
+
+Also reference language-specific reports:
+  Java: target/cucumber-reports/, target/site/jacoco/
+  Python: htmlcov/, reports/behave-report.html
+```
+
+## Final Verification
+
+### Run Full Test Suite
+
+Run all tests one final time to ensure complete functionality:
+
+**Java:**
+
+```bash
+cd <output-dir>
+mvn clean verify
+```
+
+This runs:
+
+- All unit tests (from Tests + Core steps)
+- All integration tests (from Integration step)
+- All BDD scenarios (if applicable)
+
+**Python:**
+
+```bash
+cd <output-dir>
+pytest tests/ -v --cov=app --cov-report=term-missing --cov-report=html
+```
+
+This runs:
+
+- All unit tests
+- All integration tests
+- Generates coverage report
+
+### Verify All Tests Pass
+
+```text
+Expected result: 100% tests PASS
+
+IF any test FAILS at this stage:
+  - Critical issue detected
+  - Review failure details
+  - Identify which step introduced the issue
+  - HALT with error report
+  - Provide resume instructions
+
+ELSE:
+  - All tests passing
+  - Continue to final metrics
+```
+
+### Count Final Metrics
+
+Collect and calculate final statistics:
+
+```text
+Metrics to count:
+
+1. Test metrics:
+   - Total unit tests
+   - Total integration tests
+   - Total BDD scenarios
+   - Test coverage percentage (if available)
+
+2. Code metrics:
+   - Total files generated
+   - Total lines of code (production)
+   - Total lines of test code
+
+3. Documentation metrics:
+   - Traceability coverage (BR/FR coverage %)
+   - BDD scenarios documented
+   - Living documentation generated
+
+5. Task metrics:
+   - Total tasks: <total_tasks>
+   - Completed tasks: <completed_tasks>
+   - Failed tasks: <failed_tasks>
+   - Success rate: (completed / total) * 100
+
+6. Batch metrics:
+   - Total batches: <total_batches>
+   - Completed batches: <completed_batches>
+
+7. Time metrics:
+   - Total duration: <completed_at - started_at>
+   - Average time per task: duration / total_tasks
+   - Average time per batch: duration / total_batches
+```
+
+**Java - Count Files:**
+
+```bash
+# Count production files
+find src/main/java -name "*.java" | wc -l
+
+# Count test files
+find src/test/java -name "*.java" | wc -l
+
+# Count lines of code
+find src/main/java -name "*.java" -exec wc -l {} + | tail -1
+```
+
+**Python - Count Files:**
+
+```bash
+# Count production files
+find src/app -name "*.py" | wc -l
+
+# Count test files
+find tests -name "*.py" | wc -l
+
+# Count lines of code
+find src/app -name "*.py" -exec wc -l {} + | tail -1
+```
+
+## Update Final State
+
+Update tasks.json with completion status:
+
+```json
+{
+  "execution": {
+    "status": "completed",
+    "current_step": "completion",
+    "current_batch": null,
+    "current_task": null,
+    "started_at": "2026-04-10T10:00:00Z",
+    "completed_at": "2026-04-10T11:06:30Z",
+    "last_checkpoint": "2026-04-10T11:06:30Z"
+  },
+  "progress": {
+    "total_tasks": 45,
+    "completed_tasks": 45,
+    "failed_tasks": 0,
+    "skipped_tasks": 0,
+    "percentage": 100,
+    "total_batches": 10,
+    "completed_batches": 10,
+    "failed_batches": 0,
+    "tests": {
+      "total_tests_written": 45,
+      "total_tests_passing": 67,
+      "last_test_run": "2026-04-10T11:06:30Z"
+    }
+  },
+  "steps": [
+    {
+      "name": "setup",
+      "status": "completed",
+      "task_count": 3,
+      "batch_count": 1
+    },
+    {
+      "name": "tests",
+      "status": "completed",
+      "task_count": 15,
+      "batch_count": 3
+    },
+    {
+      "name": "core",
+      "status": "completed",
+      "task_count": 20,
+      "batch_count": 4
+    },
+    {
+      "name": "integration",
+      "status": "completed",
+      "task_count": 5,
+      "batch_count": 1
+    },
+    {
+      "name": "polish",
+      "status": "completed",
+      "task_count": 2,
+      "batch_count": 1
+    }
+  ]
+}
+```
+
+Also update tasks.md with completion summary:
+
+```markdown
+## Completion Summary
+
+✓ Code generation completed successfully
+
+**Metrics:**
+- Tasks: 45 total, 45 completed, 0 failed (100% success rate)
+- Batches: 10 total, 10 completed
+- Tests: 67 passing (45 unit, 15 integration, 7 BDD scenarios)
+- Duration: 66m 30s
+- Files generated: 52 files (38 production, 14 tests)
+- Lines of code: 3,450 (2,100 production, 1,350 tests)
+
+**Completed:** 2026-04-10 11:06:30
+```
+
+## Print Completion Report
+
+Print a comprehensive completion report to the user:
+
+```text
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Code Generation Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Feature: payment-processing
+Output: ./src/generated
+Language: Java (Spring Boot 3.2, Maven 3.9)
+
+Summary:
+  Tasks: 45 total, 45 passed, 0 failed (100% success)
+  Batches: 10 total, 10 completed
+  Tests: 67 passing
+    • Unit tests: 45
+    • Integration tests: 15
+    • BDD scenarios: 7
+  Duration: 66m 30s
+  Files generated: 52 files
+    • Production: 38 files (2,100 LOC)
+    • Tests: 14 files (1,350 LOC)
+
+Step Breakdown:
+  1. Setup: 3 tasks, 1 batch (~2m)
+  2. Tests: 15 tasks, 3 batches (~12m)
+  3. Core: 20 tasks, 4 batches (~38m)
+  4. Integration: 5 tasks, 1 batch (~9m)
+  5. Polish: 2 tasks, 1 batch (~5m)
+
+Next Steps:
+  • Review generated code:
+    cd ./src/generated
+
+  • Run tests locally:
+    mvn test            # Unit tests
+    mvn verify          # All tests + integration
+    mvn spring-boot:run # Start application
+
+  • View API documentation:
+    http://localhost:8080/swagger-ui.html
+
+  • Integration:
+    - Review code for customization needs
+    - Adjust configuration in application.yml
+    - Deploy or integrate into main codebase
+
+State Files:
+  • Task state: ./src/generated/tasks.json
+  • Task list: ./src/generated/tasks.md
+
+Documentation:
+  • Living documentation: .migration/<feature>/code-generation/living-documentation.html
+  • Traceability matrix: .migration/<feature>/code-generation/traceability-matrix.html
+  • BDD report: .migration/<feature>/code-generation/bdd-report.html
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Python Example:**
+
+```text
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Code Generation Complete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Feature: user-management
+Output: ./src/generated
+Language: Python 3.11 (FastAPI, pytest, SQLAlchemy)
+
+Summary:
+  Tasks: 42 total, 42 passed, 0 failed (100% success)
+  Batches: 8 total, 8 completed
+  Tests: 58 passing
+    • Unit tests: 38
+    • Integration tests: 12
+    • BDD scenarios: 8
+  Test coverage: 87%
+  Duration: 54m 15s
+  Files generated: 45 files
+    • Production: 32 files (1,850 LOC)
+    • Tests: 13 files (1,120 LOC)
+
+Next Steps:
+  • Review generated code:
+    cd ./src/generated
+
+  • Run tests locally:
+    pytest tests/ -v                    # All tests
+    pytest tests/ --cov=app --cov-report=html  # With coverage
+
+  • Start application:
+    uvicorn app.main:app --reload
+
+  • View API documentation:
+    http://localhost:8000/docs
+
+  • Integration:
+    - Review code and adjust as needed
+    - Configure environment variables (.env)
+    - Run database migrations: alembic upgrade head
+    - Deploy or integrate into main codebase
+
+State Files:
+  • Task state: ./src/generated/tasks.json
+  • Task list: ./src/generated/tasks.md
+
+Documentation:
+  • Living documentation: .migration/<feature>/code-generation/living-documentation.html
+  • Traceability matrix: .migration/<feature>/code-generation/traceability-matrix.html
+  • BDD report: .migration/<feature>/code-generation/bdd-report.html
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+## Language-Specific Next Steps
+
+Include language-specific guidance in the completion report:
+
+### Java (Spring Boot)
+
+```text
+Next Steps (Java):
+  • Review application.yml for environment-specific configs
+  • Set up application-dev.yml and application-prod.yml
+  • Configure datasource connection
+  • Run: mvn spring-boot:run
+  • Access: http://localhost:8080
+  • API docs: http://localhost:8080/swagger-ui.html
+  • Build JAR: mvn clean package
+  • Run JAR: java -jar target/app-1.0.0.jar
+```
+
+### Python (FastAPI)
+
+```text
+Next Steps (Python):
+  • Create .env file with environment variables
+  • Install dependencies: uv sync (or poetry install)
+  • Run migrations: alembic upgrade head
+  • Start server: uvicorn app.main:app --reload
+  • Access: http://localhost:8000
+  • API docs: http://localhost:8000/docs
+  • Run tests: pytest tests/ -v
+  • Check coverage: pytest tests/ --cov=app --cov-report=html
+```
+
+## Save State
+
+Write final state to disk:
+
+```text
+1. Save tasks.json with execution.status = "completed"
+2. Save tasks.md with completion summary
+3. Optionally create GENERATED.md with:
+   - Feature overview
+   - Architecture summary
+   - Setup instructions
+   - API endpoints
+   - Testing guide
+```
+
+## Completion
+
+Code generation workflow is complete. The agent's work is done.
+
+The user can now:
+
+1. Review the generated code
+2. Run tests locally
+3. Customize as needed
+4. Integrate into their main codebase
+5. Deploy to production
+
+## Resume Capability
+
+Even after completion, state is preserved. If the user wants to:
+
+- Regenerate a specific component
+- Add new functionality
+- Fix issues
+
+They can use `/code-generation <feature> --resume` to inspect state and potentially extend the generated code.
+
+## Troubleshooting
+
+If final verification fails:
+
+```text
+Common issues:
+
+1. Tests fail at completion:
+   - Review which tests are failing
+   - Check if environment-specific (database, ports, etc.)
+   - Verify all dependencies are installed
+   - Check configuration files
+
+2. Missing files:
+   - Review tasks.json to see which tasks completed
+   - Check if any tasks were skipped
+   - Verify output directory is correct
+
+3. Build failures:
+   - Java: Check pom.xml dependencies
+   - Python: Check pyproject.toml dependencies
+   - Node.js: Check package.json dependencies
+   - Run dependency installation command
+
+4. Integration issues:
+   - Check if services are running (database, cache, etc.)
+   - Verify connection strings in config
+   - Check firewall/network settings
+```
+
+## End of Workflow
+
+Workflow complete. No further automated steps.

@@ -1,0 +1,383 @@
+# OpenAPI 3.0 Template for VNRM Microservices
+# All sections marked with [REQUIRED] are mandatory for Phase 8
+
+openapi: 3.0.3
+info:
+  title: "[Service Name] API"  # [REQUIRED]
+  version: 1.0.0
+  description: |
+    [Service description from Phase 7]
+
+    ## Authentication
+    - OAuth 2.0 with JWT tokens
+    - Token endpoint: /oauth/token
+    - Refresh token lifetime: 7 days
+    - Access token lifetime: 1 hour
+
+    ## Rate Limiting
+    - Standard tier: 100 requests/minute
+    - Premium tier: 1000 requests/minute
+    - Rate limit headers included in all responses
+
+    ## Versioning
+    - URL path versioning: /api/v1/, /api/v2/
+    - Version deprecation policy: 6 months notice
+    - Sunset header: Indicates when deprecated version will be removed (RFC 8594)
+
+    ## Idempotency
+    - POST/PUT/PATCH operations support X-Idempotency-Key header
+    - Same idempotency key returns cached result (no side effects)
+    - Idempotency keys expire after 24 hours
+
+servers:
+  - url: https://api.vnrm.dtag.de/[service-name]/api/v1
+    description: Production
+  - url: https://api-staging.vnrm.dtag.de/[service-name]/api/v1
+    description: Staging
+
+security:
+  - OAuth2:
+      - read:[resource]
+      - write:[resource]
+
+paths:
+  # [REQUIRED] Health Check Endpoint
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Health check endpoint for Kubernetes liveness and readiness probes
+      tags:
+        - Operations
+      security: []  # No authentication required
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [UP, DEGRADED, DOWN]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  dependencies:
+                    type: object
+              examples:
+                healthy:
+                  value:
+                    status: "UP"
+                    timestamp: "2025-01-15T10:00:00Z"
+                    dependencies:
+                      database: { status: "UP", response_time_ms: 5 }
+                      message_bus: { status: "UP", response_time_ms: 10 }
+        '503':
+          description: Service is unhealthy
+
+  # [REQUIRED] List endpoint with pagination
+  /[resources]:
+    get:
+      operationId: list[Resources]
+      summary: List all [resources] with pagination support
+      tags:
+        - [Resource Tag]
+      parameters:
+        # [REQUIRED] Pagination parameters
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Page number (0-indexed)
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of items per page
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Cursor for cursor-based pagination (alternative to page/size)
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "created_at:desc"
+          description: Sort field and direction
+      responses:
+        '200':
+          description: List of resources with pagination metadata
+          headers:
+            X-Correlation-ID:
+              schema:
+                type: string
+              description: Correlation ID for distributed tracing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/[Resource]'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      size:
+                        type: integer
+                      total_items:
+                        type: integer
+                      total_pages:
+                        type: integer
+                      has_next:
+                        type: boolean
+                      has_previous:
+                        type: boolean
+                      next_cursor:
+                        type: string
+                  _links:
+                    type: object
+                    properties:
+                      self:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+                      next:
+                        type: object
+                        properties:
+                          href:
+                            type: string
+
+  # Example POST endpoint with all required headers
+  /[resources]:
+    post:
+      operationId: create[Resource]
+      summary: Create a new [resource]
+      tags:
+        - [Resource Tag]
+      parameters:
+        # [REQUIRED] Correlation ID header
+        - name: X-Correlation-ID
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Optional correlation ID for distributed tracing. If not provided, server generates one.
+          example: "corr-abc-123"
+        # [REQUIRED] Idempotency Key header for write operations
+        - name: X-Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: |
+            Idempotency key for POST/PUT/PATCH operations. If same key is provided within 24 hours,
+            cached result is returned with no side effects. Required for safe retry of write operations.
+          example: "idem-xyz-789"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateResourceRequest'
+            examples:
+              valid-request:
+                summary: Valid request example
+                value:
+                  phoneNumber: "+49301234567"
+                  portingDate: "2025-01-15"
+      responses:
+        '201':
+          description: Resource created successfully
+          headers:
+            X-Correlation-ID:
+              schema:
+                type: string
+              description: Correlation ID for distributed tracing
+            X-Rate-Limit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current window
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceResponse'
+        # [REQUIRED] Complete error catalog
+        '400':
+          description: Bad Request - Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation-error:
+                  summary: Schema validation failed
+                  value:
+                    status: 400
+                    error_code: "INVALID_SCHEMA"
+                    message: "Request validation failed"
+                    timestamp: "2025-01-15T10:00:00Z"
+                    correlation_id: "corr-123"
+                business-rule-violation:
+                  summary: Business rule violated
+                  value:
+                    status: 400
+                    error_code: "PORT_DATE_RUZ_VIOLATION"
+                    message: "Porting date exceeds RUZ tolerance window of 2 months"
+                    timestamp: "2025-01-15T10:00:00Z"
+        '401':
+          description: Unauthorized - Missing or invalid authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - Resource does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or version mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until rate limit resets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service Unavailable - Circuit breaker open or dependency down
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until retry suggested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # [REQUIRED] Phone number pattern supporting international format
+    PhoneNumber:
+      type: string
+      pattern: '^\+?[0-9]{10,15}$'
+      description: |
+        Phone number in international format. May include optional + prefix.
+        Supports both formats:
+        - International: +49301234567
+        - National: 49301234567
+      example: "+49301234567"
+
+    # [REQUIRED] Standard error response
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - error_code
+        - message
+        - timestamp
+      properties:
+        status:
+          type: integer
+          description: HTTP status code (matches response status)
+          example: 400
+        error_code:
+          type: string
+          description: Application-specific error code
+          example: "PORT_DATE_RUZ_VIOLATION"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Porting date exceeds RUZ tolerance window"
+        details:
+          type: array
+          description: Additional error details
+          items:
+            type: object
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+        correlation_id:
+          type: string
+          description: Correlation ID for distributed tracing
+          example: "corr-abc-123"
+
+    # [REQUIRED] HATEOAS links in responses
+    ResourceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        # ... resource fields
+        _links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+            cancel:
+              type: object
+              properties:
+                href:
+                  type: string
+                method:
+                  type: string
+            history:
+              type: object
+              properties:
+                href:
+                  type: string
+
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://auth.vnrm.dtag.de/oauth/token
+          scopes:
+            read:[resource]: Read access to resources
+            write:[resource]: Write access to resources

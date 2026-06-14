@@ -1,0 +1,3442 @@
+# (C) 2025 Deutsche Telekom IT GmbH
+# Author: G-API-Management (api@telekom.de)
+# Build API-Ruleset: 2.11.1  (raoul.piechatzek@telekom.de <raoul.piechatzek@telekom.de>) at 2025-12-09T06:43:47Z Contact api@telekom.de
+#  (Commit b40e6b06)
+# Based on Config file: config-gapi-linter-rules.spectral.yaml
+# GAPI Config file
+# Comments about GAPI rules:
+# Linting Doc in Dev-Portal: https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/api-linting/
+# OpenAPI Rules by Stoplight: https://meta.stoplight.io/docs/spectral/4dec24461f3af-open-api-rules
+documentationUrl: >-
+  https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/api-linting/
+extends:
+  - spectral:oas
+formats:
+  - oas2
+  - oas3
+functions: []
+functionsDir: ''
+rules:
+  contact-properties: info
+  oas2-schema: error
+  oas3-schema: error
+  oas2-valid-definition-example: warn
+  oas2-valid-parameter-example: warn
+  oas2-valid-response-example: warn
+  oas2-valid-response-schema-example: warn
+  oas3-examples-value-or-externalValue: warn
+  oas3-valid-header-schema-example: warn
+  oas3-valid-oas-content-example: warn
+  oas3-valid-oas-header-example: warn
+  oas3-valid-oas-parameter-example: warn
+  oas3-valid-parameter-schema-example: warn
+  oas3-valid-schema-example: warn
+  tag-description: hint
+  operation-tags: hint
+  operation-tag-defined: hint
+  operation-singular-tag: hint
+  openapi-tags-alphabetical: hint
+  openapi-tags-uniqueness: warn
+  openapi-tags: hint
+  oas2-api-host: warn
+  oas2-api-schemes: warn
+  oas2-host-not-example: warn
+  oas2-host-trailing-slash: warn
+  oas3-server-trailing-slash: warn
+  oas3-server-not-example.com: warn
+  oas3-api-servers: warn
+  oas2-operation-security-defined: error
+  oas3-operation-security-defined: error
+  no-$ref-siblings: warn
+  typed-enum: error
+  oas2-oneOf: error
+  oas2-anyOf: error
+  oas2-unused-definition: warn
+  oas3-unused-component: warn
+  no-script-tags-in-markdown: error
+  no-eval-in-markdown: error
+  path-declarations-must-exist: error
+  path-keys-no-trailing-slash: warn
+  path-not-include-query: warn
+  path-params: error
+  oas3-parameter-description: warn
+  operation-description: warn
+  oas2-parameter-description: warn
+  operation-operationId-valid-in-url: warn
+  operation-operationId: error
+  operation-operationId-unique: error
+  operation-parameters: warn
+  info-contact: error
+  info-description: error
+  operation-success-response: error
+  oas2-operation-formData-consume-check: 'off'
+  duplicated-entry-in-enum: warn
+  info-license: 'off'
+  license-url: 'off'
+  oas2-discriminator: warn
+  oas2-valid-media-example: warn
+  oas3-valid-media-example: warn
+  errorObject-def-missing:
+    description: >-
+      No Error object definition exists.  Please define object `Error` according
+      to either RFC9457 or TMF definition.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/models/error-message
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.components.schemas
+      - $.definitions
+    then:
+      - field: Error
+        function: truthy
+  anyType-definition-found:
+    description: >-
+      ANY type found. Do NOT define and use the ANY type! The ANY type is
+      forbidden to use!  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/models/any-type
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.components.schemas
+      - $.definitions
+    then:
+      - field: Any.type
+        function: pattern
+        functionOptions:
+          notMatch: ^object
+  errorObject-def-wrong:
+    description: >-
+      Please define object `Error` according to either RFC9457 (title, desc &
+      req. properties: `type`(uri-reference), `title`; opt.: `status`,
+      `details`, `instance`(uri-reference)) or TMF definition (title, desc &
+      req. properties: `code`, `reason`; opt.: `message`, `status`,
+      `referenceError`(uri), `@baseType`, `@schemaLocation`(uri), `@type`).
+      Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/models/error-message
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.components.schemas.Error
+      - $.definitions.Error
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          oneOf:
+            - type: object
+              required:
+                - required
+              properties:
+                description:
+                  type: string
+                  minLength: 5
+                title:
+                  type: string
+                  minLength: 5
+                required:
+                  type: array
+                  minItems: 2
+                  items:
+                    enum:
+                      - code
+                      - reason
+                properties:
+                  type: object
+                  minProperties: 2
+                  additionalProperties: true
+                  required:
+                    - code
+                    - reason
+                  properties:
+                    code:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                          const: string
+                      required:
+                        - type
+                    reason:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                          const: string
+                      required:
+                        - type
+                    message:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                          const: string
+                      required:
+                        - type
+                    status:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                          const: string
+                      required:
+                        - type
+                    referenceError:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                          const: string
+                        format:
+                          type: string
+                          const: uri
+                      required:
+                        - type
+                        - format
+                    '@baseType':
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                          const: string
+                      required:
+                        - type
+                    '@type':
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                          const: string
+                      required:
+                        - type
+                    '@schemaLocation':
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                        format:
+                          type: string
+                          const: uri
+                      required:
+                        - type
+                        - format
+            - type: object
+              required:
+                - allOf
+              properties:
+                description:
+                  type: string
+                  minLength: 5
+                title:
+                  type: string
+                  minLength: 5
+                allOf:
+                  type: array
+                  allOf:
+                    - contains:
+                        minContains: 1
+                        type: object
+                        required:
+                          - required
+                        properties:
+                          required:
+                            type: array
+                            minItems: 2
+                            items:
+                              enum:
+                                - code
+                                - reason
+                          properties:
+                            type: object
+                            minProperties: 2
+                            additionalProperties: true
+                            required:
+                              - code
+                              - reason
+                            properties:
+                              code:
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                    const: string
+                                required:
+                                  - type
+                              reason:
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                    const: string
+                                required:
+                                  - type
+                              message:
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                    const: string
+                                required:
+                                  - type
+                              status:
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                    const: string
+                                required:
+                                  - type
+                              referenceError:
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                    const: string
+                                  format:
+                                    type: string
+                                    const: uri
+                                required:
+                                  - type
+                                  - format
+                              '@baseType':
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                    const: string
+                                required:
+                                  - type
+                              '@type':
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                    const: string
+                                required:
+                                  - type
+                              '@schemaLocation':
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                  format:
+                                    type: string
+                                    const: uri
+                                required:
+                                  - type
+                                  - format
+            - type: object
+              required:
+                - allOf
+              properties:
+                description:
+                  type: string
+                  minLength: 5
+                title:
+                  type: string
+                  minLength: 5
+                allOf:
+                  type: array
+                  allOf:
+                    - contains:
+                        minContains: 1
+                        type: object
+                        required:
+                          - required
+                        properties:
+                          required:
+                            type: array
+                            minItems: 2
+                            items:
+                              enum:
+                                - type
+                                - title
+                          properties:
+                            type: object
+                            minProperties: 2
+                            additionalProperties: true
+                            required:
+                              - type
+                              - title
+                            properties:
+                              type:
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                  format:
+                                    type: string
+                                    enum:
+                                      - uri
+                                      - uri-reference
+                                required:
+                                  - type
+                                  - format
+                              title:
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                    const: string
+                                required:
+                                  - type
+                              status:
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                    const: integer
+                                required:
+                                  - type
+                              detail:
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                required:
+                                  - type
+                              instance:
+                                type: object
+                                properties:
+                                  description:
+                                    type: string
+                                    minLength: 5
+                                  type:
+                                    type: string
+                                  format:
+                                    type: string
+                                    enum:
+                                      - uri
+                                      - uri-reference
+                                required:
+                                  - type
+                                  - format
+            - type: object
+              required:
+                - required
+              properties:
+                description:
+                  type: string
+                  minLength: 5
+                title:
+                  type: string
+                  minLength: 5
+                required:
+                  type: array
+                  minItems: 2
+                  items:
+                    enum:
+                      - type
+                      - title
+                properties:
+                  type: object
+                  minProperties: 2
+                  additionalProperties: true
+                  required:
+                    - type
+                    - title
+                  properties:
+                    type:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                        format:
+                          type: string
+                          enum:
+                            - uri
+                            - uri-reference
+                      required:
+                        - type
+                        - format
+                    title:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                          const: string
+                      required:
+                        - type
+                    status:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                          const: integer
+                      required:
+                        - type
+                    detail:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                      required:
+                        - type
+                    instance:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          minLength: 5
+                        type:
+                          type: string
+                        format:
+                          type: string
+                          enum:
+                            - uri
+                            - uri-reference
+                      required:
+                        - type
+                        - format
+  data-date-format:
+    description: >-
+      Date, Date-Time and Time fields must be of OAS format `date`, `date-time`
+      or `time` compliant to RFC3339.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - >-
+        $.definitions.*.properties[?(@property.match(/(^(([dD]ateOf)|([a-zA-Z]*DateOf))|[D][aA][tT][eE]\b)/)
+        && @.type === 'string')]
+      - >-
+        $.definitions.*.properties[?(@property.match(/(^(([tT]imeOf)|([a-zA-Z]*TimeOf))|[T][iI][mM][eE]\b)/)
+        && @.type === 'string')]
+      - >-
+        $.components.*.*.properties[?(@property.match(/(^(([dD]ateOf)|([a-zA-Z]*DateOf))|[D][aA][tT][eE]\b)/)
+        && @.type === 'string')]
+      - >-
+        $.components.*.*.properties[?(@property.match(/(^(([tT]imeOf)|([a-zA-Z]*TimeOf))|[T][iI][mM][eE]\b)/)
+        && @.type === 'string')]
+    then:
+      - field: format
+        function: truthy
+      - field: format
+        function: pattern
+        functionOptions:
+          match: date-time|date|time
+  info-contact-email-name:
+    description: >-
+      Object 'info.contact' MUST have 'email' (with regular email format).
+      Property 'url' and 'name' COULD be used also.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given: $.info.contact
+    then:
+      - field: email
+        function: truthy
+      - field: email
+        function: pattern
+        functionOptions:
+          match: ^([A-Za-z0-9._%+-]{3,})+@([A-Za-z0-9.-]{3,})+\.[A-Za-z]{2,3}$
+  info-version:
+    description: >-
+      Info `version` MUST be in strict SemVer format: MAJOR.MINOR.PATCH, all
+      parts non-negative integers.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given: $
+    then:
+      field: info.version
+      function: pattern
+      functionOptions:
+        match: (^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$)
+  info-title:
+    description: >-
+      Info `title` MUST be defined with at most 48 characters and no
+      punctuations. The title is the API's name displayed in the API Catalog.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given: $
+    then:
+      - field: info.title
+        function: truthy
+      - field: info.title
+        function: length
+        functionOptions:
+          max: 48
+      - field: summary
+        function: pattern
+        functionOptions:
+          notMatch: \.
+  info-description-format:
+    description: >-
+      Info `description` MUST be defined with at least 64 characters. The first
+      384 characters are shown on the API Catalog main page, the rest only on
+      the API`s detail page.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given: $
+    then:
+      - field: info.description
+        function: truthy
+      - field: info.description
+        function: length
+        functionOptions:
+          min: 64
+  info-x-api-category-deprecated:
+    description: >-
+      Old values like ENTEPRISE or SYSTEM (or similar notations) are prohibited
+      for 'info.x-api-category'!
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given: $
+    then:
+      - field: info.x-api-category
+        function: pattern
+        functionOptions:
+          notMatch: ^SYSTEM|^ENTERPRISE|^enterprise|^systems|^Enterprise|^System
+  info-x-standard-reference-id:
+    description: >-
+      BLOCKING in Q1/2026: Please provide info (info.x-standard-reference &
+      info.x-standard-reference.id) on which standard API your API is based,
+      e.g. id=TMF622 incl. version in SemVer format: MAJOR.MINOR.PATCH or NONE.
+      If the API is not standard-based, use `NONE` for id and version instead.
+      You can also use other standards like SCIM2|CAMARA|MEF|IETF|GSMA|3GPP.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.info
+    then:
+      - field: x-standard-reference
+        function: truthy
+      - field: x-standard-reference.id
+        function: truthy
+      - field: x-standard-reference.id
+        function: pattern
+        functionOptions:
+          match: (^(TMF\d{3}|SCIM2|CAMARA|MEF|IETF|GSMA|3GPP|NONE)$)
+  info-x-standard-reference-version:
+    description: >-
+      Missing or wrong version format (SemVer): MAJOR.MINOR.PATCH or NONE on
+      which standard API your API is based. If the Standard has no version, use
+      `NONE` for version instead.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.info.x-standard-reference
+    then:
+      - field: version
+        function: truthy
+      - field: version
+        function: pattern
+        functionOptions:
+          match: (^((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)|NONE)$)
+  info-x-segment:
+    description: >-
+      Info `x-segment` COULD be defined as an array of unique Strings, e.g.
+      [B2B] or [B2B, B2C].  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/basics/documentation
+      and please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/basics/api-areas
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: info
+    formats:
+      - oas2
+      - oas3
+    given: $.info
+    then:
+      - field: x-segment
+        function: truthy
+      - field: x-segment
+        function: schema
+        functionOptions:
+          schema:
+            type: array
+            items:
+              type: string
+            minItems: 1
+            uniqueItems: true
+  info-x-application-schema:
+    description: >-
+      Info `x-application` SHOULD be defined as a String with minLength=3, e.g.
+      "FxP" or "FlexProd".  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/basics/documentation
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    type: style
+    given: $.info
+    severity: warn
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          properties:
+            x-application:
+              type: string
+              minLength: 3
+  info-x-local-schema:
+    description: >-
+      Info `x-local` SHOULD be defined as an array of Strings, e.g. [BNG] or
+      [BNG, MF].  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/basics/documentation
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    type: style
+    given: $.info
+    severity: warn
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          properties:
+            x-local:
+              type: array
+              items:
+                type: string
+              minItems: 1
+              uniqueItems: true
+  info-x-api-category:
+    description: >-
+      Please enter category of API in "info.x-api-category": 'G-API', 'M-API',
+      'DT Technik', 'T-Systems', 'TARDIS', 'other' etc. For more categories.
+      Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/basics/documentation
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given: $
+    then:
+      - field: info.x-api-category
+        function: truthy
+      - field: info.x-api-category
+        function: enumeration
+        functionOptions:
+          values:
+            - G-API
+            - M-API
+            - DT Technik
+            - T-Systems
+            - TARDIS
+            - TEST
+            - INFRASTRUCTURE
+            - congstar
+            - DT IoT
+            - DT Security
+            - DT Service
+            - GHS
+            - other
+  info-x-mira-capability:
+    description: >-
+      The field `x-mira-capability` should be present if `x-api-category` is not
+      "DT Technik".  Info `x-mira-capability` SHOULD be defined as an array of
+      unique Strings, e.g. ["MIRA 2 / Product Domain / Product Catalogue"] or
+      ["MIRA 2 / Product Domain / Product Catalogue", "MIRA 2 / Product Domain /
+      Product Configuration Management"].  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/basics/documentation
+      and please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/basics/mira-mapping
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    type: style
+    given: $.info
+    severity: warn
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              x-api-category:
+                not:
+                  const: DT Technik
+          then:
+            properties:
+              x-mira-capability:
+                type: array
+                items:
+                  type: string
+                minItems: 1
+                uniqueItems: true
+            required:
+              - x-mira-capability
+  info-x-mira2-capability:
+    description: >-
+      BLOCKING in Q1/2026: The field `x-mira-capability` should have values
+      starting with 'MIRA 2 /'. Info `x-mira-capability` SHOULD be defined as an
+      array of unique Strings, e.g. ["MIRA 2 / Product Domain / Product
+      Catalogue"] or ["MIRA 2 / Product Domain / Product Catalogue", "MIRA 2 /
+      Product Domain / Product Configuration Management"].  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/basics/documentation
+      and please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/basics/mira-mapping
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    type: style
+    given: $.info
+    severity: info
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          properties:
+            x-mira-capability:
+              type: array
+              items:
+                type: string
+                pattern: ^MIRA 2 \/
+              minItems: 1
+              uniqueItems: true
+  info-x-mira1-capability-deprecated:
+    description: >-
+      BLOCKING in Q1/2026: Mira 1 is deprecated. Please use Mira 2.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/basics/mira-mapping
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    type: style
+    given: $.info
+    severity: warn
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          properties:
+            x-mira-capability:
+              type: array
+              items:
+                type: string
+                pattern: ^(?!([mM][iI][rR][aA] 1))
+  externalDocs:
+    description: >-
+      externalDocs COULD be use for some external documentation. Provide a
+      description and an url.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: info
+    formats:
+      - oas2
+      - oas3
+    given: $
+    then:
+      - field: externalDocs
+        function: truthy
+      - field: $.externalDocs.description
+        function: truthy
+      - field: $.externalDocs.url
+        function: truthy
+  no-external-refs:
+    description: >-
+      No $ref references to external YAML files are allowed because RoverCLI
+      does not support this feature!  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/basics/api-specification
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    severity: error
+    resolved: false
+    formats:
+      - oas2
+      - oas3
+    given: $..$ref
+    then:
+      function: pattern
+      functionOptions:
+        match: ^#/
+  naming-operations:
+    description: Operation `operationId` MUST be written in lowerCamelCase.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: >-
+      $.paths.*[?( @property === 'get' || @property === 'put' || @property ===
+      'post' || @property === 'delete' || @property === 'options' || @property
+      === 'head' || @property === 'patch' || @property === 'trace' )]
+    then:
+      - field: operationId
+        function: casing
+        functionOptions:
+          type: camel
+      - field: operationId
+        function: truthy
+  naming-paths:
+    description: Path names MUST be written in lowerCamelCase.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: ^(\/[a-z]+[a-zA-Z0-9]*|.{[a-zA-Z0-9]+})*$
+  naming-properties-oas2:
+    description: >-
+      Property names MUST be written in lowerCamelCase (no special/symbol
+      characters). Exceptions: _links, last_page, @baseType, @type,
+      @schemaLocation, @valueSchemaLocation, @referredType.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given: $.definitions.*.properties.*~
+    then:
+      function: pattern
+      functionOptions:
+        match: >-
+          ^(_links|last_page|@type|@baseType|@.{1,6}chemaLocation|@referredType|[a-z][a-z0-9]*([A-Z][a-z0-9]+)*[A-Z]?)$
+  naming-properties-oas3:
+    description: >-
+      Property names MUST be written in lowerCamelCase (no special/symbol
+      characters). Exceptions: _links, last_page, @baseType, @type,
+      @schemaLocation, @valueSchemaLocation, @referredType.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given: $.components.schemas.*.properties.*~
+    then:
+      function: pattern
+      functionOptions:
+        match: >-
+          ^(_links|last_page|@type|@baseType|@.{1,6}chemaLocation|@referredType|[a-z][a-z0-9]*([A-Z][a-z0-9]+)*[A-Z]?)$
+  naming-schema-oas2:
+    description: >-
+      Schema names MUST be written in UpperCamelCase (no special/symbol
+      characters). Postfixes '_Create' or '_Update' are allowed.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given: $.definitions.*~
+    then:
+      function: pattern
+      functionOptions:
+        match: ^(_links|([A-Z]+[a-z0-9]+)*(_Create|_Update)?$)
+  naming-schema-oas3:
+    description: >-
+      Schema names MUST be written in UpperCamelCase (no special/symbol
+      characters).  Postfixes '_Create' or '_Update' are allowed.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given: $.components.schemas.*~
+    then:
+      function: pattern
+      functionOptions:
+        match: ^(_links|([A-Z]+[a-z0-9]+)*(_Create|_Update)?$)
+  operation-description-format:
+    description: Operation `description` must be defined with at least 64 characters.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: >-
+      $.paths.*[?( @property === 'get' || @property === 'put' || @property ===
+      'post' || @property === 'delete' || @property === 'options' || @property
+      === 'head' || @property === 'patch' || @property === 'trace' )]
+    then:
+      - field: description
+        function: length
+        functionOptions:
+          min: 64
+      - field: description
+        function: truthy
+  operation-summary:
+    description: >-
+      Operation `summary` MUST be defined with at most 64 characters and no
+      punctuations.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: >-
+      $.paths.*[?( @property === 'get' || @property === 'put' || @property ===
+      'post' || @property === 'delete' || @property === 'options' || @property
+      === 'head' || @property === 'patch' || @property === 'trace' )]
+    then:
+      - field: summary
+        function: pattern
+        functionOptions:
+          notMatch: \.
+      - field: summary
+        function: length
+        functionOptions:
+          max: 64
+      - field: summary
+        function: truthy
+  operation-operationId-format:
+    description: Operation `operationId` MUST be defined in lowerCamelCase.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: >-
+      $.paths.*[?( @property === 'get' || @property === 'put' || @property ===
+      'post' || @property === 'delete' || @property === 'options' || @property
+      === 'head' || @property === 'patch' || @property === 'trace' )]
+    then:
+      - field: operationId
+        function: pattern
+        functionOptions:
+          match: ^[a-z][a-zA-Z0-9]*$
+      - field: operationId
+        function: truthy
+  operation-parameters-path:
+    description: Operation parameters names in `path` MUST use lowerCamelCase.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.paths.*..*[?(@.in ==='path')].name
+    then:
+      function: casing
+      functionOptions:
+        type: camel
+  operation-parameters-header:
+    description: Operation parameters names in `header` MUST use Hyphenated-Pascal-Case.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.paths.*..*[?(@.in ==='header')].name
+    then:
+      function: pattern
+      functionOptions:
+        match: ^[A-Z](?:[A-Z0-9]*[a-z]*|ID)*(?:-[A-Z](?:[A-Z0-9]*[a-z]*|ID)*)*$
+  operation-responses-header:
+    description: Operation response header names MUST use Hyphenated-Pascal-Case.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.paths.[*].responses.*.headers.
+    then:
+      field: '@key'
+      function: pattern
+      functionOptions:
+        match: ^[A-Z](?:[A-Z0-9]*[a-z]*|ID)*(?:-[A-Z](?:[A-Z0-9]*[a-z]*|ID)*)*$
+  operation-parameters-query:
+    description: >-
+      Operation parameters names in `query` MUST use lowerCamelCase (no
+      special/symbol characters). Exceptions: @baseType, @type, @schemaLocation,
+      @valueSchemaLocation, @referredType and nesting is expressed by a `.` as
+      separator.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.paths.*..*[?(@.in ==='query')].name
+    then:
+      function: pattern
+      functionOptions:
+        match: >-
+          ^(([a-z][a-zA-Z0-9]*\.)*((@(type|baseType|schemaLocation|valueSchemaLocation|referredType))|([a-z][a-zA-Z0-9]*)))$
+  pagination-header-for-pagination-not-used:
+    description: >-
+      Pagination header 'X-Result-Count' not defined in Get request. Please
+      implement Pagination in your Get request. Offset-Based-Pagination is
+      recommended.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/technical/pagination/#offset-based-paging
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - >-
+        $.paths[?(@property.match('^(?!.*(\/{.+})).*$'))].get.responses[?(@property.match(/^(200)/))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          required:
+            - headers
+          properties:
+            headers:
+              required:
+                - X-Result-Count
+  pagination-header-for-Offset-based-pagination-not-used:
+    description: >-
+      Pagination header 'X-Total-Count' not defined in Get request. Please
+      implement Offset-Based-Pagination in your Get request.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/technical/pagination/#offset-based-paging
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - >-
+        $.paths[?(@property.match('^(?!.*(\/{.+})).*$'))].get.responses[?(@property.match(/^(200)/))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          required:
+            - headers
+          properties:
+            headers:
+              required:
+                - X-Total-Count
+  pagination-paging-def-wrong:
+    description: >-
+      `Paging` object definition wrong. For Offset-based-Pagination, properties
+      `total`, `page` and `last_page` are required and also declared as
+      required, all of `type: integer`.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/technical/pagination/#offset-based-paging
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.components.schemas[?(@property.match("^Paging|^paging"))]
+      - $.definitions[?(@property.match("^Paging|^paging"))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            description:
+              type: string
+              minLength: 5
+            type:
+              type: string
+              enum:
+                - object
+            properties:
+              type: object
+              properties:
+                total:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                      minLength: 5
+                    type:
+                      type: string
+                      enum:
+                        - integer
+                  required:
+                    - type
+                page:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                      minLength: 5
+                    type:
+                      type: string
+                      enum:
+                        - integer
+                  required:
+                    - type
+                last_page:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                      minLength: 5
+                    type:
+                      type: string
+                      enum:
+                        - integer
+                  required:
+                    - type
+              required:
+                - total
+                - page
+                - last_page
+            required:
+              type: array
+              minItems: 3
+              allOf:
+                - contains:
+                    type: string
+                    const: total
+                - contains:
+                    type: string
+                    const: page
+                - contains:
+                    type: string
+                    const: last_page
+                - contains:
+                    minContains: 0
+                    type: string
+          required:
+            - type
+            - properties
+            - required
+  pagination-links-def-wrong:
+    description: >-
+      `Links`/`_links` object definition wrong. For Offset-based-Pagination,
+      properties `first`, `self` and `last` are required and also declared as
+      required, `next` and `prev` are optional, all of `type: string` & `format:
+      uri`.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/technical/pagination/#offset-based-paging
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.components.schemas[?(@property.match("^_links|^Links"))]
+      - $.definitions[?(@property.match("^_links|^Links"))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            description:
+              type: string
+              minLength: 5
+            type:
+              type: string
+              enum:
+                - object
+            required:
+              type: array
+              minItems: 3
+              allOf:
+                - contains:
+                    type: string
+                    const: first
+                - contains:
+                    type: string
+                    const: self
+                - contains:
+                    type: string
+                    const: last
+                - contains:
+                    minContains: 0
+                    type: string
+            properties:
+              type: object
+              properties:
+                first:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                      minLength: 5
+                    type:
+                      type: string
+                      enum:
+                        - string
+                    format:
+                      type: string
+                      enum:
+                        - uri
+                  required:
+                    - type
+                    - format
+                self:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                      minLength: 5
+                    type:
+                      type: string
+                      enum:
+                        - string
+                    format:
+                      type: string
+                      enum:
+                        - uri
+                  required:
+                    - type
+                    - format
+                next:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                      minLength: 5
+                    type:
+                      type: string
+                      enum:
+                        - string
+                    format:
+                      type: string
+                      enum:
+                        - uri
+                  required:
+                    - type
+                    - format
+                prev:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                      minLength: 5
+                    type:
+                      type: string
+                      enum:
+                        - string
+                    format:
+                      type: string
+                      enum:
+                        - uri
+                  required:
+                    - type
+                    - format
+                last:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                      minLength: 5
+                    type:
+                      type: string
+                      enum:
+                        - string
+                    format:
+                      type: string
+                      enum:
+                        - uri
+                  required:
+                    - type
+                    - format
+              required:
+                - first
+                - self
+                - next
+                - prev
+                - last
+          required:
+            - type
+            - properties
+            - required
+  pagination-headers-and-parameters-not-correct:
+    description: >-
+      For Pagination define parameters 'limit' and optional 'sort' in
+      Get-request; For Offset-Based-Pagination define parameters 'offset',
+      'limit' and optional 'sort'.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/technical/pagination/#offset-based-paging
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths[?(@property.match('^(?!.*(\/{.+})).*$'))].get
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            parameters:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+              uniqueItems: true
+          if:
+            properties:
+              responses:
+                type: object
+                properties:
+                  '200':
+                    type: object
+                    properties:
+                      headers:
+                        type: object
+                        properties:
+                          X-Total-Count:
+                            type: object
+                        required:
+                          - X-Total-Count
+          then:
+            properties:
+              parameters:
+                type: array
+                minItems: 2
+                allOf:
+                  - contains:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          const: limit
+                  - contains:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          const: offset
+                  - contains:
+                      minContains: 0
+                      type: object
+                      properties:
+                        name:
+                          type: string
+            required:
+              - parameters
+          else:
+            properties:
+              parameters:
+                type: array
+                minItems: 1
+                allOf:
+                  - contains:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          const: limit
+                  - contains:
+                      minContains: 0
+                      type: object
+                      properties:
+                        name:
+                          type: string
+            required:
+              - parameters
+  pagination-headers-and-parameters-sort-missing:
+    description: >-
+      Pagination should have a 'sort' parameter.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/technical/pagination
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - >-
+        $.paths[?(@property.match('^(?!.*(\/{.+})).*$'))][?(@property === 'get'
+        || @property === 'head')]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            parameters:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+              uniqueItems: true
+          if:
+            properties:
+              responses:
+                type: object
+                properties:
+                  '200':
+                    type: object
+                    properties:
+                      headers:
+                        type: object
+                        properties:
+                          X-Total-Count:
+                            type: object
+                        required:
+                          - X-Total-Count
+          then:
+            properties:
+              parameters:
+                type: array
+                minItems: 2
+                allOf:
+                  - contains:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          const: sort
+                  - contains:
+                      minContains: 0
+                      type: object
+                      properties:
+                        name:
+                          type: string
+          else:
+            properties:
+              parameters:
+                type: array
+                minItems: 1
+                allOf:
+                  - contains:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          const: sort
+                  - contains:
+                      minContains: 0
+                      type: object
+                      properties:
+                        name:
+                          type: string
+            required:
+              - parameters
+  pagination-headers-and-parameters-not-correct-sort-wrong-def:
+    description: >-
+      The sort parameter for pagination should be defined either with 'required:
+      true' or 'required: false' and with 'schema.default'.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/technical/pagination
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: >-
+      $.paths[?(@property.match('^(?!.*(\/{.+})).*$'))][?(@property === 'get' ||
+      @property === 'head')].parameters.[?(@.name === 'sort')]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          oneOf:
+            - type: object
+              properties:
+                name:
+                  type: string
+                  const: sort
+                required:
+                  type: boolean
+                  const: false
+                default:
+                  type:
+                    - array
+                    - string
+              required:
+                - required
+                - default
+            - type: object
+              properties:
+                name:
+                  type: string
+                  const: sort
+                required:
+                  type: boolean
+                  const: false
+                schema:
+                  type: object
+                  properties:
+                    default:
+                      type:
+                        - array
+                        - string
+                  required:
+                    - default
+              required:
+                - required
+                - schema
+            - type: object
+              properties:
+                name:
+                  type: string
+                  const: sort
+                required:
+                  type: boolean
+                  const: true
+              required:
+                - required
+  path-keys-no-wildcard:
+    description: Paths MUST NOT use wildcard character `*`.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.paths
+    then:
+      field: '@key'
+      function: pattern
+      functionOptions:
+        notMatch: (.+\*$)|(\*.+)|(.+\*.+)$
+  path-declarations-no-empty-object:
+    description: >-
+      BLOCKING from 1st October: Path declarations MUST exist and MUST NOT be an
+      empty object. This is a violation of PSA-Requirement ID: 3.02-23/8.0.
+      Please see http://psa.telekom.de!
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given: $.paths
+    then:
+      field: $.*~
+      function: truthy
+  request-method:
+    description: >-
+      Operation request MUST only use allowed HTTP methods
+      (get,post,put,patch,delete,head). Do NOT use options, servers, trace,
+      connect or any x-extensions and try to avoid summary and description.
+      Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-method/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given: $.paths.*
+    then:
+      field: '@key'
+      function: pattern
+      functionOptions:
+        match: >-
+          ^(get|post|put|patch|delete|head|parameters|summary|description|options|x-[a-zA-Z0-9-]+)$
+  request-method-options:
+    description: >-
+      Do NOT use HTTP method options, it's not helpful in RESTful APIs. Try to
+      avoid summary and description on path level, it's not helpful too.
+      x-Extensions shouldn't be used, too.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-method/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.paths.*
+    then:
+      field: '@key'
+      function: pattern
+      functionOptions:
+        notMatch: ^(summary|description|options|x-[a-zA-Z0-9-]+)$
+  request-headers:
+    description: >-
+      Operation request MUST only use allowed HTTP request headers. Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-headers/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths.*.*.parameters.[?(@.in == 'header')]
+      - $.paths.*.parameters.[?(@.in == 'header')]
+    then:
+      field: name
+      function: enumeration
+      functionOptions:
+        values:
+          - Accept
+          - Accept-Charset
+          - Accept-Encoding
+          - Accept-Language
+          - Cache-Control
+          - Content-Encoding
+          - Content-Language
+          - Content-Length
+          - Date
+          - Expect
+          - If-Match
+          - If-Modified-Since
+          - If-None-Match
+          - Prefer
+          - X-Auth-Identity
+          - X-B3-ParentSpanId
+          - X-B3-ParentSpanID
+          - X-B3-Sampled
+          - X-B3-SpanId
+          - X-B3-SpanID
+          - X-B3-TraceId
+          - X-B3-TraceID
+          - X-Business-Context
+          - X-Correlation-Id
+          - X-Correlation-ID
+          - X-Idempotency-Key
+          - X-Request-Id
+          - X-Request-ID
+          - X-Subscription-Id
+          - X-Subscription-ID
+  request-mediatype-oas2:
+    description: >-
+      Operation request MUST only use allowed HTTP media types. Specifying the
+      charset like "application/json;charset=UTF-8" is not necessary!
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.consumes.*
+      - $.*.*.*.consumes.*
+    then:
+      function: enumeration
+      functionOptions:
+        values:
+          - application/json
+          - application/merge-patch+json
+          - application/json-patch+json
+          - application/json-patch-query+json
+          - application/problem+json
+  request-mediatype-oas3:
+    description: >-
+      Operation request MUST only use allowed HTTP media types. Specifying the
+      charset like "application/json;charset=UTF-8" is not necessary!
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.paths.*.*.*.content
+    then:
+      field: '@key'
+      function: enumeration
+      functionOptions:
+        values:
+          - application/json
+          - application/merge-patch+json
+          - application/json-patch+json
+          - application/json-patch-query+json
+          - application/problem+json
+  request-method-get:
+    description: >-
+      Operation request `get` MUST NOT accept a payload or declare a request
+      media type.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths.*.get
+      - $.paths.*.get.*[?(@.in ==='body')].name
+    then:
+      - field: requestBody
+        function: falsy
+      - field: consumes
+        function: falsy
+  request-method-post-oas3:
+    description: >-
+      Operation request `post` MUST accept a payload and `application/json`.
+      Specifying the charset like "application/json;charset=UTF-8" is not
+      necessary! media type.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given: $.paths.*.post.requestBody.content.*~
+    then:
+      function: enumeration
+      functionOptions:
+        values:
+          - application/json
+  request-method-post-oas2:
+    description: >-
+      Operation request `post` MUST accept a payload and `application/json`.
+      Specifying the charset like "application/json;charset=UTF-8" is not
+      necessary! media type.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given:
+      - $.paths.*.post
+    then:
+      - field: consumes
+        function: truthy
+      - field: consumes[0]
+        function: enumeration
+        functionOptions:
+          values:
+            - application/json
+  request-method-put-oas3:
+    description: >-
+      Operation request `put` MUST accept a payload and `application/json` media
+      type. Specifying the charset like "application/json;charset=UTF-8" is not
+      necessary! type.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given: $.paths.*.put.requestBody.content.*~
+    then:
+      function: enumeration
+      functionOptions:
+        values:
+          - application/json
+  request-method-put-oas2:
+    description: >-
+      Operation request `put` MUST accept a payload and `application/json` media
+      type. Specifying the charset like "application/json;charset=UTF-8" is not
+      necessary! type.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given:
+      - $.paths.*.put
+    then:
+      - field: consumes
+        function: truthy
+      - field: consumes[0]
+        function: enumeration
+        functionOptions:
+          values:
+            - application/json
+  request-method-patch-oas3:
+    description: >-
+      Operation request `patch` MUST accept a payload and
+      `application/json-patch+json`, `application/json-patch-query+json` or
+      `application/merge-patch+json` media type.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given: $.paths.*.patch.requestBody.content
+    then:
+      - field: '@key'
+        function: truthy
+      - field: '@key'
+        function: enumeration
+        functionOptions:
+          values:
+            - application/json-patch+json
+            - application/json-patch-query+json
+            - application/merge-patch+json
+  request-method-patch-oas2:
+    description: >-
+      Operation request `patch` MUST accept a payload and
+      `application/json-patch+json`, `application/json-patch-query+json` or
+      `application/merge-patch+json` media type.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given: $.paths.*.patch
+    then:
+      - field: consumes
+        function: truthy
+      - field: consumes[0]
+        function: enumeration
+        functionOptions:
+          values:
+            - application/json-patch+json
+            - application/merge-patch+json
+            - application/json-patch-query+json
+  request-method-delete:
+    description: >-
+      Operation request `delete` MUST NOT accept a payload or declare a request
+      media type. Do not use `{}` for consumes, content or requestBody.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths.*.delete.consumes.*
+      - $.paths.*.delete.requestBody.content.*
+      - $.paths.*.delete.*[?(@.in ==='body')]
+    then:
+      - function: falsy
+  request-method-head:
+    description: >-
+      Operation request `head` MUST NOT accept a payload or declare a request
+      media type. Do not use `{}` for consumes, content or requestBody. message:
+      '{{description}} {{error}} {{path}} {{property}}'
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths.*.head.consumes.*
+      - $.paths.*.head.requestBody.content.*
+      - $.paths.*.head.*[?(@.in ==='body')]
+    then:
+      - function: falsy
+  request-headers-date-format-OAS3:
+    description: >-
+      "Request parameters of operation should use for the headers ``Date`` &
+      ``If-Modified-Since`` (``If-Unmodified-Since``) the properties:
+      description, in, name & schema with type, pattern with special RegEx
+      (according to RFC5322).  It is wrong to use format: date-time (that's
+      RFC3339).  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-headers/
+      RegEx for pattern must be '^(Mon|Tue|Wed|Thu|Fri|Sat|Sun),
+      (0[1-9]{1}|[1-2]{1}\d{1}|3[0-1]{1})
+      (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ([1-9]{1}\d{3})
+      ((0|1)\d{1}|2[0-3]{1}):([0-5]{1}\d{1}):([0-5]{1}\d{1}) GMT$'"
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given:
+      - >-
+        $.paths..parameters.[?(@.in == 'header' && (@.name=='If-Modified-Since'
+        || @.name=='If-Unmodified-Since'  || @.name=='Date') )].
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - name
+            - in
+          properties:
+            name:
+              type: string
+            in:
+              type: string
+              const: header
+            description:
+              type: string
+              minLength: 5
+            schema:
+              required:
+                - type
+                - pattern
+              properties:
+                type:
+                  type: string
+                  const: string
+                pattern:
+                  type: string
+                  const: >-
+                    ^(Mon|Tue|Wed|Thu|Fri|Sat|Sun),
+                    (0[1-9]{1}|[1-2]{1}\d{1}|3[0-1]{1})
+                    (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)
+                    ([1-9]{1}\d{3})
+                    ((0|1)\d{1}|2[0-3]{1}):([0-5]{1}\d{1}):([0-5]{1}\d{1}) GMT$
+  request-headers-date-format-OAS2:
+    description: >-
+      "Request parameters of operation should use for the headers ``Date`` &
+      ``If-Modified-Since`` (``If-Unmodified-Since``) the properties:
+      description, in, name, type & pattern with special RegEx (according to
+      RFC5322).  It is wrong to use format: date-time (that's RFC3339).  Please
+      see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-headers/
+      RegEx for pattern must be ^(Mon|Tue|Wed|Thu|Fri|Sat|Sun),
+      (0[1-9]{1}|[1-2]{1}\d{1}|3[0-1]{1})
+      (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ([1-9]{1}\d{3})
+      ((0|1)\d{1}|2[0-3]{1}):([0-5]{1}\d{1}):([0-5]{1}\d{1}) GMT$"
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given:
+      - >-
+        $.paths..parameters.[?(@.in == 'header' && (@.name=='If-Modified-Since'
+        || @.name=='If-Unmodified-Since'  || @.name=='Date') )].
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - name
+            - in
+            - pattern
+          properties:
+            name:
+              type: string
+            in:
+              type: string
+              const: header
+            description:
+              type: string
+              minLength: 5
+            type:
+              type: string
+              const: string
+            pattern:
+              type: string
+              const: >-
+                ^(Mon|Tue|Wed|Thu|Fri|Sat|Sun),
+                (0[1-9]{1}|[1-2]{1}\d{1}|3[0-1]{1})
+                (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)
+                ([1-9]{1}\d{3})
+                ((0|1)\d{1}|2[0-3]{1}):([0-5]{1}\d{1}):([0-5]{1}\d{1}) GMT$
+  request-headers-X-Business-Context-OAS3:
+    description: >-
+      Operation should use X-Business-Context header with properties: name,
+      description, in and schema with type (string), optional required(true) and
+      optional format(e.g. uuid). It should be defined either under
+      `paths.*.parameters` or `paths.*.*.parameters`. Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-headers/proprietary-headers/x-business-context
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given:
+      - $.paths[*]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          oneOf:
+            - allOf:
+                - properties:
+                    parameters:
+                      type: array
+                      items:
+                        type: object
+                      minItems: 1
+                      contains:
+                        type: object
+                        required:
+                          - name
+                          - in
+                        properties:
+                          name:
+                            type: string
+                            const: X-Business-Context
+                          in:
+                            type: string
+                            const: header
+                          description:
+                            type: string
+                            minLength: 5
+                          required:
+                            type: boolean
+                          schema:
+                            required:
+                              - type
+                            properties:
+                              type:
+                                type: string
+                                const: string
+                  required:
+                    - parameters
+                - patternProperties:
+                    ^(get|put|patch|post|delete|head)$:
+                      type: object
+                      properties:
+                        parameters:
+                          type: array
+                          items:
+                            type: object
+                            not:
+                              properties:
+                                name:
+                                  type: string
+                                  const: X-Business-Context
+            - allOf:
+                - patternProperties:
+                    ^(get|put|patch|post|delete|head)$:
+                      type: object
+                      properties:
+                        parameters:
+                          type: array
+                          items:
+                            type: object
+                          minItems: 1
+                          contains:
+                            type: object
+                            required:
+                              - name
+                              - in
+                            properties:
+                              name:
+                                type: string
+                                const: X-Business-Context
+                              in:
+                                type: string
+                                const: header
+                              description:
+                                type: string
+                                minLength: 5
+                              required:
+                                type: boolean
+                              schema:
+                                required:
+                                  - type
+                                properties:
+                                  type:
+                                    type: string
+                                    const: string
+                - properties:
+                    parameters:
+                      type: array
+                      items:
+                        type: object
+                      minItems: 1
+                      not:
+                        contains:
+                          type: object
+                          required:
+                            - name
+                          properties:
+                            name:
+                              type: string
+                              const: X-Business-Context
+  request-headers-X-Business-Context-OAS2:
+    description: >-
+      Operation should use X-Business-Context header with properties: name,
+      description, in, type(string) and optional required(true).  It should be
+      defined either under `paths.*.parameters` or `paths.*.*.parameters`.
+      Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-headers/proprietary-headers/x-business-context
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given:
+      - $.paths[*]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          oneOf:
+            - allOf:
+                - properties:
+                    parameters:
+                      type: array
+                      items:
+                        type: object
+                      minContains: 1
+                      contains:
+                        type: object
+                        required:
+                          - name
+                          - in
+                          - type
+                        properties:
+                          name:
+                            type: string
+                            const: X-Business-Context
+                          in:
+                            type: string
+                            const: header
+                          description:
+                            type: string
+                            minLength: 5
+                          required:
+                            type: boolean
+                          type:
+                            type: string
+                            const: string
+                  required:
+                    - parameters
+                - patternProperties:
+                    ^(get|put|patch|post|delete|head)$:
+                      type: object
+                      properties:
+                        parameters:
+                          type: array
+                          items:
+                            type: object
+                            not:
+                              properties:
+                                name:
+                                  type: string
+                                  const: X-Business-Context
+            - allOf:
+                - patternProperties:
+                    ^(get|put|patch|post|delete|head)$:
+                      type: object
+                      properties:
+                        parameters:
+                          type: array
+                          items:
+                            type: object
+                          minItems: 1
+                          contains:
+                            type: object
+                            required:
+                              - name
+                              - in
+                              - type
+                            properties:
+                              name:
+                                type: string
+                                const: X-Business-Context
+                              in:
+                                type: string
+                                const: header
+                              description:
+                                type: string
+                                minLength: 5
+                              required:
+                                type: boolean
+                              type:
+                                type: string
+                                const: string
+                - properties:
+                    parameters:
+                      type: array
+                      items:
+                        type: object
+                      minItems: 1
+                      not:
+                        contains:
+                          type: object
+                          required:
+                            - name
+                          properties:
+                            name:
+                              type: string
+                              const: X-Business-Context
+  response-clienterror:
+    description: Operation MUST have at least the `400` response.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given: >-
+      $.paths.*[?( @property === 'get' || @property === 'put' || @property ===
+      'post' || @property === 'delete' || @property === 'options' || @property
+      ==='head' || @property === 'patch' || @property === 'trace' )].responses.
+    then:
+      field: '400'
+      function: truthy
+  response-servererror:
+    description: Operation MUST have at least the `500` response.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given: >-
+      $.paths.*[?( @property === 'get' || @property === 'put' || @property ===
+      'post' || @property === 'delete' || @property === 'options' || @property
+      ==='head' || @property === 'patch' || @property === 'trace' )].responses.
+    then:
+      field: '500'
+      function: truthy
+  response-headers:
+    description: >-
+      Operation response MUST only use allowed HTTP response headers.  Please
+      see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-headers/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.paths.[*].responses.*.headers.
+    then:
+      field: '@key'
+      function: enumeration
+      functionOptions:
+        values:
+          - Accept
+          - Accept-Charset
+          - Accept-Encoding
+          - Accept-Language
+          - Cache-Control
+          - Content-Encoding
+          - Content-Language
+          - Content-Length
+          - Date
+          - ETag
+          - Expires
+          - Last-Modified
+          - Location
+          - Preference-Applied
+          - RateLimit-Limit
+          - RateLimit-Remaining
+          - RateLimit-Reset
+          - Retry-After
+          - WWW-Authenticate
+          - X-Business-Context
+          - X-Correlation-ID
+          - X-Correlation-Id
+          - X-Result-Count
+          - X-Total-Count
+          - X-Request-ID
+          - X-Request-Id
+          - X-Subscription-Id
+          - X-Subscription-ID
+  response-mediatype-oas2:
+    description: >-
+      API MUST produce an allowed content type. Specifying the charset like
+      "application/json;charset=UTF-8" is not necessary!
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given:
+      - $.produces.*
+      - $.*.*.*.produces.*
+    then:
+      function: enumeration
+      functionOptions:
+        values:
+          - application/json
+          - application/problem+json
+  response-status-404-get:
+    description: >-
+      Operation response `404` MUST NOT be used in get, only in get-by-Id
+      operations.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    resolved: false
+    given:
+      - >-
+        $.paths[?(@property.match('^(?!.*(\/{.+})).*$'))].get.responses[?(@property.match(/^(404)/))]
+    then:
+      function: falsy
+  response-status-302-303-307-location:
+    description: Operation responses `302`, `303` & `307` MUST declare `Location` header.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: $.paths[*].*.responses[?(@property.match(/^(302|303|307)/))].
+    then:
+      - field: headers.Location
+        function: truthy
+  response-object:
+    description: >-
+      Operation response MUST NOT respond an array, but for 2xx a resource
+      object (for a get-request an object containing the response data (array)
+      and paging information) or an error object for 4xx and 5xx. Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+      - oas2
+    given:
+      - >-
+        $.paths[*].*.responses[?(@property.match(/^(200|201|202|400|401|403|409|410|412|415|500|501|502|503|504)/))].schema.
+      - >-
+        $.paths[*].*.responses[?(@property.match(/^(200|201|202|400|401|403|409|410|412|415|500|501|502|503|504)/))].content.*.schema.
+    then:
+      field: type
+      function: pattern
+      functionOptions:
+        notMatch: array
+  response-status-415:
+    description: Operation MUST have the `415` response.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: >-
+      $.paths.*[?( @property === 'put' || @property === 'post' || @property ===
+      'patch' )].responses.
+    then:
+      field: '415'
+      function: truthy
+  response-method-head:
+    description: >-
+      Operation response `head` MUST NOT return a payload, neither in 2xx nor in
+      4xx and 5xx. Do not use `{}` for content or schema and do not declare are
+      mediatype in produces.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths.*[?( @property ==='head' )].produces.*
+      - $.paths.*[?( @property ==='head' )].responses.*.content.*
+      - $.paths.*[?( @property ==='head' )].responses.*.schema.*
+    then:
+      - function: falsy
+  response-method-delete:
+    description: >-
+      Operation response `delete` MUST NOT return a payload in 2xx. Do not use
+      `{}` for content or schema.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: error
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths.*[?( @property ==='delete' )].produces.*
+      - >-
+        $.paths.*[?( @property
+        ==='delete')].responses[?(@property.match(/^(2)/))].content.*
+      - >-
+        $.paths.*[?( @property
+        ==='delete')].responses[?(@property.match(/^(2)/))].schema.*
+    then:
+      - function: falsy
+  response-headers-date-format-OAS3:
+    description: >-
+      "Response of operation should use for headers Date, Expires &
+      Last-Modified the properties: description, schema & pattern with special
+      RegEx (according to RFC5322).   It is wrong to use format: date-time
+      (that's RFC3339).  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-headers/
+      Please use RegEx '^(Mon|Tue|Wed|Thu|Fri|Sat|Sun),
+      (0[1-9]{1}|[1-2]{1}\d{1}|3[0-1]{1})
+      (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ([1-9]{1}\d{3})
+      ((0|1)\d{1}|2[0-3]{1}):([0-5]{1}\d{1}):([0-5]{1}\d{1}) GMT$' "
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given:
+      - >-
+        $.paths.[*].responses.*.headers[?(@property.match(/^(Date|Last-Modified|Expires)/))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - schema
+            - description
+          properties:
+            description:
+              type: string
+              minLength: 5
+            schema:
+              required:
+                - type
+                - pattern
+              properties:
+                type:
+                  type: string
+                  const: string
+                pattern:
+                  type: string
+                  const: >-
+                    ^(Mon|Tue|Wed|Thu|Fri|Sat|Sun),
+                    (0[1-9]{1}|[1-2]{1}\d{1}|3[0-1]{1})
+                    (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)
+                    ([1-9]{1}\d{3})
+                    ((0|1)\d{1}|2[0-3]{1}):([0-5]{1}\d{1}):([0-5]{1}\d{1}) GMT$
+  response-headers-date-format-OAS2:
+    description: >-
+      "Response of operation should use for headers Date, Expires &
+      Last-Modified the properties: description, type & pattern with special
+      RegEx (according to RFC5322).   It is wrong to use format: date-time
+      (that's RFC3339).  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-headers/
+      Please use RegEx '^(Mon|Tue|Wed|Thu|Fri|Sat|Sun),
+      (0[1-9]{1}|[1-2]{1}\d{1}|3[0-1]{1})
+      (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ([1-9]{1}\d{3})
+      ((0|1)\d{1}|2[0-3]{1}):([0-5]{1}\d{1}):([0-5]{1}\d{1}) GMT$' "
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given:
+      - >-
+        $.paths.[*].responses.*.headers[?(@property.match(/^(Date|Last-Modified|Expires)/))]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - pattern
+            - description
+          properties:
+            description:
+              type: string
+              minLength: 5
+            type:
+              type: string
+              const: string
+            pattern:
+              type: string
+              const: >-
+                ^(Mon|Tue|Wed|Thu|Fri|Sat|Sun),
+                (0[1-9]{1}|[1-2]{1}\d{1}|3[0-1]{1})
+                (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)
+                ([1-9]{1}\d{3})
+                ((0|1)\d{1}|2[0-3]{1}):([0-5]{1}\d{1}):([0-5]{1}\d{1}) GMT$
+  response-headers-X-Business-Context-OAS3:
+    description: >-
+      Response of operation should use header X-Business-Context header with
+      properties: name, description, schema with type(string), optional
+      required(true) and optional format(e.g. uuid).  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-headers/proprietary-headers/x-business-context
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given:
+      - $.paths.[*].responses.*
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - headers
+          properties:
+            headers:
+              type: object
+              required:
+                - X-Business-Context
+              properties:
+                X-Business-Context:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                      minLength: 5
+                    required:
+                      type: boolean
+                    schema:
+                      required:
+                        - type
+                      properties:
+                        type:
+                          type: string
+                          const: string
+  response-headers-X-Business-Context-OAS2:
+    description: >-
+      Response of operation should use X-Business-Context header with
+      properties: name, description, type(string) and optional format(e.g.
+      uuid).  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-headers/proprietary-headers/x-business-context
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given:
+      - $.paths.[*].responses.*.
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required:
+            - headers
+          properties:
+            headers:
+              type: object
+              required:
+                - X-Business-Context
+              properties:
+                X-Business-Context:
+                  type: object
+                  required:
+                    - type
+                  properties:
+                    description:
+                      type: string
+                      minLength: 5
+                    type:
+                      type: string
+                      const: string
+                    format:
+                      type: string
+  response-status-with-no-payload:
+    description: >-
+      Operation responses `100|204|304|401|403|404|410|415|417|422|429` MUST NOT
+      return a payload or declare a content or response media type.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - >-
+        $.paths[*].*.responses[?(@property.match(/^(100|204|304|401|403|404|410|415|417|422|429)/))].content
+      - >-
+        $.paths[*].*.responses[?(@property.match(/^(100|204|304|401|403|404|410|415|417|422|429)/))].schema
+    then:
+      function: falsy
+  response-content:
+    description: >-
+      Operation response MUST define a content type (OAS3) or schema (OAS2).
+      Except for ``HEAD`` method.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given:
+      - >-
+        $.paths.*[?( @property
+        !=='head')].responses[?(@property.match(/^(200|201|400|409|412|413|428|500|502|503|504)/))].
+    then:
+      function: xor
+      functionOptions:
+        properties:
+          - schema
+          - content
+  response-content-produces-oas2:
+    description: >-
+      Operation response MUST define a content type.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-mediatype/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given: $.
+    then:
+      field: produces
+      function: truthy
+  response-status-forbidden:
+    description: >-
+      Operation responses
+      `203|206|207|300|301|302|303|307|308|402|405|406|408|410|411|414|416|418|421|426|501|502`
+      MUST NOT be used.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+      - oas3
+    given: >-
+      $.paths.*.*.responses[?(@property.match(/^(203|206|207|300|301|302|303|307|308|402|405|406|408|410|411|414|416|421|426|501|502)/))]
+    then:
+      function: falsy
+  response-mediatype-oas3:
+    description: >-
+      Operation response MUST only use allowed HTTP media types. Specifying the
+      charset like "application/json;charset=UTF-8" is not necessary!  Please
+      see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+      and
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-mediatype/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given:
+      - >-
+        $.paths[*].*.responses[?(@property.match(/^(200|201|202|400|409|412|413|428|429|500|502|503|504)/))].content.*~
+    then:
+      function: enumeration
+      functionOptions:
+        values:
+          - application/json
+          - application/problem+json
+  response-errorobject-mediatype-4xx-5xx-oas3:
+    description: >-
+      Operation response MUST return Error/Problem Details (except head method)
+      and use `application/problem+json` media type for RFC9457 or media type
+      `application/json` for TMF.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+      and
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-mediatype/
+      and
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/models/error-message
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given:
+      - >-
+        $.paths.*[?( @property
+        !=='head')].responses[?(@property.match(/^(400|409|410|412|413|428|500|502|503|504)/))].
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            content:
+              oneOf:
+                - type: object
+                  properties:
+                    application/json:
+                      type: object
+                      properties:
+                        schema:
+                          oneOf:
+                            - type: object
+                              required:
+                                - required
+                              properties:
+                                required:
+                                  type: array
+                                  minItems: 2
+                                  items:
+                                    enum:
+                                      - code
+                                      - reason
+                            - type: object
+                              required:
+                                - allOf
+                              properties:
+                                allOf:
+                                  type: array
+                                  allOf:
+                                    - contains:
+                                        minContains: 1
+                                        type: object
+                                        required:
+                                          - required
+                                        properties:
+                                          required:
+                                            type: array
+                                            minItems: 2
+                                            items:
+                                              enum:
+                                                - code
+                                                - reason
+                      required:
+                        - schema
+                  required:
+                    - application/json
+                - type: object
+                  properties:
+                    application/problem+json:
+                      type: object
+                      properties:
+                        schema:
+                          oneOf:
+                            - type: object
+                              required:
+                                - required
+                              properties:
+                                required:
+                                  type: array
+                                  minItems: 2
+                                  items:
+                                    enum:
+                                      - type
+                                      - title
+                            - type: object
+                              required:
+                                - allOf
+                              properties:
+                                allOf:
+                                  type: array
+                                  allOf:
+                                    - contains:
+                                        minContains: 1
+                                        type: object
+                                        required:
+                                          - required
+                                        properties:
+                                          required:
+                                            type: array
+                                            minItems: 2
+                                            items:
+                                              enum:
+                                                - type
+                                                - title
+                      required:
+                        - schema
+                  required:
+                    - application/problem+json
+          required:
+            - content
+  response-errorobject-4xx-5xx-oas2:
+    description: >-
+      Operation response MUST return Error/Problem Details (except head method)
+      according to RFC9457 or TMF.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+      and
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/models/error-message
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given:
+      - >-
+        $.paths.*[?( @property
+        !=='head')].responses[?(@property.match(/^(400|409|410|412|413|428|500|502|503|504)/))].
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          properties:
+            schema:
+              oneOf:
+                - type: object
+                  required:
+                    - required
+                  properties:
+                    required:
+                      type: array
+                      minItems: 2
+                      items:
+                        enum:
+                          - code
+                          - reason
+                - type: object
+                  required:
+                    - allOf
+                  properties:
+                    allOf:
+                      type: array
+                      allOf:
+                        - contains:
+                            minContains: 1
+                            type: object
+                            required:
+                              - required
+                            properties:
+                              required:
+                                type: array
+                                minItems: 2
+                                items:
+                                  enum:
+                                    - code
+                                    - reason
+                - type: object
+                  required:
+                    - required
+                  properties:
+                    required:
+                      type: array
+                      minItems: 2
+                      items:
+                        enum:
+                          - type
+                          - title
+                - type: object
+                  required:
+                    - allOf
+                  properties:
+                    allOf:
+                      type: array
+                      allOf:
+                        - contains:
+                            minContains: 1
+                            type: object
+                            required:
+                              - required
+                            properties:
+                              required:
+                                type: array
+                                minItems: 2
+                                items:
+                                  enum:
+                                    - type
+                                    - title
+          required:
+            - schema
+  response-status-get:
+    description: >-
+      Operation 'get' response MUST return only allowed HTTP status codes `200,
+      202, 304, 400, 401, 403, 409, 412, 413, 428, 429, 500, 503, 504`. Please
+      see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    resolved: false
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths[?(@property.match('^(?!.*(\/{.+})).*$'))].get.responses
+    then:
+      field: '@key'
+      function: enumeration
+      functionOptions:
+        values:
+          - '200'
+          - '202'
+          - '304'
+          - '400'
+          - '401'
+          - '403'
+          - '409'
+          - '412'
+          - '413'
+          - '428'
+          - '429'
+          - '500'
+          - '503'
+          - '504'
+  response-status-get-by-id:
+    description: >-
+      Operation 'get-by-id' response MUST return only allowed HTTP status codes
+      `200, 202, 304, 400, 401, 403, 404, 409, 412, 413, 417, 428, 429, 500,
+      503, 504`.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    resolved: false
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths[?(@property.match('^(.*(\/{.+})).*$'))].get.responses
+    then:
+      field: '@key'
+      function: enumeration
+      functionOptions:
+        values:
+          - '200'
+          - '202'
+          - '304'
+          - '400'
+          - '401'
+          - '403'
+          - '404'
+          - '409'
+          - '412'
+          - '413'
+          - '428'
+          - '429'
+          - '500'
+          - '503'
+          - '504'
+  response-status-put:
+    description: >-
+      Operation 'put' response MUST return only allowed HTTP status codes `100,
+      200, 202, 400, 401, 403, 404, 409, 412, 413, 415, 417, 428, 429, 500, 503,
+      504`.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    resolved: false
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths.*[?( @property === 'put' )].responses.
+    then:
+      field: '@key'
+      function: enumeration
+      functionOptions:
+        values:
+          - '100'
+          - '200'
+          - '202'
+          - '400'
+          - '401'
+          - '403'
+          - '404'
+          - '409'
+          - '412'
+          - '413'
+          - '415'
+          - '417'
+          - '428'
+          - '429'
+          - '500'
+          - '503'
+          - '504'
+  response-status-patch:
+    description: >-
+      Operation 'patch' response MUST return only allowed HTTP status codes
+      `100, 200, 202, 400, 401, 403, 404, 409, 412, 413, 415, 417, 422, 428,
+      429, 500, 503, 504`.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    resolved: false
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths.*[?( @property === 'patch' )].responses.
+    then:
+      field: '@key'
+      function: enumeration
+      functionOptions:
+        values:
+          - '100'
+          - '200'
+          - '202'
+          - '400'
+          - '401'
+          - '403'
+          - '404'
+          - '409'
+          - '412'
+          - '413'
+          - '415'
+          - '417'
+          - '422'
+          - '428'
+          - '429'
+          - '500'
+          - '503'
+          - '504'
+  response-status-post:
+    description: >-
+      Operation 'post' response MUST return only allowed HTTP status codes `100,
+      201, 202, 400, 401, 403, 409, 412, 413, 415, 417, 422, 428, 429, 500, 503,
+      504`.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    resolved: false
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths.*[?( @property === 'post' )].responses.
+    then:
+      field: '@key'
+      function: enumeration
+      functionOptions:
+        values:
+          - '100'
+          - '200'
+          - '201'
+          - '202'
+          - '400'
+          - '401'
+          - '403'
+          - '409'
+          - '412'
+          - '413'
+          - '415'
+          - '417'
+          - '422'
+          - '428'
+          - '429'
+          - '500'
+          - '503'
+          - '504'
+  response-status-delete:
+    description: >-
+      Operation 'delete' response MUST return only allowed HTTP status codes
+      ``100, 202, 204, 400, 401, 403, 404, 409, 412, 413, 417, 428, 429, 500,
+      503, 504``.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    resolved: false
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths.*[?( @property === 'delete' )].responses.
+    then:
+      field: '@key'
+      function: enumeration
+      functionOptions:
+        values:
+          - '100'
+          - '202'
+          - '204'
+          - '400'
+          - '401'
+          - '403'
+          - '404'
+          - '409'
+          - '412'
+          - '413'
+          - '417'
+          - '428'
+          - '429'
+          - '500'
+          - '503'
+          - '504'
+  response-status-head:
+    description: >-
+      Operation 'head' response MUST return only allowed HTTP status codes `200,
+      201, 202, 204, 304, 400, 401, 403, 404, 409, 412, 413, 415, 422, 428, 429,
+      500, 503, 504`.  Please see
+      https://docs.devops.telekom.de/docs/standards-and-security/api-guidelines/http-details/http-statuscode/
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    resolved: false
+    formats:
+      - oas2
+      - oas3
+    given:
+      - $.paths.*[?( @property === 'head' )].responses.
+    then:
+      field: '@key'
+      function: enumeration
+      functionOptions:
+        values:
+          - '200'
+          - '201'
+          - '202'
+          - '204'
+          - '304'
+          - '400'
+          - '401'
+          - '403'
+          - '404'
+          - '409'
+          - '412'
+          - '413'
+          - '415'
+          - '422'
+          - '428'
+          - '429'
+          - '500'
+          - '503'
+          - '504'
+  security-no-http-basic:
+    description: Security definition MUST NOT use `basic` as type.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    severity: warn
+    formats:
+      - oas3
+      - oas2
+    given:
+      - $.components.securitySchemes[*]
+      - $.securityDefinitions[*]
+    then:
+      - field: type
+        function: pattern
+        functionOptions:
+          notMatch: basic
+      - field: scheme
+        function: pattern
+        functionOptions:
+          notMatch: basic
+  security-defined-oas2:
+    description: Security definitions MUST be defined.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    severity: warn
+    formats:
+      - oas2
+    given: $.
+    then:
+      field: securityDefinitions
+      function: truthy
+  security-defined-oas3:
+    description: Security schemes MUST be defined.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    severity: warn
+    formats:
+      - oas3
+    given: $.components.
+    then:
+      field: securitySchemes
+      function: truthy
+  security-global:
+    description: Global security MUST be defined.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    severity: warn
+    formats:
+      - oas3
+      - oas2
+    given: $.
+    then:
+      - field: security
+        function: truthy
+  security-defined-oauth2-oas3:
+    description: >-
+      Wrong type of security defined. Only type `oauth2` with fields `flows` and
+      `description` is allowed.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    severity: warn
+    formats:
+      - oas3
+    given:
+      - $.components.securitySchemes.*.
+    then:
+      - field: flows
+        function: truthy
+      - field: description
+        function: truthy
+      - field: type
+        function: truthy
+      - field: type
+        function: pattern
+        functionOptions:
+          match: ^oauth2$
+  security-defined-oauth2-oas2:
+    description: >-
+      Wrong type of security defined. Only type `oauth2` with fields `flow` and
+      `description` is allowed.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    severity: warn
+    formats:
+      - oas2
+    given:
+      - $.securityDefinitions.*.
+    then:
+      - field: flow
+        function: truthy
+      - field: description
+        function: truthy
+      - field: type
+        function: truthy
+      - field: type
+        function: pattern
+        functionOptions:
+          match: ^oauth2$
+  security-defined-ClientCredentialFlow-oas3:
+    description: >-
+      Only `clientCredentials` flow with `tokenUrl` and `scopes` is allowed by
+      TARDIS.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    severity: warn
+    formats:
+      - oas3
+    given:
+      - $.components.securitySchemes.*.flows
+    then:
+      - field: clientCredentials
+        function: truthy
+      - field: clientCredentials.tokenUrl
+        function: truthy
+      - field: clientCredentials.scopes
+        function: truthy
+  security-defined-ClientCredentialFlow-oas2:
+    description: >-
+      Only `clientCredentials` flow aka `application` with `tokenUrl` and
+      `scopes` is allowed by TARDIS.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    severity: warn
+    formats:
+      - oas2
+    given:
+      - $.securityDefinitions.*
+    then:
+      - field: flow
+        function: truthy
+      - field: flow
+        function: pattern
+        functionOptions:
+          match: ^application$
+      - field: tokenUrl
+        function: truthy
+      - field: scopes
+        function: truthy
+  security-global-access-deprecated:
+    description: >-
+      Global security definition MUST NOT be set to `Access` (that is
+      deprecated!).
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    severity: warn
+    formats:
+      - oas3
+      - oas2
+    given: $.security.*
+    then:
+      - field: '@key'
+        function: pattern
+        functionOptions:
+          notMatch: ^Access$
+  security-defined-access-deprecated:
+    description: >-
+      Security definition with key `Access` MUST NOT be defined anymore. Use
+      `oauth2` with `clientCredentials` flow instead.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    severity: warn
+    formats:
+      - oas3
+      - oas2
+    given:
+      - $.components.securitySchemes
+      - $.securityDefinitions
+    then:
+      - field: Access
+        function: falsy
+  server-https-only-oas2:
+    description: Server address MUST only specify `https` protocol.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas2
+    given: $.schemes
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+              - https
+          maxItems: 1
+  server-https-only-oas3:
+    description: Server address MUST only specify `https` protocol or relative URLs.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: warn
+    formats:
+      - oas3
+    given: $.servers..url
+    then:
+      function: pattern
+      functionOptions:
+        match: ^(https:|\/(?!\/)|\${).*
+  server-https-no-LinuxVar:
+    description: Server address MUST NOT contain Linux variable.
+    message: '{{description}} {{error}} {{path}} {{property}}'
+    recommended: true
+    severity: info
+    formats:
+      - oas3
+    given: $.servers..url
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: ^\${.*

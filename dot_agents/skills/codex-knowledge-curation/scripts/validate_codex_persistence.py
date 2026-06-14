@@ -11,11 +11,20 @@ from pathlib import Path
 RESERVED = {"index.md", "log.md"}
 BLOCKED_NAMES = {
     ".credentials.json",
+    ".token_seed",
     "auth.json",
+    "data.json",
     "history.jsonl",
+    "hosts.yml",
     "installation_id",
+    "keys.txt",
+    "mondoo.yml",
 }
 BLOCKED_SUFFIXES = {
+    ".db",
+    ".db-shm",
+    ".db-wal",
+    ".kubeconfig",
     ".sqlite",
     ".sqlite-shm",
     ".sqlite-wal",
@@ -25,9 +34,11 @@ BLOCKED_SUFFIXES = {
     ".pdf",
 }
 BLOCKED_PARTS = {
+    ".kube",
     "__pycache__",
-    "shell_snapshots",
+    "Bitwarden CLI",
     "cache",
+    "shell_snapshots",
     ".tmp",
 }
 SKIP_PARTS = {
@@ -39,6 +50,9 @@ SECRET_PATTERNS = [
     re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{20,}\b"),
     re.compile(r"\bsk-[A-Za-z0-9_\-]{20,}\b"),
     re.compile(r"\b(?:OPENAI_API_KEY|CODEX_API_KEY|GITLAB_PERSONAL_ACCESS_TOKEN)\s*=\s*['\"]?[A-Za-z0-9_\-]{16,}"),
+    re.compile(r"\bgithub_token\s*=\s*['\"][A-Za-z0-9_\-]{16,}['\"]", re.IGNORECASE),
+    re.compile(r"\btoken:\s*[A-Za-z0-9_\-]{16,}\b", re.IGNORECASE),
+    re.compile(r"\bpassword:\s*['\"]?[A-Za-z0-9+/=_\-]{24,}['\"]?\s*$", re.IGNORECASE),
     re.compile(r"\bajs-synchrony-token\b", re.IGNORECASE),
     re.compile(r"\batl_token\b", re.IGNORECASE),
 ]

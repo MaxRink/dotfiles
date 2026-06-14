@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Migration Plan",
+  "description": "Output schema for plan.json produced by the plan-migration skill.",
+  "type": "object",
+  "required": [
+    "feature_name",
+    "description",
+    "knowledge_level",
+    "migration_type",
+    "source_stack",
+    "target_stack",
+    "scope",
+    "dependencies",
+    "risks",
+    "constraints",
+    "migration_goals",
+    "success_criteria",
+    "focus_areas",
+    "modules"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Short identifier for the feature being migrated."
+    },
+    "description": {
+      "type": "string",
+      "description": "One to two sentence description of the migration."
+    },
+    "knowledge_level": {
+      "type": "string",
+      "enum": ["expert", "feature-owner", "discovery"],
+      "description": "User's self-assessed familiarity with the codebase."
+    },
+    "migration_type": {
+      "type": "string",
+      "description": "Type of migration: language-change, framework-upgrade, architecture-change, cloud-migration, or user-defined."
+    },
+    "source_stack": {
+      "type": "object",
+      "description": "Current technology stack being migrated from.",
+      "required": ["languages", "frameworks"],
+      "additionalProperties": true,
+      "properties": {
+        "languages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Programming languages in the source system."
+        },
+        "frameworks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Frameworks and libraries in the source system."
+        },
+        "infrastructure": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Infrastructure components (databases, message queues, etc.)."
+        },
+        "test_command": {
+          "type": ["string", "null"],
+          "description": "Shell command to run the source project's test suite. Null if unknown."
+        },
+        "test_framework": {
+          "type": ["string", "null"],
+          "description": "Test framework used (e.g., 'JUnit 5', 'pytest', 'Jest'). Null if unknown."
+        },
+        "test_directory": {
+          "type": ["string", "null"],
+          "description": "Root test source directory (e.g., 'src/test/java', 'tests'). Null if unknown."
+        }
+      }
+    },
+    "target_stack": {
+      "type": "object",
+      "description": "Target technology stack being migrated to.",
+      "required": ["languages", "frameworks"],
+      "additionalProperties": true,
+      "properties": {
+        "languages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Programming languages for the target system."
+        },
+        "frameworks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Frameworks and libraries for the target system."
+        },
+        "infrastructure": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Infrastructure components for the target system."
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "description": "What is included and excluded from the migration.",
+      "required": ["include", "exclude"],
+      "additionalProperties": false,
+      "properties": {
+        "include": {
+          "type": "object",
+          "required": ["paths"],
+          "properties": {
+            "paths": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Human-readable module/area names (not file paths)"
+            },
+            "mode": {
+              "type": "string",
+              "enum": ["targeted", "full", "incremental"],
+              "description": "Scope mode."
+            }
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Components, modules, or areas explicitly out of scope."
+        },
+        "critical_components": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "High-risk or high-importance components requiring extra attention."
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "description": "Internal and external dependencies.",
+      "required": ["internal", "external"],
+      "additionalProperties": false,
+      "properties": {
+        "internal": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Other modules or shared libraries this feature depends on."
+        },
+        "external": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "External APIs, services, or databases this feature depends on."
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description", "severity"],
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "What the risk is."
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "description": "Assessed severity level."
+          },
+          "mitigation": {
+            "type": "string",
+            "description": "How to mitigate this risk, if known."
+          }
+        }
+      },
+      "description": "Identified migration risks."
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "unchanged": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "integration": {
+          "type": "object",
+          "properties": {
+            "systems": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "required": ["systems"]
+        }
+      },
+      "required": ["unchanged", "integration"]
+    },
+    "migration_goals": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "type": "object",
+          "properties": {
+            "goal": { "type": "string" },
+            "description": { "type": "string" }
+          },
+          "required": ["goal", "description"]
+        }
+      },
+      "required": ["primary"]
+    },
+    "success_criteria": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Concrete, verifiable criteria that define migration completion."
+    },
+    "focus_areas": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Priority areas ranked by importance, guiding downstream analysis and architecture."
+    },
+    "modules": {
+      "type": "array",
+      "description": "Modules involved in the migration. Links back to index.json modules when available, but also captures user-identified modules not in the documentation.",
+      "items": {
+        "type": "object",
+        "required": ["name", "role"],
+        "additionalProperties": true,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Module name. Should match modules[].name from index.json when sourced from documentation."
+          },
+          "source": {
+            "type": "string",
+            "enum": ["index.json", "user"],
+            "description": "Whether this module was identified from index.json or provided by the user during the interview."
+          },
+          "doc_file": {
+            "type": "string",
+            "description": "Path to module documentation from index.json (e.g. modules/order-service.md), if available."
+          },
+          "role": {
+            "type": "string",
+            "enum": ["primary", "dependency", "affected"],
+            "description": "Role in the migration: primary (being migrated), dependency (used by primary modules), affected (impacted but not directly migrated)."
+          },
+          "notes": {
+            "type": "string",
+            "description": "User-provided context about this module's relevance to the migration."
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Open-ended notes, context, or observations from the interview that don't fit into the structured fields above."
+    }
+  }
+}

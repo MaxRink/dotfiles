@@ -3,6 +3,8 @@ name: psa-portal-soc-capture
 description: Use when capturing, downloading, refreshing, answering, or filling Statement of Compliance (SoC) requirements from the Telekom PSA Portal for T-CaaS systems. Includes the proxy-backed Chromium workflow, DevTools automation, system snapshots, SoC ZIP export, XLSX/HTML/PDF extraction, answer templates, validation, and browser filling.
 ---
 
+<!-- Imported from tcaas-psa/skill/psa-portal-soc-capture by codex-knowledge-curation/scripts/persist_project_skills.py. -->
+
 # PSA Portal SoC Capture
 
 Use this skill to pull SoC requirement artifacts from `https://psa-portal.telekom.de/intranet-ui/` into a local workspace.

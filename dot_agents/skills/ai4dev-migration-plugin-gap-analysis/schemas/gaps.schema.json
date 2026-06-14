@@ -1,0 +1,181 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gap Analysis Report",
+  "description": "Simple gap report identifying inconsistencies between analysis and architecture artifacts",
+  "type": "object",
+  "required": ["metadata", "gaps", "summary"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["feature", "timestamp"],
+      "properties": {
+        "feature": {
+          "type": "string",
+          "description": "Feature name being analyzed"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When gap analysis was performed"
+        },
+        "artifacts_analyzed": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of artifacts that were compared"
+        },
+        "quality_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Overall quality score of the gap analysis"
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_gaps", "status"],
+      "properties": {
+        "total_gaps": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of gaps identified"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["clean", "gaps_found"],
+          "description": "Overall gap analysis status"
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": ["pending_review", "approved", "rejected", "approved_with_risks"],
+          "description": "Human approval status for progression"
+        },
+        "approval_notes": {
+          "type": "string",
+          "description": "Human reviewer comments or rationale for approval decision"
+        },
+        "categories": {
+          "type": "object",
+          "properties": {
+            "missing_business_rules": {"type": "integer", "minimum": 0},
+            "missing_dependencies": {"type": "integer", "minimum": 0},
+            "uncovered_scope": {"type": "integer", "minimum": 0},
+            "contradictions": {"type": "integer", "minimum": 0},
+            "missing_integrations": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "description", "severity", "source_artifact", "recommendation"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique gap identifier"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "missing_business_rules",
+              "missing_dependencies",
+              "uncovered_scope",
+              "contradictions",
+              "missing_integrations"
+            ],
+            "description": "Type of gap identified"
+          },
+          "description": {
+            "type": "string",
+            "description": "Clear description of the gap"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["high", "medium", "low"],
+            "description": "Impact level of the gap"
+          },
+          "source_artifact": {
+            "type": "string",
+            "description": "Artifact where issue originates"
+          },
+          "target_artifact": {
+            "type": "string",
+            "description": "Artifact where issue should be addressed"
+          },
+          "recommendation": {
+            "type": "string",
+            "description": "Suggested action to resolve the gap"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional context-specific details"
+          }
+        }
+      }
+    },
+    "gap_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "file", "gap_count"],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "missing_business_rules",
+              "missing_dependencies",
+              "uncovered_scope",
+              "contradictions",
+              "missing_integrations"
+            ],
+            "description": "Category of gaps in this file"
+          },
+          "file": {
+            "type": "string",
+            "description": "Filename containing detailed gap information"
+          },
+          "gap_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of gaps documented in this file"
+          },
+          "severity_breakdown": {
+            "type": "object",
+            "properties": {
+              "high": {"type": "integer", "minimum": 0},
+              "medium": {"type": "integer", "minimum": 0},
+              "low": {"type": "integer", "minimum": 0}
+            },
+            "description": "Count of gaps by severity level"
+          }
+        }
+      },
+      "description": "Optional modular gap files with category-specific details"
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "priority"],
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "Recommended action to take"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["high", "medium", "low"],
+            "description": "Priority level for the action"
+          },
+          "affected_gaps": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Gap IDs that this action addresses"
+          }
+        }
+      }
+    }
+  }
+}

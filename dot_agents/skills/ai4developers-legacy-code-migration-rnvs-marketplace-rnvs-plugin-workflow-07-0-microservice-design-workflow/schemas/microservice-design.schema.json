@@ -1,0 +1,413 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vnrm.telekom.de/schemas/microservice-design.schema.json",
+  "title": "VNRM Microservice Design Schema",
+  "description": "Schema for Phase 7 microservice design output",
+  "type": "object",
+  "required": ["feature_name", "phase", "timestamp", "feature_type", "microservices", "validation_report"],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Name of the feature being designed"
+    },
+    "phase": {
+      "type": "integer",
+      "const": 7,
+      "description": "Phase number (always 7 for this schema)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of design creation"
+    },
+    "feature_type": {
+      "type": "string",
+      "enum": ["STANDARD_VNRM", "HYBRID_CUSTOM", "FULLY_CUSTOM"],
+      "description": "Classification of feature type"
+    },
+    "microservices": {
+      "type": "array",
+      "description": "List of microservice designs",
+      "items": {
+        "$ref": "#/$defs/microservice"
+      },
+      "minItems": 1
+    },
+    "service_dependencies": {
+      "type": "object",
+      "description": "Service dependency graph",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "rest_dependencies": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "event_dependencies": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "event_catalog": {
+      "type": "object",
+      "description": "Message Bus event catalog",
+      "additionalProperties": {
+        "$ref": "#/$defs/event_topic"
+      }
+    },
+    "validation_report": {
+      "$ref": "#/$defs/validation_report"
+    }
+  },
+  "$defs": {
+    "microservice": {
+      "type": "object",
+      "required": ["service_name", "vnrm_submodule", "service_level", "description", "api_design"],
+      "properties": {
+        "service_name": {
+          "type": "string",
+          "description": "Exact service name from VNRM catalog or Phase 5"
+        },
+        "service_abbreviation": {
+          "type": "string",
+          "description": "Short abbreviation for the service"
+        },
+        "vnrm_submodule": {
+          "type": "string",
+          "enum": ["NUM", "PRT", "COM", "SPE", "COR", "NTW", "CUSTOM"],
+          "description": "VNRM submodule this service belongs to"
+        },
+        "service_level": {
+          "type": "string",
+          "enum": ["HA", "OT"],
+          "description": "HA = 24/7 high availability, OT = business hours"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 50,
+          "description": "Detailed description of the service (min 50 chars)"
+        },
+        "maps_from_rnvs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Legacy RNVS components being replaced"
+        },
+        "database_design": {
+          "$ref": "#/$defs/database_design"
+        },
+        "api_design": {
+          "$ref": "#/$defs/api_design"
+        },
+        "event_design": {
+          "$ref": "#/$defs/event_design"
+        },
+        "state_machine": {
+          "$ref": "#/$defs/state_machine"
+        },
+        "dependencies": {
+          "$ref": "#/$defs/dependencies"
+        },
+        "deployment_config": {
+          "$ref": "#/$defs/deployment_config"
+        }
+      }
+    },
+    "database_design": {
+      "type": "object",
+      "properties": {
+        "database_name": {
+          "type": "string"
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["table_name", "ddl"],
+            "properties": {
+              "table_name": { "type": "string" },
+              "ddl": { "type": "string" },
+              "indexes": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "constraints": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        },
+        "migration_from_rnvs": {
+          "type": "object",
+          "properties": {
+            "source_tables": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "etl_strategy": { "type": "string" }
+          }
+        }
+      }
+    },
+    "api_design": {
+      "type": "object",
+      "required": ["openapi_version", "base_path", "endpoints"],
+      "properties": {
+        "openapi_version": {
+          "type": "string",
+          "default": "3.0.3"
+        },
+        "base_path": {
+          "type": "string",
+          "pattern": "^/api/v[0-9]+.*"
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/api_endpoint"
+          }
+        }
+      }
+    },
+    "api_endpoint": {
+      "type": "object",
+      "required": ["path", "method", "operation_id", "response"],
+      "properties": {
+        "path": { "type": "string" },
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+        },
+        "operation_id": { "type": "string" },
+        "summary": { "type": "string" },
+        "request": {
+          "type": "object",
+          "properties": {
+            "content_type": { "type": "string" },
+            "schema": { "type": "object" }
+          }
+        },
+        "response": {
+          "type": "object",
+          "required": ["200"],
+          "properties": {
+            "200": { "type": "object" },
+            "201": { "type": "object" },
+            "204": { "type": "object" },
+            "400": { "type": "object" },
+            "404": { "type": "object" },
+            "409": { "type": "object" },
+            "500": { "type": "object" }
+          }
+        },
+        "business_rules_enforced": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "event_design": {
+      "type": "object",
+      "properties": {
+        "message_topics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["topic_name"],
+            "properties": {
+              "topic_name": { "type": "string" },
+              "avro_schema": { "type": "object" },
+              "partitions": { "type": "integer" },
+              "retention_days": { "type": "integer" }
+            }
+          }
+        },
+        "event_subscriptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["topic_name", "consumer_group"],
+            "properties": {
+              "topic_name": { "type": "string" },
+              "consumer_group": { "type": "string" },
+              "idempotency": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "state_machine": {
+      "type": "object",
+      "properties": {
+        "states": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "initial_state": { "type": "string" },
+        "terminal_states": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "trigger"],
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "trigger": { "type": "string" },
+              "guard": { "type": "string" },
+              "action": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "internal_services": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["service_name", "communication_pattern"],
+            "properties": {
+              "service_name": { "type": "string" },
+              "communication_pattern": {
+                "type": "string",
+                "enum": ["REST API", "Event-driven", "gRPC"]
+              },
+              "circuit_breaker": { "type": "string" },
+              "timeout": { "type": "string" },
+              "retry": { "type": "string" },
+              "fallback": { "type": "string" }
+            }
+          }
+        },
+        "external_services": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "service_name": { "type": "string" },
+              "endpoint": { "type": "string" },
+              "protocol": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "deployment_config": {
+      "type": "object",
+      "properties": {
+        "service_level": {
+          "type": "string",
+          "enum": ["HA", "OT"]
+        },
+        "scaling": {
+          "type": "object",
+          "properties": {
+            "min_replicas": { "type": "integer" },
+            "max_replicas": { "type": "integer" },
+            "target_cpu_utilization": { "type": "integer" }
+          }
+        },
+        "health_checks": {
+          "type": "object",
+          "properties": {
+            "liveness_path": { "type": "string" },
+            "readiness_path": { "type": "string" },
+            "startup_path": { "type": "string" }
+          }
+        },
+        "monitoring": {
+          "type": "object",
+          "properties": {
+            "metrics_path": { "type": "string" },
+            "log_level": { "type": "string" }
+          }
+        }
+      }
+    },
+    "event_topic": {
+      "type": "object",
+      "required": ["topic_name", "publisher"],
+      "properties": {
+        "topic_name": { "type": "string" },
+        "publisher": { "type": "string" },
+        "subscribers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "event_type": {
+          "type": "string",
+          "enum": ["domain_event", "integration_event", "saga_event"]
+        },
+        "retention_days": { "type": "integer" }
+      }
+    },
+    "validation_report": {
+      "type": "object",
+      "required": ["overall_status"],
+      "properties": {
+        "overall_status": {
+          "type": "string",
+          "enum": ["PENDING", "IN_PROGRESS", "COMPLETE", "FAILED"]
+        },
+        "overall_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "gates": {
+          "type": "object",
+          "properties": {
+            "completeness": {
+              "type": "object",
+              "properties": {
+                "score": { "type": "integer" },
+                "weight": { "type": "number" },
+                "issues": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "api_quality": {
+              "type": "object",
+              "properties": {
+                "score": { "type": "integer" },
+                "weight": { "type": "number" },
+                "issues": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "database_quality": {
+              "type": "object",
+              "properties": {
+                "score": { "type": "integer" },
+                "weight": { "type": "number" },
+                "issues": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "integration_quality": {
+              "type": "object",
+              "properties": {
+                "score": { "type": "integer" },
+                "weight": { "type": "number" },
+                "issues": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            "schema_validation": {
+              "type": "object",
+              "properties": {
+                "score": { "type": "integer" },
+                "weight": { "type": "number" },
+                "issues": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

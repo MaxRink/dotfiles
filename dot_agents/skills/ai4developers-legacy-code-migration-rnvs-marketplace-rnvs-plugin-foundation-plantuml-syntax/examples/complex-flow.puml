@@ -1,0 +1,71 @@
+@startuml
+!pragma layout smetana
+!theme plain
+title Complex Multi-Swimlane Flow Example
+
+|External System|
+start
+:Send message
+(KCODE 21);
+note right
+  Message contains:
+  - Operation code
+  - Data payload
+  - Timestamp
+end note
+
+|Package Layer|
+:Receive message;
+:Parse and validate;
+
+if (Message valid?) then (yes)
+  if (Operation type?) then (Type A)
+    |Manager A|
+    :Execute Type A logic;
+    note right
+      Specific business rules
+      for Type A operations
+    end note
+
+    |Database|
+    :Update Table A;
+
+  else (Type B)
+    |Manager B|
+    :Execute Type B logic;
+
+    |Database|
+    :Update Table B;
+  endif
+
+  |Package Layer|
+  :Create log entry;
+  note right
+    Success logging
+    in T_LOG table
+  end note
+
+  |Database|
+  :Commit transaction;
+
+  stop
+
+else (no)
+  |Package Layer|
+  :Create problem report;
+  note left
+    Problem message
+    logged in T_PMR
+  end note
+
+  stop
+endif
+
+legend right
+  |<#90EE90>  | Start |
+  |<#FFB6C1>  | End |
+  |<#E1F5C4>  | Activity/Process |
+  |<#FFD700>  | Decision Point |
+endlegend
+
+@enduml

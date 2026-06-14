@@ -1,0 +1,97 @@
+{
+  "title": "Architecture Validation Report",
+  "description": "Validation report produced by the architecture-validation skill.",
+  "type": "object",
+  "required": ["feature", "overall_status", "steps", "issues"],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "description": "Feature name."
+    },
+    "overall_status": {
+      "type": "string",
+      "enum": ["PASS", "PASS_WITH_WARNINGS", "FAIL"],
+      "description": "PASS = no critical issues across all steps. PASS_WITH_WARNINGS = no critical issues, at least one warning. FAIL = any critical issue found."
+    },
+    "steps": {
+      "type": "object",
+      "required": [
+        "step_1_executive_summary",
+        "step_2_architecture_overview",
+        "step_3_component_design",
+        "step_4_data_architecture",
+        "step_5_integration_design",
+        "step_6_security_architecture",
+        "step_7_cross_cutting_concerns",
+        "step_8_risk_mitigations"
+      ],
+      "properties": {
+        "step_1_executive_summary":       { "$ref": "#/$defs/step_result" },
+        "step_2_architecture_overview":   { "$ref": "#/$defs/step_result" },
+        "step_3_component_design":        { "$ref": "#/$defs/step_result" },
+        "step_4_data_architecture":       { "$ref": "#/$defs/step_result" },
+        "step_5_integration_design":      { "$ref": "#/$defs/step_result" },
+        "step_6_security_architecture":   { "$ref": "#/$defs/step_result" },
+        "step_7_cross_cutting_concerns":  { "$ref": "#/$defs/step_result" },
+        "step_8_risk_mitigations":        { "$ref": "#/$defs/step_result" }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "description": "All issues from all steps aggregated. Every per-step issue must also appear here.",
+      "items": { "$ref": "#/$defs/top_level_issue" }
+    }
+  },
+  "$defs": {
+    "step_status": {
+      "type": "string",
+      "enum": ["PASS", "PASS_WITH_WARNINGS", "FAIL"]
+    },
+    "step_result": {
+      "type": "object",
+      "required": ["status", "issues"],
+      "properties": {
+        "status": { "$ref": "#/$defs/step_status" },
+        "issues": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/issue" }
+        }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "required": ["severity", "description"],
+      "properties": {
+        "severity":    { "type": "string", "enum": ["critical", "warning", "info"] },
+        "description": { "type": "string" },
+        "evidence":    { "type": "string", "description": "File path with line number or quoted value. Required when available." },
+        "remediation": { "type": "string", "description": "Recommended fix. Required when available." }
+      }
+    },
+    "top_level_issue": {
+      "description": "Issue rolled up to the report root. Copy the per-step issue as-is, then add 'step' from context.",
+      "allOf": [
+        { "$ref": "#/$defs/issue" },
+        {
+          "type": "object",
+          "required": ["step"],
+          "properties": {
+            "step": {
+              "type": "string",
+              "enum": [
+                "step_1_executive_summary",
+                "step_2_architecture_overview",
+                "step_3_component_design",
+                "step_4_data_architecture",
+                "step_5_integration_design",
+                "step_6_security_architecture",
+                "step_7_cross_cutting_concerns",
+                "step_8_risk_mitigations"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

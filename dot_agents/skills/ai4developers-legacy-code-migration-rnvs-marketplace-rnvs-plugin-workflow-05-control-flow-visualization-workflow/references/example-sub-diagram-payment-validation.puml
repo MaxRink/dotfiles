@@ -1,0 +1,113 @@
+@startuml control-flow-diagram-payment-validation
+title Payment Validation Sub-Process (8 nodes - under 10 limit)
+
+' This is a SUB-DIAGRAM referenced from the main Order Processing workflow
+' Demonstrates how to keep complex sub-processes under the 10-node business limit
+
+skinparam activityBackgroundColor #FFFACD
+skinparam activityBorderColor #A80036
+
+|Order Processing System|
+start
+note right
+  **SUB-DIAGRAM**
+  Called from: control-flow-diagram-order-processing.puml
+  Entry Point: Execute Payment Validation
+end note
+
+:Validate Payment Method;
+note right
+  Node count: 1 (process step)
+  Check if credit card or PayPal
+end note
+
+if (Payment Method Valid?) then (yes)
+  note right
+    Node count: 2 (decision point)
+  end note
+
+  :Contact Payment Gateway;
+  note right
+    Node count: 3 (process step)
+    External System: Stripe/PayPal API
+  end note
+
+  if (Gateway Reachable?) then (yes)
+    note right
+      Node count: 4 (decision point)
+    end note
+
+    :Authorize Payment;
+    note right
+      Node count: 5 (process step)
+      Verify funds/credit available
+    end note
+
+    if (Payment Authorized?) then (yes)
+      note right
+        Node count: 6 (decision point)
+      end note
+
+      :Update Payment Status to "APPROVED";
+      note right
+        Node count: 7 (process step)
+      end note
+
+      stop
+      note right
+        Node count: 8 (end - success path)
+        **Return to main diagram with success status**
+      end note
+
+    else (no)
+      :Update Payment Status to "DECLINED";
+      note left
+        Insufficient funds or card declined
+      end note
+      stop
+      note left
+        **Return to main diagram with failure status**
+      end note
+    endif
+
+  else (no)
+    :Update Payment Status to "GATEWAY_ERROR";
+    note left
+      Payment gateway timeout or unavailable
+    end note
+    stop
+    note left
+      **Return to main diagram with error status**
+    end note
+  endif
+
+else (no)
+  :Update Payment Status to "INVALID_METHOD";
+  note left
+    Unsupported payment method
+  end note
+  stop
+  note left
+    **Return to main diagram with failure status**
+  end note
+endif
+
+legend right
+  **SUB-DIAGRAM NODE COUNT**: 8 nodes (under 15-node limit - compliant ✓)
+
+  **Node Breakdown**:
+  - Start: 1 node (implied)
+  - Process steps: 4 nodes (Validate Method, Contact Gateway, Authorize Payment, Update Status)
+  - Decision points: 3 nodes (Method Valid?, Gateway Reachable?, Payment Authorized?)
+  - End: 1 node (primary success path)
+
+  **Returns to Main Diagram**: control-flow-diagram-order-processing.puml
+  **Return Values**: APPROVED, DECLINED, GATEWAY_ERROR, INVALID_METHOD
+
+  **Source Traceability**:
+  - Phase 4 BP-ORDER-001 Step 2 (Payment Validation)
+  - Phase 3 ORDER-BR-010 (Payment Authorization Rule)
+  - Phase 3 ORDER-BR-011 (Payment Gateway Integration Rule)
+endlegend
+
+@enduml

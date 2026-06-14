@@ -1,0 +1,336 @@
+{
+  "service_name": "num-fcm-fixednet-callnumber-management-api",
+  "service_description": "Fixed callnumber management service providing CRUD operations for individual and range callnumbers with complete state machine transitions and BNetzA compliance",
+  "analysis_timestamp": "2025-11-19T16:30:00Z",
+  "vnrm_submodule": "NUM",
+  "technology_stack": {
+    "spring_boot_version": "2.7.18",
+    "java_version": "17",
+    "database": "PostgreSQL 13+",
+    "messaging": "Apache Message Bus (Tardis Horizon)",
+    "resilience": "Resilience4j",
+    "authentication": "Tardis M2M (Iris + Stargate)",
+    "monitoring": "Prometheus + ELK Stack"
+  },
+  "api_contracts": [
+    {
+      "endpoint": "/api/v1/callnumbers/{localAreaCodeCallnumber}",
+      "method": "GET",
+      "description": "Retrieve callnumber details including current state and validity period",
+      "request_schema": {
+        "path_parameters": {
+          "localAreaCodeCallnumber": {
+            "type": "string",
+            "pattern": "^\\d{3,5}\\d{4,11}$",
+            "description": "Concatenated ONKZ + callnumber"
+          }
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "localAreaCodeCallnumber": {"type": "string"},
+          "callnumber": {"type": "string"},
+          "localAreaCode": {"type": "string"},
+          "callnumberstate": {
+            "type": "string",
+            "enum": ["AVAILABLE", "RESERVED", "BLOCKED", "WAITING", "PROCESSING", "ACTIVATED", "BNETZA"]
+          },
+          "validFrom": {"type": "string", "format": "date-time"},
+          "validTo": {"type": "string", "format": "date-time"},
+          "bookingType": {"type": "string"},
+          "callnumberType": {"type": "string"}
+        }
+      },
+      "status_codes": [200, 404, 500],
+      "authentication": "M2M Bearer Token",
+      "rate_limiting": "1000 req/min"
+    },
+    {
+      "endpoint": "/api/v1/callnumbers/{localAreaCodeCallnumber}/state",
+      "method": "PUT",
+      "description": "Update callnumber state with business rule validation",
+      "request_schema": {
+        "type": "object",
+        "required": ["newState", "changeReason"],
+        "properties": {
+          "newState": {
+            "type": "string",
+            "enum": ["AVAILABLE", "RESERVED", "BLOCKED", "WAITING", "PROCESSING", "ACTIVATED"]
+          },
+          "changeReason": {"type": "integer"},
+          "comment": {"type": "string", "maxLength": 255},
+          "externalBookingReference": {"type": "string", "maxLength": 40}
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "modificationUuid": {"type": "string", "format": "uuid"},
+          "message": {"type": "string"}
+        }
+      },
+      "status_codes": [200, 400, 404, 409, 500],
+      "authentication": "M2M Bearer Token",
+      "rate_limiting": "500 req/min"
+    },
+    {
+      "endpoint": "/api/v1/callnumbers/search",
+      "method": "POST",
+      "description": "Search callnumbers with filtering and pagination",
+      "request_schema": {
+        "type": "object",
+        "properties": {
+          "onkz": {"type": "string", "pattern": "^\\d{3,5}$"},
+          "state": {"type": "string"},
+          "bookingType": {"type": "string"},
+          "validFrom": {"type": "string", "format": "date"},
+          "validTo": {"type": "string", "format": "date"},
+          "pageSize": {"type": "integer", "minimum": 1, "maximum": 1000},
+          "pageOffset": {"type": "integer", "minimum": 0}
+        }
+      },
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "callnumbers": {"type": "array", "items": {"$ref": "#/components/schemas/Callnumber"}},
+          "totalCount": {"type": "integer"},
+          "pageSize": {"type": "integer"},
+          "pageOffset": {"type": "integer"}
+        }
+      },
+      "status_codes": [200, 400, 500],
+      "authentication": "M2M Bearer Token",
+      "rate_limiting": "100 req/min"
+    }
+  ],
+  "database_schema": {
+    "tables": [
+      {
+        "name": "callnumber",
+        "description": "Core callnumber management table with state machine and audit trail",
+        "columns": [
+          {"name": "local_area_code_callnumber", "type": "VARCHAR(20)", "nullable": false, "primary_key": true, "description": "Concatenated ONKZ + callnumber primary key"},
+          {"name": "callnumber", "type": "VARCHAR(15)", "nullable": false, "description": "Phone number without area code"},
+          {"name": "callnumber_end", "type": "VARCHAR(15)", "nullable": false, "description": "End number for ranges"},
+          {"name": "local_area_code", "type": "VARCHAR(5)", "nullable": false, "description": "Area code (ONKZ)"},
+          {"name": "callnumberstate", "type": "VARCHAR(1)", "nullable": false, "description": "Current state code"},
+          {"name": "callnumber_type", "type": "VARCHAR(1)", "nullable": false, "description": "Type classification"},
+          {"name": "booking_type", "type": "VARCHAR(1)", "nullable": false, "description": "Booking status"},
+          {"name": "valid_from", "type": "TIMESTAMP(6)", "nullable": false, "description": "Validity start date"},
+          {"name": "valid_to", "type": "TIMESTAMP(6)", "nullable": false, "description": "Validity end date"},
+          {"name": "latest_modification_uuid", "type": "UUID", "nullable": false, "description": "Last modification tracking"}
+        ],
+        "indexes": [
+          {"name": "idx_callnumber_onkz", "columns": ["local_area_code"], "unique": false},
+          {"name": "idx_callnumber_state", "columns": ["callnumberstate"], "unique": false},
+          {"name": "idx_callnumber_booking", "columns": ["booking_type"], "unique": false},
+          {"name": "idx_callnumber_valid_from", "columns": ["valid_from"], "unique": false}
+        ],
+        "constraints": [
+          {"type": "CHECK", "definition": "callnumberstate IN ('F', 'R', 'S', 'W', 'V', 'B', 'N')"},
+          {"type": "CHECK", "definition": "valid_from <= valid_to"},
+          {"type": "FOREIGN_KEY", "definition": "REFERENCES callnumber_block(callnumber_block_id)"}
+        ],
+        "audit_columns": ["latest_modification_uuid"]
+      },
+      {
+        "name": "callnumber_modification",
+        "description": "Complete audit trail for all callnumber state changes",
+        "columns": [
+          {"name": "modification_uuid", "type": "UUID", "nullable": false, "primary_key": true},
+          {"name": "local_area_code_callnumber", "type": "VARCHAR(20)", "nullable": false},
+          {"name": "x_business_correlation_id", "type": "VARCHAR(255)", "nullable": false},
+          {"name": "reuse_comment", "type": "VARCHAR(255)", "nullable": false},
+          {"name": "update", "type": "TIMESTAMP(6)", "nullable": false},
+          {"name": "user", "type": "VARCHAR(60)", "nullable": false},
+          {"name": "change_reason", "type": "INTEGER", "nullable": false},
+          {"name": "comment", "type": "VARCHAR(255)", "nullable": false},
+          {"name": "external_booking_reference", "type": "VARCHAR(40)", "nullable": true}
+        ],
+        "indexes": [
+          {"name": "idx_modification_callnumber", "columns": ["local_area_code_callnumber"], "unique": false},
+          {"name": "idx_modification_timestamp", "columns": ["update"], "unique": false},
+          {"name": "idx_modification_user", "columns": ["user"], "unique": false}
+        ],
+        "constraints": [
+          {"type": "FOREIGN_KEY", "definition": "REFERENCES callnumber(local_area_code_callnumber)"}
+        ],
+        "audit_columns": ["modification_uuid", "update", "user"]
+      }
+    ],
+    "state_machines": [
+      {
+        "entity": "callnumber",
+        "states": ["AVAILABLE", "RESERVED", "BLOCKED", "WAITING", "PROCESSING", "ACTIVATED", "BNETZA"],
+        "transitions": [
+          {"from": "AVAILABLE", "to": "RESERVED", "trigger": "reserve_number", "condition": "booking_type = 'T'"},
+          {"from": "RESERVED", "to": "ACTIVATED", "trigger": "activate_number", "condition": "valid booking reference"},
+          {"from": "RESERVED", "to": "AVAILABLE", "trigger": "cancel_reservation", "condition": "timeout or explicit cancel"},
+          {"from": "ACTIVATED", "to": "WAITING", "trigger": "terminate_number", "condition": "service termination"},
+          {"from": "WAITING", "to": "AVAILABLE", "trigger": "reuse_timeout", "condition": "waiting period expired"},
+          {"from": "ANY", "to": "BLOCKED", "trigger": "manual_block", "condition": "administrative action"},
+          {"from": "BLOCKED", "to": "AVAILABLE", "trigger": "unblock", "condition": "issue resolved"}
+        ],
+        "business_rules": [
+          "Single numbers have 24h reservation timeout",
+          "Range numbers >200 have variable timeout based on size",
+          "WAITING state requires minimum reuse period per TKG regulations",
+          "BNETZA state is permanent and managed by federal authority",
+          "All state changes must be audited with modification_uuid"
+        ]
+      }
+    ]
+  },
+  "integration_patterns": [
+    {
+      "type": "service_dependency",
+      "target_service": "com-cs-config-server-api",
+      "protocol": "REST",
+      "circuit_breaker": true,
+      "timeout": "5000ms",
+      "retry_policy": "exponential_backoff",
+      "criticality": "CRITICAL",
+      "compliance": "Required for service bootstrap and configuration management"
+    },
+    {
+      "type": "service_dependency",
+      "target_service": "com-rdm-reference-data-management-api",
+      "protocol": "REST",
+      "circuit_breaker": true,
+      "timeout": "3000ms",
+      "retry_policy": "fixed_delay",
+      "criticality": "HIGH",
+      "compliance": "Reference data validation for ONKZ and business rules"
+    },
+    {
+      "type": "external_integration",
+      "target_service": "BNetzA Registry",
+      "protocol": "SOAP",
+      "circuit_breaker": false,
+      "timeout": "30000ms",
+      "retry_policy": "none",
+      "criticality": "HIGH",
+      "compliance": "BNetzA regulatory requirements for number block management"
+    },
+    {
+      "type": "event_driven",
+      "target_service": "prt-porting-events",
+      "protocol": "Message Bus",
+      "circuit_breaker": false,
+      "timeout": "1000ms",
+      "retry_policy": "exponential_backoff",
+      "criticality": "HIGH",
+      "compliance": "Number porting coordination with PRT module"
+    },
+    {
+      "type": "database_integration",
+      "target_service": "vnrm_fcm_dev",
+      "protocol": "Database",
+      "circuit_breaker": false,
+      "timeout": "10000ms",
+      "retry_policy": "none",
+      "criticality": "CRITICAL",
+      "compliance": "Exclusive database ownership per microservice pattern"
+    }
+  ],
+  "resilience_patterns": {
+    "circuit_breakers": [
+      {
+        "name": "config-server-circuit-breaker",
+        "failure_threshold": 5,
+        "timeout": "60s",
+        "fallback_strategy": "use_cached_configuration"
+      },
+      {
+        "name": "rdm-service-circuit-breaker",
+        "failure_threshold": 3,
+        "timeout": "30s",
+        "fallback_strategy": "skip_validation_with_warning"
+      }
+    ],
+    "retry_policies": [
+      {
+        "operation": "rdm_validation",
+        "max_attempts": 3,
+        "backoff_strategy": "fixed_delay_2s",
+        "exceptions": ["SocketTimeoutException", "ConnectException"]
+      },
+      {
+        "operation": "message_event_publish",
+        "max_attempts": 5,
+        "backoff_strategy": "exponential_backoff",
+        "exceptions": ["RetriableException", "TimeoutException"]
+      }
+    ],
+    "timeout_configurations": {
+      "default_timeout": "5000ms",
+      "endpoint_timeouts": {
+        "/api/v1/callnumbers/{id}": "2000ms",
+        "/api/v1/callnumbers/search": "10000ms",
+        "/api/v1/callnumbers/{id}/state": "3000ms"
+      }
+    }
+  },
+  "operational_metrics": {
+    "service_level": "HA",
+    "availability_target": "99.9%",
+    "response_time_target": "< 200ms",
+    "throughput_capacity": "10000 req/min",
+    "monitoring": {
+      "health_check": "/actuator/health",
+      "metrics": "/actuator/prometheus",
+      "logging": "ELK Stack with structured JSON logging"
+    }
+  },
+  "compliance_requirements": [
+    {
+      "type": "GDPR",
+      "requirements": ["data_encryption", "audit_trails", "right_to_deletion", "data_minimization"],
+      "implementation": "PostgreSQL encryption at rest, complete modification audit, soft delete with anonymization, minimal data collection"
+    },
+    {
+      "type": "BNetzA",
+      "requirements": ["number_portability_compliance", "audit_trails", "regulatory_reporting", "data_retention"],
+      "implementation": "Complete state transition logging, regulatory audit reports, 10-year data retention policy"
+    },
+    {
+      "type": "TKG",
+      "requirements": ["number_reuse_waiting_period", "carrier_coordination", "transparent_pricing"],
+      "implementation": "Automated waiting period enforcement, PRT integration for carrier coordination, pricing transparency via API"
+    }
+  ],
+  "enhancement_opportunities": {
+    "performance": [
+      "Implement Redis caching for frequent ONKZ validation lookups",
+      "Database query optimization for state transition queries with composite indexes",
+      "Connection pooling optimization for high-throughput scenarios",
+      "Implement database read replicas for search operations"
+    ],
+    "modernization": [
+      "Migrate to Spring Boot 3.x for improved performance and security",
+      "Implement reactive programming patterns for async operations",
+      "Add GraphQL API layer for flexible client queries",
+      "Upgrade to Java 21 LTS for performance improvements"
+    ],
+    "observability": [
+      "Implement distributed tracing with Jaeger for request correlation",
+      "Add business metrics collection for state transition analytics",
+      "Enhanced monitoring dashboards with Grafana integration",
+      "Implement structured logging with correlation IDs"
+    ],
+    "security": [
+      "Implement fine-grained RBAC for different operation types",
+      "Add request signing for critical state transitions",
+      "Implement audit log encryption and integrity verification",
+      "Add rate limiting per client/tenant for multi-tenancy support"
+    ],
+    "architecture": [
+      "Implement CQRS pattern for separation of read/write operations",
+      "Add event sourcing for complete state transition history",
+      "Implement domain events for better service decoupling",
+      "Add API versioning strategy for backward compatibility"
+    ]
+  }
+}

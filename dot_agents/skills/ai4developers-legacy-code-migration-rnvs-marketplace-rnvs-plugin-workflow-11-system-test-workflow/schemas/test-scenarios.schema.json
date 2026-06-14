@@ -1,0 +1,271 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "test-scenarios.schema.json",
+  "title": "Phase 11 Test Scenarios Schema",
+  "description": "Schema for Phase 11 system test scenario output (test-scenarios.json)",
+  "type": "object",
+  "required": ["feature_name", "phase", "timestamp", "test_scenario_metadata", "test_categories"],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Feature identifier (e.g., 'FNPORT')"
+    },
+    "phase": {
+      "type": "integer",
+      "const": 11,
+      "description": "Phase number (always 11)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of generation"
+    },
+    "test_scenario_metadata": {
+      "type": "object",
+      "required": ["total_scenarios", "e2e_scenarios", "integration_scenarios", "performance_scenarios", "security_scenarios"],
+      "properties": {
+        "total_scenarios": {
+          "type": "integer",
+          "minimum": 80,
+          "maximum": 200,
+          "description": "Total number of test scenarios (target: 100-150)"
+        },
+        "e2e_scenarios": {
+          "type": "integer",
+          "description": "Count of E2E test scenarios"
+        },
+        "integration_scenarios": {
+          "type": "integer",
+          "description": "Count of integration test scenarios"
+        },
+        "performance_scenarios": {
+          "type": "integer",
+          "description": "Count of performance test scenarios"
+        },
+        "security_scenarios": {
+          "type": "integer",
+          "description": "Count of security test scenarios"
+        },
+        "missing_workflow_scenarios": {
+          "type": "integer",
+          "description": "Count of missing workflow test scenarios (WF-003, WF-006, WF-007, WF-008)"
+        },
+        "test_id_prefix": {
+          "type": "string",
+          "description": "Prefix for test IDs (usually feature name)"
+        },
+        "dependencies_tracked": {
+          "type": "boolean",
+          "const": true,
+          "description": "Whether test dependencies are tracked"
+        }
+      }
+    },
+    "workflow_mode": {
+      "type": "string",
+      "enum": ["NEW", "CHANGE"],
+      "description": "Workflow mode from .workflow-state.md"
+    },
+    "classification_summary": {
+      "type": "object",
+      "description": "Classification breakdown for CHANGE mode (null or omitted for NEW mode)",
+      "properties": {
+        "reuse_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Scenarios covered by existing unchanged tests"
+        },
+        "modify_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Scenarios requiring existing test modifications"
+        },
+        "new_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Scenarios requiring new tests"
+        }
+      }
+    },
+    "test_categories": {
+      "type": "array",
+      "description": "Test scenarios grouped by category",
+      "items": {
+        "type": "object",
+        "required": ["category", "scenario_count", "scenarios"],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["E2E", "Integration", "Performance", "Security", "MissingWorkflow"],
+            "description": "Test category type"
+          },
+          "parent_test_story": {
+            "type": "string",
+            "description": "Phase 10 test story ID (e.g., 'FNPORT-T001') or 'NEW'"
+          },
+          "scenario_count": {
+            "type": "integer",
+            "description": "Number of scenarios in this category"
+          },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/testScenario"
+            }
+          }
+        }
+      }
+    },
+    "test_dependencies": {
+      "type": "array",
+      "description": "Dependencies between test scenarios",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "reason"],
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Scenario ID that must run first"
+          },
+          "to": {
+            "type": "string",
+            "description": "Scenario ID that depends on 'from'"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this dependency exists"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "testScenario": {
+      "type": "object",
+      "required": ["scenario_id", "scenario_name", "scenario_type", "priority", "test_framework"],
+      "properties": {
+        "scenario_id": {
+          "type": "string",
+          "pattern": "^[A-Z]+-T?[0-9]+-SC[0-9]+$|^INT-[0-9]+$|^PERF-[A-Z]+-[0-9]+$|^SEC-[A-Z]+-[0-9]+$|^WF[0-9]+-[A-Z]+-[0-9]+$",
+          "description": "Unique scenario ID (e.g., 'FNPORT-T001-SC001', 'INT-001', 'SEC-AUTH-001')"
+        },
+        "scenario_name": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Concise scenario name (max 80 characters)"
+        },
+        "scenario_type": {
+          "type": "string",
+          "enum": ["Happy Path", "Alternative Path", "Error Path", "Edge Case", "Load Test", "Stress Test", "Spike Test", "Endurance Test", "Authentication", "Authorization", "Data Security", "Vulnerability"],
+          "description": "Type of test scenario"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["Critical", "High", "Medium", "Low"],
+          "description": "Test priority"
+        },
+        "classification": {
+          "type": "string",
+          "enum": ["REUSE", "MODIFY", "NEW"],
+          "description": "Classification for CHANGE mode: REUSE (existing test covers), MODIFY (existing test needs update), NEW (new test needed)"
+        },
+        "existing_test_reference": {
+          "type": "object",
+          "description": "Reference to existing test (for REUSE/MODIFY classification)",
+          "properties": {
+            "test_class": {
+              "type": "string",
+              "description": "Existing test class name"
+            },
+            "test_method": {
+              "type": "string",
+              "description": "Existing test method name"
+            },
+            "modification_required": {
+              "type": "string",
+              "description": "Description of changes needed (for MODIFY classification)"
+            }
+          }
+        },
+        "test_framework": {
+          "type": "string",
+          "description": "Testing framework (e.g., 'Spring Boot Test + Testcontainers', 'JMeter', 'OWASP ZAP')"
+        },
+        "automation": {
+          "type": "boolean",
+          "description": "Whether this test can be automated"
+        },
+        "test_data": {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "object",
+              "description": "Input data for the test"
+            },
+            "mocks": {
+              "type": "object",
+              "description": "Mock service configurations"
+            },
+            "database_state": {
+              "type": "object",
+              "description": "Required database state before test"
+            }
+          }
+        },
+        "expected_results": {
+          "type": "object",
+          "properties": {
+            "http_status": {
+              "type": "integer",
+              "description": "Expected HTTP status code"
+            },
+            "response_body": {
+              "type": "object",
+              "description": "Expected response structure"
+            },
+            "database_changes": {
+              "type": "object",
+              "description": "Expected database state changes"
+            },
+            "message_events": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Expected Message Bus events to be published"
+            }
+          }
+        },
+        "business_rules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^BR-[0-9]+$"
+          },
+          "description": "Business rules validated by this scenario (BR-XXX)"
+        },
+        "workflows": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^WF-[0-9]+$"
+          },
+          "description": "Workflows covered by this scenario (WF-XXX)"
+        },
+        "dependencies": {
+          "type": "object",
+          "properties": {
+            "blocked_by": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Scenario IDs that must complete first"
+            },
+            "test_data_dependencies": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Test data dependencies"
+            }
+          }
+        }
+      }
+    }
+  }
+}

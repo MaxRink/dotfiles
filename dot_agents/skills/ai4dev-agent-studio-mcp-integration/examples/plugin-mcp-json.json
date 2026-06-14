@@ -1,0 +1,14 @@
+{
+  "name": "example-plugin",
+  "version": "1.0.0",
+  "description": "Plugin with inline MCP server configuration",
+  "mcpServers": {
+    "example-tools": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/servers/index.js"],
+      "env": {
+        "API_KEY": "${EXAMPLE_API_KEY}"
+      }
+    }
+  }
+}

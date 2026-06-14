@@ -1,0 +1,127 @@
+{
+  "feature_name": "order-processing",
+  "description": "Migrate the order processing module from a monolithic Java/Spring service to a Kotlin/Spring Boot microservice with event-driven architecture.",
+  "knowledge_level": "feature-owner",
+  "migration_type": "architecture-change",
+  "source_stack": {
+    "languages": ["Java 8"],
+    "frameworks": ["Spring MVC 4", "Hibernate 5", "Apache Camel"],
+    "infrastructure": ["Oracle DB", "ActiveMQ", "Tomcat"]
+  },
+  "target_stack": {
+    "languages": ["Kotlin"],
+    "frameworks": ["Spring Boot 3", "Spring Data JPA", "Spring Cloud Stream"],
+    "infrastructure": ["PostgreSQL", "Kafka", "Kubernetes"]
+  },
+  "scope": {
+    "include": {
+      "paths": [
+        "Order creation and validation",
+        "Order state machine (pending → confirmed → shipped → delivered)",
+        "Inventory reservation integration",
+        "Payment gateway callbacks"
+      ],
+      "mode": "targeted"
+    },
+    "exclude": [
+      "Reporting and analytics dashboards",
+      "Legacy batch jobs (migrating separately)",
+      "Admin backoffice UI"
+    ],
+    "critical_components": [
+      "Payment callback handler — must maintain exactly-once processing guarantees",
+      "Order state machine — business-critical transitions with audit trail"
+    ]
+  },
+  "dependencies": {
+    "internal": [
+      "inventory-service (gRPC for stock reservation)",
+      "user-service (REST for customer data)",
+      "notification-service (async events for order status emails)"
+    ],
+    "external": [
+      "Stripe Payment API v3",
+      "FedEx Shipping Rate API",
+      "SAP ERP order sync (SOAP)"
+    ]
+  },
+  "risks": [
+    {
+      "description": "Oracle-to-PostgreSQL migration may surface SQL dialect incompatibilities in complex reporting queries.",
+      "severity": "high",
+      "mitigation": "Audit all native queries early; use integration tests against PostgreSQL from day one."
+    },
+    {
+      "description": "ActiveMQ-to-Kafka shift changes message ordering guarantees.",
+      "severity": "medium",
+      "mitigation": "Use Kafka partition keys on order ID to preserve per-order ordering."
+    },
+    {
+      "description": "SAP SOAP integration has no test environment available.",
+      "severity": "medium",
+      "mitigation": "Build a mock SOAP server for development; schedule production dry-run window."
+    }
+  ],
+  "constraints": {
+    "unchanged": [
+      "Stripe webhook contract must remain unchanged — existing payment flow depends on it",
+      "Order ID format (ORD-XXXXXXXX) must be preserved for downstream SAP integration",
+      "REST API for mobile clients must stay backward-compatible during transition"
+    ],
+    "integration": {
+      "systems": [
+        "SAP ERP order sync (SOAP)",
+        "Stripe Payment API v3",
+        "FedEx Shipping Rate API"
+      ]
+    }
+  },
+  "migration_goals": {
+    "primary": {
+      "goal": "Decompose monolith into event-driven microservice",
+      "description": "Extract the order processing module from the monolithic Java/Spring service into an independent Kotlin/Spring Boot microservice using Kafka for event-driven integration, improving scalability and enabling independent deployments."
+    }
+  },
+  "success_criteria": [
+    "All 847 existing order-processing unit tests pass against the new implementation",
+    "End-to-end order flow (create → pay → ship → deliver) works in staging",
+    "P95 latency for order creation stays under 200ms",
+    "Zero data loss during switchover — verified by reconciliation job"
+  ],
+  "focus_areas": [
+    "Payment callback handler (highest risk, exactly-once guarantees)",
+    "Order state machine (core business logic, most complex transitions)",
+    "Database migration (Oracle → PostgreSQL query compatibility)",
+    "Event-driven integration (ActiveMQ → Kafka migration)"
+  ],
+  "modules": [
+    {
+      "name": "order-service",
+      "source": "index.json",
+      "doc_file": "modules/order-service.md",
+      "role": "primary",
+      "notes": "Core module being migrated. Contains the order state machine and payment integration."
+    },
+    {
+      "name": "inventory-service",
+      "source": "index.json",
+      "doc_file": "modules/inventory-service.md",
+      "role": "dependency",
+      "notes": "Stock reservation calls must work during and after migration. gRPC contract stays the same."
+    },
+    {
+      "name": "notification-service",
+      "source": "index.json",
+      "doc_file": "modules/notification-service.md",
+      "role": "affected",
+      "notes": "Currently consumes ActiveMQ events — will need to switch to Kafka consumer."
+    },
+    {
+      "name": "sap-bridge",
+      "source": "user",
+      "role": "dependency",
+      "notes": "Undocumented SOAP adapter layer discovered during interview. Not in index.json — lives in a separate repo but tightly coupled."
+    }
+  ],
+  "notes": "Team is planning a parallel-run period of 2 weeks where both old and new systems process orders. The SAP bridge was not captured by deep-explore because it lives in a separate repository."
+}

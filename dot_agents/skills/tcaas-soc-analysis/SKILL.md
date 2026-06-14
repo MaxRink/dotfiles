@@ -3,6 +3,8 @@ name: tcaas-soc-analysis
 description: Use when researching T-CaaS code, configuration, Confluence/documentation exports, implementation repositories, and PSA SoC answer files to produce evidence-backed SoC answers and reusable project analysis artifacts.
 ---
 
+<!-- Imported from tcaas-psa/skill/tcaas-soc-analysis by codex-knowledge-curation/scripts/persist_project_skills.py. -->
+
 # T-CaaS SoC Analysis
 
 Use this skill for repeatable T-CaaS project analysis and PSA SoC answering.

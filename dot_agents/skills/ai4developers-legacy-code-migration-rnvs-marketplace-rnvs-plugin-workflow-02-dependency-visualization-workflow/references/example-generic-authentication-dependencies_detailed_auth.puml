@@ -1,0 +1,107 @@
+@startuml dependencies_detailed_auth
+title User Authentication - Auth Module Detailed Dependencies
+
+' Auth Java Components
+package "Auth Java Components" {
+  [AuthenticationManager.java] as AUTH_MGR <<Service>>
+  [PasswordValidator.java] as PWD_VAL <<Utility>>
+}
+
+' Auth SQL Components
+package "Auth SQL Components" {
+  [auth_procedures.sql] as AUTH_PROC <<Stored Procedures>>
+  [user_schema.sql] as USER_SCHEMA <<DDL Script>>
+}
+
+' Auth Frontend Components
+package "Auth Frontend Components" {
+  [LoginForm.jsx] as LOGIN_FORM <<React Component>>
+  [AuthProvider.jsx] as AUTH_PROVIDER <<Context Provider>>
+}
+
+' External dependencies from other modules
+package "External Module Dependencies" <<Cloud>> {
+  [SessionManager.java] as SESS_MGR <<Session Module>>
+  [UserRepository.java] as USER_REPO <<User Module>>
+  [TokenGenerator.java] as TOKEN_GEN <<Common>>
+  [BaseService.java] as BASE_SVC <<Common>>
+  [SessionMonitor.js] as SESS_MONITOR <<Session Module>>
+}
+
+' External systems
+cloud "External Systems" {
+  [LDAP Directory] as LDAP
+  [Email Service] as EMAIL
+}
+
+database "Data Storage" {
+  [User Database\nUSERS, AUTH_LOGS] as DB
+  [Redis Cache] as CACHE
+}
+
+' Intra-module dependencies (within Auth)
+AUTH_MGR --> PWD_VAL : validates password\ncheckComplexity()
+LOGIN_FORM --> AUTH_PROVIDER : uses context\nlogin action
+AUTH_PROC --> USER_SCHEMA : executes on\nUSERS table
+
+' Cross-component dependencies within Auth
+AUTH_MGR ..> AUTH_PROC : invokes via\nJDBC CallableStatement
+LOGIN_FORM ..> AUTH_MGR : REST API call\nPOST /api/auth/login
+
+' Inter-module dependencies (Auth to other modules)
+AUTH_MGR --> USER_REPO : retrieves user\nfindByUsername()
+AUTH_MGR --> SESS_MGR : creates session\ncreateSession(userId)
+AUTH_MGR --> BASE_SVC : inherits from\nbase functionality
+AUTH_PROVIDER --> SESS_MONITOR : monitors session\ncheckTimeout()
+SESS_MGR --> TOKEN_GEN : generates token\ngenerateSessionToken()
+
+' External integrations
+AUTH_PROC -down-> DB : INSERT/UPDATE USERS\nDML operations
+AUTH_MGR --> LDAP : LDAP bind\nuser authentication
+AUTH_MGR --> EMAIL : password reset\nemail notifications
+AUTH_MGR --> CACHE : failed attempts\nRedis INCR/GET
+
+' Color coding (High relevance in green)
+AUTH_MGR #LightGreen
+PWD_VAL #LightGreen
+LOGIN_FORM #LightGreen
+AUTH_PROVIDER #LightGreen
+AUTH_PROC #LightGreen
+USER_SCHEMA #LightGreen
+
+note right of AUTH_MGR
+  **Core Auth Service**
+
+  - Lines: 450
+  - Score: 95/100
+  - Features: Login, Logout,
+    Password validation,
+    Account lockout
+end note
+
+note bottom of PWD_VAL
+  **Password Validation**
+
+  Enforces password policy:
+  - Minimum 8 characters
+  - Complexity requirements
+  - BCrypt hashing
+end note
+
+legend right
+  **Module Scope: Authentication**
+
+  This diagram shows only the
+  Authentication module and its
+  dependencies on external modules.
+
+  |= Color |= Meaning |
+  | <#LightGreen> | Auth Module (High Relevance) |
+  | <<Cloud>> | External Module Dependency |
+
+  **For other modules, see:**
+  - dependencies_detailed_session.puml
+  - dependencies_detailed_user.puml
+endlegend
+
+@enduml

@@ -1,0 +1,303 @@
+{
+  "$comment": "Generic example: User Authentication System analysis",
+  "feature_name": "USER-AUTH",
+  "analysis_timestamp": "2025-12-16T10:00:00Z",
+  "analyzed_files": [
+    {
+      "file_path": "src/auth/AuthenticationManager.java",
+      "language": "Java",
+      "lines_of_code": 450,
+      "complexity_score": 3,
+      "last_modified": "2024-11-20T14:30:00Z"
+    },
+    {
+      "file_path": "src/auth/SessionManager.java",
+      "language": "Java",
+      "lines_of_code": 320,
+      "complexity_score": 2,
+      "last_modified": "2024-10-15T09:20:00Z"
+    },
+    {
+      "file_path": "src/auth/PasswordValidator.java",
+      "language": "Java",
+      "lines_of_code": 180,
+      "complexity_score": 2,
+      "last_modified": "2024-09-05T11:45:00Z"
+    },
+    {
+      "file_path": "database/auth_schema.sql",
+      "language": "SQL",
+      "lines_of_code": 250,
+      "complexity_score": 1,
+      "last_modified": "2024-08-12T16:00:00Z"
+    }
+  ],
+  "components": [
+    {
+      "component_id": "AUTH-MGR-001",
+      "component_name": "AuthenticationManager",
+      "component_type": "service",
+      "file_location": "src/auth/AuthenticationManager.java",
+      "language": "Java",
+      "description": "Core authentication service handling user login, logout, and credential validation. Coordinates with SessionManager and PasswordValidator to manage authentication lifecycle.",
+      "business_purpose": "Ensures secure user access to the system by validating credentials against stored user data and enforcing password policies.",
+      "key_methods": [
+        {
+          "method_name": "authenticateUser",
+          "parameters": ["username: String", "password: String"],
+          "return_type": "AuthenticationResult",
+          "line_number": 45,
+          "description": "Validates user credentials and creates session on success"
+        },
+        {
+          "method_name": "logout",
+          "parameters": ["sessionToken: String"],
+          "return_type": "void",
+          "line_number": 89,
+          "description": "Terminates user session and invalidates session token"
+        },
+        {
+          "method_name": "validateSessionToken",
+          "parameters": ["token: String"],
+          "return_type": "boolean",
+          "line_number": 112,
+          "description": "Checks if session token is valid and not expired"
+        }
+      ],
+      "dependencies": [
+        {
+          "target_component": "SessionManager",
+          "dependency_type": "method_call",
+          "description": "Creates and manages user sessions"
+        },
+        {
+          "target_component": "PasswordValidator",
+          "dependency_type": "method_call",
+          "description": "Validates password complexity and hashing"
+        },
+        {
+          "target_component": "UserRepository",
+          "dependency_type": "data_access",
+          "description": "Retrieves user credentials from database"
+        }
+      ],
+      "confidence_score": 5,
+      "notes": "Well-structured component with clear separation of concerns. Password hashing uses BCrypt algorithm."
+    },
+    {
+      "component_id": "SESS-MGR-001",
+      "component_name": "SessionManager",
+      "component_type": "service",
+      "file_location": "src/auth/SessionManager.java",
+      "language": "Java",
+      "description": "Manages user session lifecycle including token generation, validation, timeout handling, and session cleanup.",
+      "business_purpose": "Maintains stateful user sessions to track authenticated users and enforce session expiration policies for security.",
+      "key_methods": [
+        {
+          "method_name": "createSession",
+          "parameters": ["userId: Long"],
+          "return_type": "SessionToken",
+          "line_number": 38,
+          "description": "Generates new session token and stores in session cache"
+        },
+        {
+          "method_name": "invalidateSession",
+          "parameters": ["token: String"],
+          "return_type": "void",
+          "line_number": 67,
+          "description": "Removes session from active sessions and marks token as invalid"
+        },
+        {
+          "method_name": "refreshSession",
+          "parameters": ["token: String"],
+          "return_type": "SessionToken",
+          "line_number": 95,
+          "description": "Extends session timeout if within renewal window"
+        }
+      ],
+      "dependencies": [
+        {
+          "target_component": "SessionCache",
+          "dependency_type": "data_storage",
+          "description": "Redis-backed cache for active sessions"
+        },
+        {
+          "target_component": "TokenGenerator",
+          "dependency_type": "utility",
+          "description": "Generates cryptographically secure session tokens"
+        }
+      ],
+      "confidence_score": 5,
+      "notes": "Uses Redis for distributed session management. Session timeout configured at 30 minutes with 5-minute renewal window."
+    },
+    {
+      "component_id": "PWD-VAL-001",
+      "component_name": "PasswordValidator",
+      "component_type": "utility",
+      "file_location": "src/auth/PasswordValidator.java",
+      "language": "Java",
+      "description": "Validates password complexity requirements and handles password hashing/verification using BCrypt algorithm.",
+      "business_purpose": "Enforces password security policies to protect user accounts from unauthorized access and brute-force attacks.",
+      "key_methods": [
+        {
+          "method_name": "validatePasswordPolicy",
+          "parameters": ["password: String"],
+          "return_type": "ValidationResult",
+          "line_number": 28,
+          "description": "Checks password meets minimum length, complexity requirements"
+        },
+        {
+          "method_name": "hashPassword",
+          "parameters": ["plainPassword: String"],
+          "return_type": "String",
+          "line_number": 52,
+          "description": "Creates BCrypt hash of password with salt"
+        },
+        {
+          "method_name": "verifyPassword",
+          "parameters": ["plainPassword: String", "hashedPassword: String"],
+          "return_type": "boolean",
+          "line_number": 71,
+          "description": "Verifies plain password matches stored hash"
+        }
+      ],
+      "dependencies": [],
+      "confidence_score": 5,
+      "notes": "Password policy: minimum 8 characters, requires uppercase, lowercase, digit, and special character. Uses BCrypt with cost factor 12."
+    }
+  ],
+  "business_rules": [
+    {
+      "rule_id": "AUTH-BR-001",
+      "rule_name": "Failed Login Lockout",
+      "description": "After 5 consecutive failed login attempts, user account is locked for 15 minutes",
+      "source_location": "src/auth/AuthenticationManager.java:156-178",
+      "pseudocode": "IF failed_attempts >= 5 THEN\n  SET account_locked = true\n  SET lockout_until = current_time + 15 minutes\n  RETURN 'Account locked'\nEND IF",
+      "confidence_score": 5,
+      "business_impact": "Prevents brute-force password attacks while allowing legitimate users to regain access after timeout",
+      "notes": "Lockout counter resets on successful login. Admin can manually unlock accounts."
+    },
+    {
+      "rule_id": "AUTH-BR-002",
+      "rule_name": "Session Timeout Policy",
+      "description": "User sessions expire after 30 minutes of inactivity. Sessions can be renewed within 5-minute window before expiration.",
+      "source_location": "src/auth/SessionManager.java:95-110",
+      "pseudocode": "IF (current_time - last_activity) > 30 minutes THEN\n  INVALIDATE session\n  RETURN 'Session expired'\nELSE IF (current_time - last_activity) > 25 minutes THEN\n  ALLOW renewal\nEND IF",
+      "confidence_score": 5,
+      "business_impact": "Balances security (limiting exposure of idle sessions) with user experience (preventing frequent re-authentication)",
+      "notes": "Session activity updated on each authenticated API request"
+    },
+    {
+      "rule_id": "AUTH-BR-003",
+      "rule_name": "Password Complexity Requirements",
+      "description": "Passwords must be minimum 8 characters with at least one uppercase letter, one lowercase letter, one digit, and one special character",
+      "source_location": "src/auth/PasswordValidator.java:28-45",
+      "pseudocode": "IF length < 8 THEN REJECT\nIF NOT contains_uppercase THEN REJECT\nIF NOT contains_lowercase THEN REJECT\nIF NOT contains_digit THEN REJECT\nIF NOT contains_special_char THEN REJECT\nRETURN 'Valid'",
+      "confidence_score": 5,
+      "business_impact": "Ensures password strength to protect user accounts from dictionary attacks and common password vulnerabilities",
+      "notes": "Special characters include: !@#$%^&*()_+-=[]{}|;:,.<>?"
+    }
+  ],
+  "data_flows": [
+    {
+      "flow_id": "DF-AUTH-001",
+      "flow_name": "User Login Flow",
+      "description": "Complete authentication flow from credential submission to session creation",
+      "steps": [
+        "User submits username and password via login form",
+        "AuthenticationManager receives credentials",
+        "UserRepository queries database for user record",
+        "PasswordValidator verifies password hash matches",
+        "Check failed login attempts (AUTH-BR-001)",
+        "SessionManager creates new session token",
+        "Session stored in Redis cache",
+        "Return session token to user"
+      ],
+      "data_elements": ["username", "password", "userId", "passwordHash", "sessionToken", "failedAttempts"],
+      "security_considerations": "Password transmitted over HTTPS only. Password hash never returned to client. Session token includes CSRF protection.",
+      "confidence_score": 5
+    },
+    {
+      "flow_id": "DF-AUTH-002",
+      "flow_name": "Session Validation Flow",
+      "description": "Validates session token for authenticated API requests",
+      "steps": [
+        "Client includes session token in API request header",
+        "SessionManager retrieves session from cache",
+        "Check if session exists and not expired (AUTH-BR-002)",
+        "Update last_activity timestamp",
+        "Return user context for request processing"
+      ],
+      "data_elements": ["sessionToken", "userId", "lastActivity", "sessionExpiry"],
+      "security_considerations": "Session tokens are UUID v4. Token validation occurs before any business logic execution.",
+      "confidence_score": 5
+    }
+  ],
+  "external_dependencies": [
+    {
+      "dependency_name": "UserDatabase",
+      "dependency_type": "database",
+      "description": "PostgreSQL database storing user credentials and profile data",
+      "integration_point": "JDBC connection via UserRepository",
+      "confidence_score": 5
+    },
+    {
+      "dependency_name": "SessionCache",
+      "dependency_type": "cache",
+      "description": "Redis cache for distributed session storage",
+      "integration_point": "Redis client library via SessionManager",
+      "confidence_score": 5
+    },
+    {
+      "dependency_name": "AuditLogger",
+      "dependency_type": "logging",
+      "description": "Centralized audit logging service for authentication events",
+      "integration_point": "Log4j integration for login attempts, logouts, lockouts",
+      "confidence_score": 4,
+      "notes": "Audit logs include timestamp, username, IP address, success/failure status"
+    }
+  ],
+  "technical_debt": [
+    {
+      "debt_id": "TD-AUTH-001",
+      "description": "Password reset functionality not implemented - currently requires admin intervention",
+      "severity": "high",
+      "estimated_effort": "3-5 days",
+      "migration_impact": "Should be included in modern microservices implementation"
+    },
+    {
+      "debt_id": "TD-AUTH-002",
+      "description": "No multi-factor authentication support",
+      "severity": "medium",
+      "estimated_effort": "5-7 days",
+      "migration_impact": "Recommended for enhanced security in VNRM equivalent"
+    },
+    {
+      "debt_id": "TD-AUTH-003",
+      "description": "Session storage lacks backup/persistence - Redis failure causes all sessions to be lost",
+      "severity": "medium",
+      "estimated_effort": "2-3 days",
+      "migration_impact": "Implement Redis persistence or session database backup"
+    }
+  ],
+  "migration_notes": {
+    "recommended_target_architecture": "Separate Authentication Service (OAuth2/JWT) with centralized Session Management",
+    "modernization_opportunities": [
+      "Replace custom session tokens with JWT for stateless authentication",
+      "Implement OAuth2/OpenID Connect for third-party authentication",
+      "Add multi-factor authentication (TOTP, SMS)",
+      "Implement passwordless authentication options (biometric, magic links)",
+      "Add rate limiting at API gateway level to complement lockout mechanism"
+    ],
+    "migration_complexity": "medium",
+    "estimated_migration_effort": "4-6 weeks"
+  },
+  "summary": {
+    "total_files_analyzed": 4,
+    "total_components": 3,
+    "total_business_rules": 3,
+    "total_data_flows": 2,
+    "overall_code_quality": "good",
+    "migration_readiness": "ready with modernization recommendations"
+  }
+}

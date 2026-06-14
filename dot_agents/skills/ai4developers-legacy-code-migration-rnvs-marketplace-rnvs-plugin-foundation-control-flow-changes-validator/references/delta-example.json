@@ -1,0 +1,85 @@
+{
+  "baseline": {
+    "source": "No baseline - first-time control flow design in CHANGE workflow",
+    "assumption": "Phase 8 was not run previously",
+    "phase7_1_source": "results/priority-porting/phase7.1/microservice-changes-design.json",
+    "phase5_source": "results/priority-porting/phase5/control-flow-mapping.json"
+  },
+  "requirements": {
+    "control_flow_mapping": "results/priority-porting/phase5/control-flow-mapping.json",
+    "microservice_changes": "results/priority-porting/phase7.1/microservice-changes-design.json"
+  },
+  "changes": {
+    "sequences_to_add": [
+      {
+        "diagram_name": "sequence-priority-porting-request.puml",
+        "use_case": "Priority Porting Request Flow",
+        "participants": ["prt-fcpm", "num-fcm", "spe-coms"],
+        "rationale": "Phase 7.1 added POST /portings/priority endpoint requiring new sequence diagram",
+        "source_change": "endpoints_to_add: createPriorityPortingRequest"
+      }
+    ],
+    "sequences_to_modify": [
+      {
+        "diagram_name": "sequence-export-porting.puml",
+        "modifications": {
+          "new_participants": ["num-fcm"],
+          "new_interactions": [
+            {
+              "from": "prt-fcpm",
+              "to": "num-fcm",
+              "message": "POST /booking-orders",
+              "type": "request"
+            },
+            {
+              "from": "num-fcm",
+              "to": "prt-fcpm",
+              "message": "allocation_id",
+              "type": "response"
+            }
+          ],
+          "rationale": "Add number allocation step before PDA transmission"
+        }
+      }
+    ],
+    "activities_to_add": [
+      {
+        "diagram_name": "activity-priority-validation.puml",
+        "operation": "Priority Porting Validation Logic",
+        "table_name": "priority_porting_requests",
+        "rationale": "Phase 7.1 added priority_porting_requests table with complex validation rules",
+        "source_change": "tables_to_add: priority_porting_requests"
+      }
+    ],
+    "activities_to_modify": [],
+    "sagas_to_add": [
+      {
+        "diagram_name": "saga-priority-porting.puml",
+        "saga_name": "Priority Porting with Number Allocation Saga",
+        "steps": 3,
+        "compensation_required": true,
+        "rationale": "Distributed transaction spans prt-fcpm and num-fcm services",
+        "source_change": "dependency_changes + database_changes"
+      }
+    ],
+    "event_flows_to_modify": [
+      {
+        "diagram_name": "event-architecture.puml",
+        "new_topics": ["prt.priority.requested", "prt.number.allocated"],
+        "new_subscriptions": [
+          {
+            "consumer": "spe-coms",
+            "topic": "prt.priority.requested"
+          },
+          {
+            "consumer": "spe-coms",
+            "topic": "prt.number.allocated"
+          }
+        ],
+        "rationale": "Phase 7.1 added Message Bus topics for priority porting events",
+        "source_change": "topics_to_add: prt.priority.requested, prt.number.allocated"
+      }
+    ]
+  },
+  "computed_at": "2026-01-06T10:00:00.000Z"
+}

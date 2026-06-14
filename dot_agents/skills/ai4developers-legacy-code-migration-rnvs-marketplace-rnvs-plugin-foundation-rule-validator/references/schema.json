@@ -1,0 +1,387 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Business Rule Table Schema",
+  "description": "Schema for Phase 3 business rule extraction output (ruletable.json)",
+  "type": "object",
+  "required": ["feature_name", "phase", "timestamp", "rules", "summary"],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Feature name (kebab-case, e.g., 'NBM')",
+      "pattern": "^[A-Z][A-Z0-9-]*$"
+    },
+    "feature_full_name": {
+      "type": "string",
+      "description": "Full descriptive feature name"
+    },
+    "phase": {
+      "type": "integer",
+      "const": 3,
+      "description": "Phase number (always 3 for rule extraction)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp of rule extraction"
+    },
+    "inputs": {
+      "type": "object",
+      "description": "Documents which Phase 1 and Phase 2 outputs were analyzed",
+      "properties": {
+        "phase1_analysis": {
+          "type": "string",
+          "description": "Path to Phase 1 analysis.json"
+        },
+        "phase2_summary": {
+          "type": "string",
+          "description": "Path to Phase 2 PHASE2_SUMMARY.md"
+        },
+        "phase2_flows": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of Phase 2 flow diagram files analyzed"
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_rules", "by_type", "by_confidence"],
+      "properties": {
+        "total_rules": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of rules extracted"
+        },
+        "by_type": {
+          "type": "object",
+          "required": ["validation", "business_logic", "integration", "compliance"],
+          "properties": {
+            "validation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "business_logic": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "integration": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "compliance": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "by_confidence": {
+          "type": "object",
+          "required": ["very_high", "high", "medium", "low", "very_low"],
+          "properties": {
+            "very_high": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Rules with confidence = 5"
+            },
+            "high": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Rules with confidence = 4"
+            },
+            "medium": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Rules with confidence = 3"
+            },
+            "low": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Rules with confidence = 2"
+            },
+            "very_low": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Rules with confidence = 1"
+            }
+          }
+        },
+        "by_flow": {
+          "type": "object",
+          "description": "Rules grouped by business flow (optional but recommended)",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "quality_metrics": {
+          "type": "object",
+          "description": "Quality metrics from validation (if validation run)",
+          "properties": {
+            "rule_completeness": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "confidence_quality": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "source_traceability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "categorization_completeness": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "overall_quality_score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "description": "Array of extracted business rules",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule_id",
+          "description",
+          "type",
+          "confidence",
+          "reasoning",
+          "source_location",
+          "business_impact"
+        ],
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "pattern": "^BR-\\d+$",
+            "description": "Unique rule identifier (format: BR-001, BR-002, etc.)"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Clear business language description of the rule"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["validation", "business_logic", "integration", "compliance"],
+            "description": "Rule category"
+          },
+          "confidence": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "description": "Confidence score (1=Very Low, 2=Low, 3=Medium, 4=High, 5=Very High)"
+          },
+          "reasoning": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Explanation for confidence score (why this confidence level?)"
+          },
+          "source_location": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Source reference (Phase 1 component/function or Phase 2 flow diagram with line number)"
+          },
+          "business_flow": {
+            "type": "string",
+            "description": "Business flow name or KCODE (if rule is specific to a flow from Phase 2)"
+          },
+          "business_impact": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"],
+            "description": "Business impact level"
+          },
+          "german_terms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "German terminology used in this rule (from german-glossary skill)"
+          },
+          "affected_components": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Components from Phase 1 that enforce this rule"
+          },
+          "validation_method": {
+            "type": "string",
+            "description": "Method/function that validates this rule (if applicable)"
+          },
+          "related_rules": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^BR-\\d+$"
+            },
+            "description": "Related rule IDs (rules that work together or depend on each other)"
+          }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "object",
+      "description": "Recommendations based on rule analysis",
+      "properties": {
+        "rules_needing_validation": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Rules with low confidence (1-2) that need validation"
+        },
+        "critical_rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Rules with critical business impact - prioritize for testing"
+        },
+        "compliance_rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Regulatory compliance rules (BNetzA, GDPR, etc.)"
+        },
+        "flow_coverage": {
+          "type": "object",
+          "description": "Coverage of business flows from Phase 2",
+          "properties": {
+            "complete": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Flows with complete rule coverage"
+            },
+            "partial": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Flows with partial rule coverage"
+            },
+            "missing": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Flows with no extracted rules"
+            }
+          }
+        }
+      }
+    },
+    "validation_report": {
+      "type": "object",
+      "description": "Inline validation report (if validation was run)",
+      "properties": {
+        "gate_1_rule_completeness": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASSED", "FAILED", "PENDING"]
+            },
+            "percentage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "details": {
+              "type": "string"
+            }
+          }
+        },
+        "gate_2_confidence_quality": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASSED", "FAILED", "PENDING"]
+            },
+            "percentage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "details": {
+              "type": "string"
+            }
+          }
+        },
+        "gate_3_source_traceability": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASSED", "FAILED", "PENDING"]
+            },
+            "percentage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "details": {
+              "type": "string"
+            }
+          }
+        },
+        "gate_4_categorization_completeness": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASSED", "FAILED", "PENDING"]
+            },
+            "percentage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "details": {
+              "type": "string"
+            }
+          }
+        },
+        "gate_5_json_schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASSED", "FAILED", "PENDING"]
+            },
+            "details": {
+              "type": "string"
+            }
+          }
+        },
+        "overall_status": {
+          "type": "string",
+          "enum": ["COMPLETE", "INCOMPLETE"],
+          "description": "Overall validation status"
+        },
+        "overall_quality_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Overall quality score from 5-gate validation"
+        }
+      }
+    }
+  }
+}

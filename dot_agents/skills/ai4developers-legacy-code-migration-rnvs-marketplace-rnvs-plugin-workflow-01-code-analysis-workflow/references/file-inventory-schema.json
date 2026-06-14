@@ -1,0 +1,347 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RNVS Phase 1 File Inventory",
+  "description": "Schema for file-inventory.json - documents all code files discovered for a feature with relevance scoring and MANDATORY evidence fields",
+  "type": "object",
+  "required": [
+    "feature",
+    "timestamp",
+    "discovery_method",
+    "summary",
+    "files"
+  ],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "description": "Feature name (matches feature-definition.json)",
+      "minLength": 3,
+      "maxLength": 10
+    },
+    "timestamp": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of discovery completion",
+      "format": "date-time"
+    },
+    "discovery_method": {
+      "type": "object",
+      "description": "How files were discovered",
+      "required": [
+        "module_references_available",
+        "keyword_search_performed",
+        "dependency_extraction_depth"
+      ],
+      "properties": {
+        "module_references_available": {
+          "type": "boolean",
+          "description": "Whether /modules folder was used"
+        },
+        "module_folders_used": {
+          "type": "array",
+          "description": "List of module folders consulted",
+          "items": {
+            "type": "string"
+          }
+        },
+        "keyword_search_performed": {
+          "type": "boolean",
+          "description": "Whether Grep keyword search was performed"
+        },
+        "keywords_used": {
+          "type": "array",
+          "description": "Keywords used in Grep searches",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependency_extraction_depth": {
+          "type": "integer",
+          "description": "Levels of dependency extraction (1-3)",
+          "minimum": 1,
+          "maximum": 3
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "Summary statistics of discovery",
+      "required": [
+        "total_files_discovered",
+        "high_relevance_files",
+        "medium_relevance_files",
+        "low_relevance_files",
+        "files_fully_read"
+      ],
+      "properties": {
+        "total_files_discovered": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "high_relevance_files": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Files with score >= 70"
+        },
+        "medium_relevance_files": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Files with score 40-69"
+        },
+        "low_relevance_files": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Files with score 1-39"
+        },
+        "dependency_discovered_files": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Files discovered via dependency extraction"
+        },
+        "excluded_files": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Files excluded per feature definition scope"
+        },
+        "files_fully_read": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "REQUIRED: Number of files with content_read: true (must be >= 1)"
+        },
+        "files_partially_read": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "files_grep_verified": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "description": "List of all discovered files with scoring and MANDATORY evidence",
+      "items": {
+        "type": "object",
+        "required": [
+          "file_path",
+          "language",
+          "file_type",
+          "relevance_score",
+          "classification",
+          "discovery_method",
+          "content_read",
+          "read_method",
+          "keyword_matches",
+          "scoring_breakdown"
+        ],
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "Absolute or relative path to file"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["PL/SQL", "TCL", "C++", "Java", "Shell", "SQL", "Other"]
+          },
+          "file_type": {
+            "type": "string",
+            "description": "Type of file (Package Body, Manager Class, Script, etc.)",
+            "minLength": 3
+          },
+          "relevance_score": {
+            "type": "integer",
+            "description": "Relevance score (0-100)",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "classification": {
+            "type": "string",
+            "enum": ["high", "medium", "low", "not_relevant"],
+            "description": "high >= 70, medium 40-69, low 1-39, not_relevant 0"
+          },
+          "content_read": {
+            "type": "boolean",
+            "description": "REQUIRED: Was file content actually read with Read tool? Must be true for high-relevance files."
+          },
+          "read_method": {
+            "type": "string",
+            "enum": ["full", "chunked", "partial", "grep_context", "agent_delegated"],
+            "description": "REQUIRED: How was the file read? full=entire file, chunked=multiple chunks, partial=first N lines + context, grep_context=grep with context only, agent_delegated=read by subagent"
+          },
+          "read_chunks": {
+            "type": "array",
+            "description": "For chunked reads, list of [start_line, end_line] ranges",
+            "items": {
+              "type": "array",
+              "items": { "type": "integer" },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "lines_read": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of lines actually read from the file"
+          },
+          "discovery_method": {
+            "type": "string",
+            "description": "How this file was discovered",
+            "examples": ["module_reference", "keyword_search", "dependency", "module_reference + keyword_search"]
+          },
+          "keyword_matches": {
+            "type": "array",
+            "description": "REQUIRED: Keywords that matched in this file WITH EVIDENCE",
+            "items": {
+              "type": "object",
+              "required": ["keyword", "occurrences", "sample_lines"],
+              "properties": {
+                "keyword": {
+                  "type": "string",
+                  "description": "The keyword that matched"
+                },
+                "occurrences": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Number of times keyword was found"
+                },
+                "sample_lines": {
+                  "type": "array",
+                  "description": "REQUIRED: Line numbers where keyword was found (EVIDENCE)",
+                  "items": { "type": "integer" },
+                  "minItems": 1
+                }
+              }
+            }
+          },
+          "scoring_breakdown": {
+            "type": "object",
+            "description": "REQUIRED: Breakdown of relevance score calculation",
+            "required": ["keyword_density_reason"],
+            "properties": {
+              "module_reference": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 30
+              },
+              "component_match": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 25
+              },
+              "keyword_density": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 25
+              },
+              "keyword_density_reason": {
+                "type": "string",
+                "description": "REQUIRED: Explanation of how keyword_density was calculated (e.g., '47 RFM + 12 format_plausi = 59 matches for 10 keywords, avg 5.9')",
+                "minLength": 10
+              },
+              "language_priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10
+              },
+              "exclusion_penalty": {
+                "type": "integer",
+                "maximum": 0,
+                "description": "Negative points for exclusion matches"
+              },
+              "dependency_indicator": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10
+              }
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "description": "Dependencies extracted from this file WITH EVIDENCE",
+            "items": {
+              "type": "object",
+              "required": ["target", "source_line", "pattern_found"],
+              "properties": {
+                "target": {
+                  "type": "string",
+                  "description": "Target file or package that is depended on"
+                },
+                "source_line": {
+                  "type": "integer",
+                  "description": "REQUIRED: Line number where dependency was found (EVIDENCE)",
+                  "minimum": 1
+                },
+                "pattern_found": {
+                  "type": "string",
+                  "description": "REQUIRED: Actual code pattern found in file (EVIDENCE)",
+                  "minLength": 5
+                }
+              }
+            }
+          },
+          "line_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of lines in file"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Human-readable explanation of relevance classification",
+            "minLength": 10
+          }
+        }
+      }
+    },
+    "excluded_files": {
+      "type": "array",
+      "description": "Files excluded per feature definition",
+      "items": {
+        "type": "object",
+        "required": ["file_path", "reason"],
+        "properties": {
+          "file_path": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this file was excluded (reference to excluded_scope)"
+          },
+          "keyword_matches": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "would_be_score": {
+            "type": "integer",
+            "description": "Score without exclusion penalty",
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
+      }
+    },
+    "unresolved_dependencies": {
+      "type": "array",
+      "description": "Dependencies that could not be resolved",
+      "items": {
+        "type": "object",
+        "required": ["dependency_name", "referenced_by"],
+        "properties": {
+          "dependency_name": {
+            "type": "string"
+          },
+          "referenced_by": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why dependency could not be resolved"
+          }
+        }
+      }
+    }
+  }
+}

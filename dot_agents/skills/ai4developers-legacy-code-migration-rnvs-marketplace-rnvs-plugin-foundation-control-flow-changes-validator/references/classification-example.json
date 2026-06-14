@@ -1,0 +1,29 @@
+{
+  "change_type": "ENHANCEMENT",
+  "change_description": "ENHANCEMENT change: 1 new sequence diagram(s), 1 sequence diagram modification(s), 1 new activity diagram(s), 1 new saga choreography diagram(s), 1 event architecture update(s)",
+  "complexity_score": 18,
+  "is_breaking_change": false,
+  "quality_target": 75,
+  "change_summary": {
+    "sequences_added": 1,
+    "sequences_modified": 1,
+    "activities_added": 1,
+    "activities_modified": 0,
+    "sagas_added": 1,
+    "sagas_modified": 0,
+    "event_flows_modified": 1,
+    "total_diagram_changes": 5
+  },
+  "classification_rationale": {
+    "complexity_breakdown": {
+      "sequences_added_weight": 5,
+      "sequences_modified_weight": 3,
+      "activities_added_weight": 4,
+      "activities_modified_weight": 0,
+      "sagas_added_weight": 6,
+      "event_flows_modified_weight": 2
+    },
+    "type_determination": "Modifications to existing flows detected"
+  },
+  "classified_at": "2026-01-06T10:00:00.000Z"
+}

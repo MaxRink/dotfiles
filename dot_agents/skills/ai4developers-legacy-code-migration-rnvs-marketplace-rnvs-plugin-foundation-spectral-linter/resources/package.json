@@ -1,0 +1,13 @@
+{
+  "name": "spectral-linter",
+  "version": "1.0.0",
+  "description": "Spectral OpenAPI linting with OWASP and G-API rulesets",
+  "private": true,
+  "devDependencies": {
+    "@stoplight/spectral-cli": "^6.13.0",
+    "@stoplight/spectral-owasp-ruleset": "^2.0.0"
+  },
+  "scripts": {
+    "spectral-lint": "spectral lint"
+  }
+}

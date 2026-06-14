@@ -1,0 +1,69 @@
+@startuml dependencies
+title User Authentication - Module & Technology Dependencies
+
+' Module groupings
+package "Authentication System Modules" {
+  [Authentication Module] as AUTH
+  [Session Management Module] as SESSION
+  [User Management Module] as USER
+}
+
+' Language/Technology layers
+package "Programming Languages" {
+  [Java Services\n(5 files)] as JAVA
+  [SQL Scripts\n(3 files)] as SQL
+  [JavaScript/React\n(4 files)] as JS
+}
+
+' External systems
+cloud "External Systems" {
+  [LDAP Directory] as LDAP
+  [Email Service] as EMAIL
+}
+
+database "Data Storage" {
+  [User Database\nUSERS, SESSIONS, ROLES] as DB
+  [Redis Cache] as CACHE
+}
+
+' Module-to-language connections
+AUTH --> JAVA : AuthenticationManager.java\nPasswordValidator.java
+AUTH --> SQL : user_schema.sql\nauth_procedures.sql
+AUTH --> JS : LoginForm.jsx\nAuthProvider.jsx
+
+SESSION --> JAVA : SessionManager.java\nTokenGenerator.java
+SESSION --> SQL : session_cleanup.sql
+
+USER --> JAVA : UserRepository.java
+USER --> SQL : user_crud.sql
+
+' Module-to-module dependencies
+AUTH -down-> SESSION : creates sessions\n(createSession)
+AUTH -down-> USER : validates credentials\n(getUserByUsername)
+
+' External integrations
+AUTH -right-> LDAP : user lookup\n(LDAP bind)
+AUTH --> EMAIL : password reset emails
+JAVA -down-> DB : INSERT/UPDATE\nUSERS, SESSIONS
+SESSION --> CACHE : session storage\n(Redis SET/GET)
+
+note right of AUTH
+  **Core Authentication Module**
+
+  Handles user authentication:
+  - Login with credentials
+  - Password validation
+  - Session creation
+  - Failed attempt tracking
+  - Account lockout
+end note
+
+note right of LDAP
+  **LDAP Integration**
+
+  Active Directory/LDAP
+  corporate user directory
+  via LDAP protocol
+end note
+
+@enduml

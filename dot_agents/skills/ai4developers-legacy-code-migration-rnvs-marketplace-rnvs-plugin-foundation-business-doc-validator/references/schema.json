@@ -1,0 +1,651 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Business Documentation Schema",
+  "description": "Schema for Phase 4 business documentation outputs",
+  "type": "object",
+  "required": [
+    "feature_name",
+    "feature_full_name",
+    "phase",
+    "timestamp",
+    "inputs",
+    "overview",
+    "business_rules_enhanced",
+    "business_processes",
+    "stakeholder_analysis",
+    "impact_analysis",
+    "glossary",
+    "recommendations",
+    "validation_report"
+  ],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Short feature identifier (e.g., 'NBM')",
+      "minLength": 2,
+      "maxLength": 20
+    },
+    "feature_full_name": {
+      "type": "string",
+      "description": "Full descriptive name of the feature",
+      "minLength": 5
+    },
+    "phase": {
+      "type": "integer",
+      "const": 4,
+      "description": "Phase number (always 4 for business documentation)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of documentation generation"
+    },
+    "inputs": {
+      "type": "object",
+      "required": ["phase1_analysis", "phase2_summary", "phase3_ruletable"],
+      "properties": {
+        "phase1_analysis": {
+          "type": "string",
+          "description": "Path to Phase 1 analysis.json"
+        },
+        "phase2_summary": {
+          "type": "string",
+          "description": "Path to Phase 2 PHASE2_SUMMARY.md"
+        },
+        "phase3_ruletable": {
+          "type": "string",
+          "description": "Path to Phase 3 ruletable.json"
+        },
+        "wiki_confluence_available": {
+          "type": "boolean",
+          "description": "Whether Wiki/Confluence MCP was available during generation"
+        }
+      }
+    },
+    "overview": {
+      "type": "object",
+      "required": ["business_objective", "affected_stakeholders", "key_processes"],
+      "properties": {
+        "business_objective": {
+          "type": "string",
+          "description": "Primary business objective of this feature",
+          "minLength": 20
+        },
+        "affected_stakeholders": {
+          "type": "array",
+          "description": "List of stakeholder groups affected by this feature",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "key_processes": {
+          "type": "array",
+          "description": "Main business processes covered by this feature",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "regulatory_context": {
+          "type": "string",
+          "description": "Regulatory framework and compliance requirements"
+        }
+      }
+    },
+    "business_rules_enhanced": {
+      "type": "array",
+      "description": "Business rules from Phase 3 enhanced with business context",
+      "items": {
+        "type": "object",
+        "required": ["rule_id", "business_objective", "business_owner", "customer_impact"],
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "pattern": "^BR-\\d{3}$",
+            "description": "Rule ID from Phase 3 ruletable.json"
+          },
+          "business_objective": {
+            "type": "string",
+            "description": "WHY does this rule exist? Business rationale",
+            "minLength": 20
+          },
+          "business_owner": {
+            "type": "string",
+            "description": "WHO owns this rule? Department or team",
+            "minLength": 3
+          },
+          "customer_impact": {
+            "type": "string",
+            "description": "HOW does this rule affect end users?",
+            "minLength": 20
+          },
+          "regulatory_detail": {
+            "type": "string",
+            "description": "Specific regulation, law, or compliance requirement (if applicable)"
+          },
+          "stakeholder_communication": {
+            "type": "string",
+            "description": "How stakeholders should be informed about this rule"
+          },
+          "business_use_case": {
+            "type": "string",
+            "description": "Business use case mapping (from Wiki/Confluence or inferred)"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "business_processes": {
+      "type": "array",
+      "description": "Business process documentation based on Phase 2 flows",
+      "items": {
+        "type": "object",
+        "required": ["process_name", "business_flow", "process_steps", "decision_criteria"],
+        "properties": {
+          "process_name": {
+            "type": "string",
+            "description": "Human-readable process name",
+            "minLength": 5
+          },
+          "business_flow": {
+            "type": "string",
+            "description": "Flow name from Phase 2 (e.g., 'New Assignment (KCODE 20)')",
+            "minLength": 5
+          },
+          "kcode": {
+            "type": "string",
+            "description": "Operation code (e.g., '20', '21', '60')"
+          },
+          "process_steps": {
+            "type": "array",
+            "description": "Sequential business process steps in business language",
+            "items": {
+              "type": "string",
+              "minLength": 10
+            },
+            "minItems": 2
+          },
+          "decision_criteria": {
+            "type": "array",
+            "description": "Business decision points and criteria",
+            "items": {
+              "type": "object",
+              "required": ["decision", "criteria", "outcomes"],
+              "properties": {
+                "decision": {
+                  "type": "string",
+                  "description": "Decision point description"
+                },
+                "criteria": {
+                  "type": "string",
+                  "description": "Business criteria for making this decision"
+                },
+                "outcomes": {
+                  "type": "object",
+                  "properties": {
+                    "yes": {
+                      "type": "string",
+                      "description": "What happens if criteria met"
+                    },
+                    "no": {
+                      "type": "string",
+                      "description": "What happens if criteria not met"
+                    }
+                  }
+                }
+              }
+            },
+            "minItems": 1
+          },
+          "exception_scenarios": {
+            "type": "array",
+            "description": "Exception handling and error scenarios",
+            "items": {
+              "type": "object",
+              "properties": {
+                "scenario": {
+                  "type": "string"
+                },
+                "handling": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "sla_constraints": {
+            "type": "string",
+            "description": "Service level agreements and time constraints"
+          },
+          "rules_applied": {
+            "type": "array",
+            "description": "Business rules (BR-XXX) applied in this process",
+            "items": {
+              "type": "string",
+              "pattern": "^BR-\\d{3}$"
+            }
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "stakeholder_analysis": {
+      "type": "object",
+      "required": ["departments", "responsibilities"],
+      "properties": {
+        "departments": {
+          "type": "array",
+          "description": "Departments involved in this feature",
+          "items": {
+            "type": "object",
+            "required": ["name", "role"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Department name"
+              },
+              "role": {
+                "type": "string",
+                "description": "Department's role and involvement"
+              },
+              "rules_owned": {
+                "type": "array",
+                "description": "Rules owned by this department",
+                "items": {
+                  "type": "string",
+                  "pattern": "^BR-\\d{3}$"
+                }
+              }
+            }
+          }
+        },
+        "responsibilities": {
+          "type": "array",
+          "description": "Specific responsibilities and ownership",
+          "items": {
+            "type": "object",
+            "required": ["responsibility", "owner"],
+            "properties": {
+              "responsibility": {
+                "type": "string",
+                "description": "Responsibility description"
+              },
+              "owner": {
+                "type": "string",
+                "description": "Owner (person or team)"
+              },
+              "escalation_path": {
+                "type": "string",
+                "description": "Escalation process for issues"
+              }
+            }
+          }
+        },
+        "communication_channels": {
+          "type": "array",
+          "description": "Communication channels and protocols",
+          "items": {
+            "type": "object",
+            "properties": {
+              "purpose": {
+                "type": "string"
+              },
+              "channel": {
+                "type": "string"
+              },
+              "frequency": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "impact_analysis": {
+      "type": "object",
+      "required": ["customer_impact", "operational_impact"],
+      "properties": {
+        "customer_impact": {
+          "type": "string",
+          "description": "Overall impact on customers and end users",
+          "minLength": 50
+        },
+        "operational_impact": {
+          "type": "string",
+          "description": "Impact on business operations and processes",
+          "minLength": 50
+        },
+        "regulatory_impact": {
+          "type": "string",
+          "description": "Regulatory and compliance implications"
+        },
+        "financial_impact": {
+          "type": "string",
+          "description": "Financial implications and cost considerations"
+        },
+        "risk_assessment": {
+          "type": "object",
+          "properties": {
+            "high_risks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "risk": {"type": "string"},
+                  "mitigation": {"type": "string"}
+                }
+              }
+            },
+            "medium_risks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "risk": {"type": "string"},
+                  "mitigation": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "glossary": {
+      "type": "array",
+      "description": "Consolidated business terminology from all phases",
+      "items": {
+        "type": "object",
+        "required": ["german_term", "english_term", "definition"],
+        "properties": {
+          "german_term": {
+            "type": "string",
+            "description": "German business term",
+            "minLength": 2
+          },
+          "english_term": {
+            "type": "string",
+            "description": "English translation",
+            "minLength": 2
+          },
+          "abbreviation": {
+            "type": "string",
+            "description": "Common abbreviation (if applicable)"
+          },
+          "definition": {
+            "type": "string",
+            "description": "Business definition of the term",
+            "minLength": 20
+          },
+          "technical_mapping": {
+            "type": "object",
+            "description": "Technical system references",
+            "properties": {
+              "database_table": {
+                "type": "string"
+              },
+              "components": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "functions": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "flows": {
+                "type": "array",
+                "items": {"type": "string"}
+              }
+            }
+          },
+          "frequency": {
+            "type": "integer",
+            "description": "Number of rules using this term",
+            "minimum": 1
+          },
+          "used_in_rules": {
+            "type": "array",
+            "description": "Rule IDs that use this term",
+            "items": {
+              "type": "string",
+              "pattern": "^BR-\\d{3}$"
+            },
+            "minItems": 1
+          },
+          "source": {
+            "type": "string",
+            "description": "Where this term was extracted from",
+            "enum": ["Phase 1", "Phase 2", "Phase 3", "Wiki/Confluence"]
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "recommendations": {
+      "type": "object",
+      "required": ["migration_strategy", "quality_assurance"],
+      "properties": {
+        "migration_strategy": {
+          "type": "array",
+          "description": "Strategic recommendations for migration",
+          "items": {
+            "type": "string",
+            "minLength": 30
+          },
+          "minItems": 1
+        },
+        "risk_mitigation": {
+          "type": "array",
+          "description": "Risk mitigation strategies",
+          "items": {
+            "type": "string",
+            "minLength": 30
+          }
+        },
+        "quality_assurance": {
+          "type": "array",
+          "description": "Quality assurance and testing recommendations",
+          "items": {
+            "type": "string",
+            "minLength": 30
+          },
+          "minItems": 1
+        },
+        "stakeholder_actions": {
+          "type": "array",
+          "description": "Required actions by stakeholders",
+          "items": {
+            "type": "object",
+            "required": ["stakeholder", "action", "priority"],
+            "properties": {
+              "stakeholder": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "string",
+                "enum": ["critical", "high", "medium", "low"]
+              },
+              "timeline": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "next_phase_readiness": {
+          "type": "string",
+          "description": "Readiness assessment for Phase 5"
+        }
+      }
+    },
+    "validation_report": {
+      "type": "object",
+      "required": [
+        "gate_1_documentation_completeness",
+        "gate_2_terminology_consistency",
+        "gate_3_stakeholder_coverage",
+        "gate_4_process_quality",
+        "gate_5_schema_validation",
+        "overall_status",
+        "overall_quality_score"
+      ],
+      "properties": {
+        "gate_1_documentation_completeness": {
+          "type": "object",
+          "required": ["status", "percentage", "details"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASSED", "FAILED"]
+            },
+            "percentage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "details": {
+              "type": "string"
+            },
+            "errors": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "warnings": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "gate_2_terminology_consistency": {
+          "type": "object",
+          "required": ["status", "percentage", "details"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASSED", "FAILED"]
+            },
+            "percentage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "details": {
+              "type": "string"
+            },
+            "errors": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "warnings": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "gate_3_stakeholder_coverage": {
+          "type": "object",
+          "required": ["status", "percentage", "details"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASSED", "FAILED"]
+            },
+            "percentage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "details": {
+              "type": "string"
+            },
+            "errors": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "warnings": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "gate_4_process_quality": {
+          "type": "object",
+          "required": ["status", "percentage", "details"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASSED", "FAILED"]
+            },
+            "percentage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "details": {
+              "type": "string"
+            },
+            "errors": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "warnings": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "gate_5_schema_validation": {
+          "type": "object",
+          "required": ["status", "details"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["PASSED", "FAILED"]
+            },
+            "valid_json": {
+              "type": "boolean"
+            },
+            "required_fields_present": {
+              "type": "boolean"
+            },
+            "field_types_valid": {
+              "type": "boolean"
+            },
+            "details": {
+              "type": "string"
+            },
+            "schema_errors": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "errors": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "warnings": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "overall_status": {
+          "type": "string",
+          "enum": ["COMPLETE", "INCOMPLETE"],
+          "description": "Overall validation status"
+        },
+        "overall_quality_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Weighted quality score (threshold: >= 75)"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Validation timestamp"
+        }
+      }
+    }
+  }
+}

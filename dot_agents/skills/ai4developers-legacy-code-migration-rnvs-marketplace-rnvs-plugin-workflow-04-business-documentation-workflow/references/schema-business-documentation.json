@@ -1,0 +1,489 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Business Documentation Schema",
+  "description": "Schema for Phase 4 business documentation output (business-documentation.json). Transforms Phase 3 technical rules into stakeholder-consumable business documentation with enhanced context.",
+  "type": "object",
+  "required": [
+    "feature_name",
+    "documentation_timestamp",
+    "phase3_source",
+    "business_rules_enhanced",
+    "business_processes",
+    "glossary",
+    "stakeholder_analysis",
+    "summary"
+  ],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Short feature identifier (e.g., 'NBM', 'USER-AUTH')",
+      "minLength": 2,
+      "maxLength": 20
+    },
+    "documentation_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when business documentation was generated"
+    },
+    "phase3_source": {
+      "type": "string",
+      "description": "Path to Phase 3 ruletable.json (primary input source)",
+      "pattern": "^results/.*/phase3/ruletable\\.json$"
+    },
+    "enhancement_sources": {
+      "type": "array",
+      "description": "List of sources used to enrich Phase 3 rules with business context",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "business_rules_enhanced": {
+      "type": "array",
+      "description": "Phase 3 rules enhanced with business context (ALL Phase 3 fields preserved)",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule_id",
+          "rule_name",
+          "rule_description",
+          "source_location",
+          "confidence_score",
+          "business_objective",
+          "business_terminology",
+          "stakeholder_owner"
+        ],
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "description": "Unique rule identifier from Phase 3 (e.g., 'AUTH-BR-001')"
+          },
+          "rule_name": {
+            "type": "string",
+            "description": "Rule name from Phase 3"
+          },
+          "rule_description": {
+            "type": "string",
+            "description": "Technical rule description from Phase 3"
+          },
+          "rule_category": {
+            "type": "string",
+            "description": "Rule category from Phase 3 (security, validation, integration, compliance)"
+          },
+          "source_location": {
+            "type": "string",
+            "description": "Source code location from Phase 3 (file:line)"
+          },
+          "source_type": {
+            "type": "string",
+            "description": "Source type from Phase 3"
+          },
+          "source_evidence": {
+            "type": "string",
+            "description": "Source evidence from Phase 3"
+          },
+          "confidence_score": {
+            "type": "integer",
+            "description": "Confidence score from Phase 3 (1-5)",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "business_objective": {
+            "type": "string",
+            "description": "NEW: WHY this rule exists - business value, regulatory compliance, customer impact",
+            "minLength": 20
+          },
+          "business_process": {
+            "type": "string",
+            "description": "NEW: Business process or workflow that uses this rule"
+          },
+          "business_terminology": {
+            "type": "string",
+            "description": "NEW: Rule explanation in non-technical language for stakeholders",
+            "minLength": 30
+          },
+          "stakeholder_owner": {
+            "type": "object",
+            "description": "NEW: Stakeholder ownership and responsibility",
+            "required": ["business_owner", "technical_owner"],
+            "properties": {
+              "business_owner": {
+                "type": "string",
+                "description": "Department/role accountable for business logic"
+              },
+              "technical_owner": {
+                "type": "string",
+                "description": "Team responsible for implementation"
+              },
+              "decision_authority": {
+                "type": "string",
+                "description": "Who can approve changes to this rule"
+              }
+            }
+          },
+          "regulatory_rationale": {
+            "type": "string",
+            "description": "NEW: Regulatory compliance context (BNetzA, GDPR, NIST, etc.) if applicable"
+          },
+          "business_impact": {
+            "type": "string",
+            "description": "NEW: Business impact of this rule (customer experience, compliance, revenue, etc.)"
+          },
+          "enhancement_sources": {
+            "type": "object",
+            "description": "NEW: Sources for each business enhancement (skill name, phase, code comment)",
+            "properties": {
+              "business_objective": {
+                "type": "string"
+              },
+              "stakeholder_owner": {
+                "type": "string"
+              },
+              "regulatory_rationale": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "business_processes": {
+      "type": "array",
+      "description": "Business processes with logical step-by-step flow",
+      "items": {
+        "type": "object",
+        "required": [
+          "process_id",
+          "process_name",
+          "process_description",
+          "process_steps",
+          "process_owner",
+          "process_priority"
+        ],
+        "properties": {
+          "process_id": {
+            "type": "string",
+            "description": "Unique process identifier (e.g., 'BP-AUTH-001')",
+            "pattern": "^BP-[A-Z]+-[0-9]{3}$"
+          },
+          "process_name": {
+            "type": "string",
+            "description": "Business process name",
+            "minLength": 10
+          },
+          "process_description": {
+            "type": "string",
+            "description": "Comprehensive business process description",
+            "minLength": 50
+          },
+          "process_steps": {
+            "type": "array",
+            "description": "Sequential steps in business process flow",
+            "items": {
+              "type": "object",
+              "required": [
+                "step_number",
+                "step_name",
+                "step_description",
+                "rules_applied",
+                "business_rationale"
+              ],
+              "properties": {
+                "step_number": {
+                  "type": "integer",
+                  "description": "Sequential step number",
+                  "minimum": 1
+                },
+                "step_name": {
+                  "type": "string",
+                  "description": "Step name in business language"
+                },
+                "step_description": {
+                  "type": "string",
+                  "description": "Detailed step description for stakeholders"
+                },
+                "rules_applied": {
+                  "type": "array",
+                  "description": "List of rule IDs applied in this step",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "business_rationale": {
+                  "type": "string",
+                  "description": "WHY this step is important (business value)"
+                },
+                "stakeholder_value": {
+                  "type": "string",
+                  "description": "Value delivered to stakeholders"
+                }
+              }
+            },
+            "minItems": 1
+          },
+          "total_rules": {
+            "type": "integer",
+            "description": "Total rules involved in this process",
+            "minimum": 1
+          },
+          "process_owner": {
+            "type": "string",
+            "description": "Department/team owning this business process"
+          },
+          "process_priority": {
+            "type": "string",
+            "description": "Business priority (Critical, High, Medium, Low)",
+            "enum": ["Critical", "High", "Medium", "Low"]
+          },
+          "regulatory_compliance": {
+            "type": "array",
+            "description": "Regulatory requirements this process fulfills",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dependencies": {
+            "type": "object",
+            "description": "Upstream and downstream process dependencies",
+            "properties": {
+              "upstream_processes": {
+                "type": "array",
+                "description": "Processes that must complete before this one",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "downstream_processes": {
+                "type": "array",
+                "description": "Processes triggered by completion of this one",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "glossary": {
+      "type": "object",
+      "description": "Business and technical term translations",
+      "required": ["business_terms"],
+      "properties": {
+        "business_terms": {
+          "type": "array",
+          "description": "Business terminology with definitions",
+          "items": {
+            "type": "object",
+            "required": ["term", "definition", "business_context"],
+            "properties": {
+              "term": {
+                "type": "string",
+                "description": "Business term"
+              },
+              "definition": {
+                "type": "string",
+                "description": "Clear business definition",
+                "minLength": 20
+              },
+              "technical_equivalent": {
+                "type": "string",
+                "description": "Technical term or code reference"
+              },
+              "business_context": {
+                "type": "string",
+                "description": "When and why this term matters to business"
+              },
+              "german_term": {
+                "type": "string",
+                "description": "German term if applicable (RNVS-specific)"
+              }
+            }
+          }
+        },
+        "technical_terms_translated": {
+          "type": "array",
+          "description": "Technical terms translated to business language",
+          "items": {
+            "type": "object",
+            "required": ["technical_term", "business_description"],
+            "properties": {
+              "technical_term": {
+                "type": "string",
+                "description": "Technical term from code (class name, method, etc.)"
+              },
+              "business_description": {
+                "type": "string",
+                "description": "Business explanation of what this technical term does"
+              }
+            }
+          }
+        }
+      }
+    },
+    "stakeholder_analysis": {
+      "type": "object",
+      "description": "Stakeholder identification and responsibility mapping",
+      "required": ["stakeholder_groups", "stakeholder_matrix"],
+      "properties": {
+        "stakeholder_groups": {
+          "type": "array",
+          "description": "Detailed stakeholder group analysis",
+          "items": {
+            "type": "object",
+            "required": [
+              "stakeholder_id",
+              "stakeholder_name",
+              "stakeholder_type",
+              "responsibilities",
+              "affected_processes"
+            ],
+            "properties": {
+              "stakeholder_id": {
+                "type": "string",
+                "description": "Unique stakeholder identifier (e.g., 'SH-001')",
+                "pattern": "^SH-[0-9]{3}$"
+              },
+              "stakeholder_name": {
+                "type": "string",
+                "description": "Stakeholder name (department, team, role)"
+              },
+              "stakeholder_type": {
+                "type": "string",
+                "description": "Stakeholder type",
+                "enum": [
+                  "Business Owner",
+                  "Technical Owner",
+                  "Regulatory Authority",
+                  "Affected Stakeholder"
+                ]
+              },
+              "responsibilities": {
+                "type": "array",
+                "description": "Key responsibilities of this stakeholder",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "affected_processes": {
+                "type": "array",
+                "description": "Business process IDs this stakeholder is involved in",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "affected_rules": {
+                "type": "array",
+                "description": "Rule IDs this stakeholder owns or is affected by",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "decision_authority": {
+                "type": "string",
+                "description": "Level of decision authority (High, Medium, Low)"
+              },
+              "communication_needs": {
+                "type": "string",
+                "description": "Communication and reporting requirements"
+              }
+            }
+          }
+        },
+        "stakeholder_matrix": {
+          "type": "object",
+          "description": "Stakeholder categorization matrix",
+          "required": ["business_owners", "technical_owners"],
+          "properties": {
+            "business_owners": {
+              "type": "array",
+              "description": "List of business owner stakeholders",
+              "items": {
+                "type": "string"
+              }
+            },
+            "technical_owners": {
+              "type": "array",
+              "description": "List of technical owner stakeholders",
+              "items": {
+                "type": "string"
+              }
+            },
+            "regulatory_authorities": {
+              "type": "array",
+              "description": "List of regulatory authority stakeholders",
+              "items": {
+                "type": "string"
+              }
+            },
+            "affected_stakeholders": {
+              "type": "array",
+              "description": "List of affected stakeholders",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "Summary statistics for business documentation",
+      "required": [
+        "total_rules_enhanced",
+        "total_business_processes",
+        "total_stakeholder_groups"
+      ],
+      "properties": {
+        "total_rules_enhanced": {
+          "type": "integer",
+          "description": "Total number of rules enhanced with business context",
+          "minimum": 1
+        },
+        "total_business_processes": {
+          "type": "integer",
+          "description": "Total number of business processes documented",
+          "minimum": 1
+        },
+        "total_stakeholder_groups": {
+          "type": "integer",
+          "description": "Total number of stakeholder groups identified",
+          "minimum": 1
+        },
+        "glossary_terms": {
+          "type": "integer",
+          "description": "Total glossary terms defined",
+          "minimum": 0
+        },
+        "critical_processes": {
+          "type": "integer",
+          "description": "Number of critical priority processes",
+          "minimum": 0
+        },
+        "high_confidence_rules": {
+          "type": "integer",
+          "description": "Number of rules with confidence score 4-5",
+          "minimum": 0
+        },
+        "regulatory_compliance_areas": {
+          "type": "array",
+          "description": "List of regulatory compliance areas covered",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "description": "Recommendations for stakeholders and next steps",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

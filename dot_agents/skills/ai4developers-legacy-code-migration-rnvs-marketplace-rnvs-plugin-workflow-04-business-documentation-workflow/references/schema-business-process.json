@@ -1,0 +1,283 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Business Process Schema",
+  "description": "Schema for Phase 4 business process output (business-process.json). Maps business process dependencies and flow sequencing.",
+  "type": "object",
+  "required": [
+    "feature_name",
+    "documentation_timestamp",
+    "phase3_source",
+    "business_processes",
+    "process_flow_sequence",
+    "process_dependencies",
+    "summary"
+  ],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Short feature identifier (e.g., 'NBM', 'USER-AUTH')",
+      "minLength": 2,
+      "maxLength": 20
+    },
+    "documentation_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when business process map was generated"
+    },
+    "phase3_source": {
+      "type": "string",
+      "description": "Path to Phase 3 ruletable.json (primary input source)",
+      "pattern": "^results/.*/phase3/ruletable\\.json$"
+    },
+    "business_processes": {
+      "type": "array",
+      "description": "Business processes with detailed step-by-step flow",
+      "items": {
+        "type": "object",
+        "required": [
+          "process_id",
+          "process_name",
+          "process_description",
+          "process_steps",
+          "total_rules",
+          "process_owner",
+          "process_priority",
+          "dependencies"
+        ],
+        "properties": {
+          "process_id": {
+            "type": "string",
+            "description": "Unique process identifier (e.g., 'BP-AUTH-001')",
+            "pattern": "^BP-[A-Z]+-[0-9]{3}$"
+          },
+          "process_name": {
+            "type": "string",
+            "description": "Business process name",
+            "minLength": 10
+          },
+          "process_description": {
+            "type": "string",
+            "description": "Comprehensive business process description",
+            "minLength": 50
+          },
+          "process_steps": {
+            "type": "array",
+            "description": "Sequential steps in business process flow",
+            "items": {
+              "type": "object",
+              "required": [
+                "step_number",
+                "step_name",
+                "step_description",
+                "rules_applied",
+                "business_rationale"
+              ],
+              "properties": {
+                "step_number": {
+                  "type": "integer",
+                  "description": "Sequential step number",
+                  "minimum": 1
+                },
+                "step_name": {
+                  "type": "string",
+                  "description": "Step name in business language"
+                },
+                "step_description": {
+                  "type": "string",
+                  "description": "Detailed step description for stakeholders"
+                },
+                "rules_applied": {
+                  "type": "array",
+                  "description": "List of rule IDs applied in this step",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "business_rationale": {
+                  "type": "string",
+                  "description": "WHY this step is important (business value)"
+                },
+                "stakeholder_value": {
+                  "type": "string",
+                  "description": "Value delivered to stakeholders by this step"
+                },
+                "decision_points": {
+                  "type": "array",
+                  "description": "Decision points in this step (if/else logic)",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "condition": {
+                        "type": "string",
+                        "description": "Business condition (e.g., 'If password is valid')"
+                      },
+                      "true_path": {
+                        "type": "string",
+                        "description": "Business action if condition is true"
+                      },
+                      "false_path": {
+                        "type": "string",
+                        "description": "Business action if condition is false"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "minItems": 1
+          },
+          "total_rules": {
+            "type": "integer",
+            "description": "Total rules involved in this process",
+            "minimum": 1
+          },
+          "process_owner": {
+            "type": "string",
+            "description": "Department/team owning this business process"
+          },
+          "process_priority": {
+            "type": "string",
+            "description": "Business priority (Critical, High, Medium, Low)",
+            "enum": ["Critical", "High", "Medium", "Low"]
+          },
+          "regulatory_compliance": {
+            "type": "array",
+            "description": "Regulatory requirements this process fulfills",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dependencies": {
+            "type": "object",
+            "description": "Upstream and downstream process dependencies",
+            "required": ["upstream_processes", "downstream_processes"],
+            "properties": {
+              "upstream_processes": {
+                "type": "array",
+                "description": "Process IDs that must complete before this one",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "downstream_processes": {
+                "type": "array",
+                "description": "Process IDs triggered by completion of this one",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "process_flow_sequence": {
+      "type": "array",
+      "description": "Ordered list of process IDs showing execution sequence for stakeholder presentation",
+      "items": {
+        "type": "string",
+        "description": "Process ID in sequential order"
+      },
+      "minItems": 1
+    },
+    "process_dependencies": {
+      "type": "array",
+      "description": "Explicit process dependency mappings",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_process",
+          "source_process_name",
+          "target_process",
+          "target_process_name",
+          "dependency_type",
+          "dependency_description"
+        ],
+        "properties": {
+          "source_process": {
+            "type": "string",
+            "description": "Source process ID (e.g., 'BP-AUTH-001')"
+          },
+          "source_process_name": {
+            "type": "string",
+            "description": "Source process name"
+          },
+          "target_process": {
+            "type": "string",
+            "description": "Target process ID (e.g., 'BP-SESSION-001')"
+          },
+          "target_process_name": {
+            "type": "string",
+            "description": "Target process name"
+          },
+          "dependency_type": {
+            "type": "string",
+            "description": "Type of dependency",
+            "enum": ["Sequential", "Parallel", "Conditional", "Event-Driven"]
+          },
+          "dependency_description": {
+            "type": "string",
+            "description": "Description of dependency relationship",
+            "minLength": 20
+          },
+          "business_rationale": {
+            "type": "string",
+            "description": "WHY this dependency exists (business reason)"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "Summary statistics for business processes",
+      "required": [
+        "total_processes",
+        "total_process_steps",
+        "total_rules_mapped"
+      ],
+      "properties": {
+        "total_processes": {
+          "type": "integer",
+          "description": "Total number of business processes",
+          "minimum": 1
+        },
+        "critical_processes": {
+          "type": "integer",
+          "description": "Number of critical priority processes",
+          "minimum": 0
+        },
+        "high_priority_processes": {
+          "type": "integer",
+          "description": "Number of high priority processes",
+          "minimum": 0
+        },
+        "medium_priority_processes": {
+          "type": "integer",
+          "description": "Number of medium priority processes",
+          "minimum": 0
+        },
+        "low_priority_processes": {
+          "type": "integer",
+          "description": "Number of low priority processes",
+          "minimum": 0
+        },
+        "total_process_steps": {
+          "type": "integer",
+          "description": "Total number of process steps across all processes",
+          "minimum": 1
+        },
+        "total_rules_mapped": {
+          "type": "integer",
+          "description": "Total rules mapped to business processes",
+          "minimum": 1
+        },
+        "total_dependencies": {
+          "type": "integer",
+          "description": "Total process dependencies identified",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

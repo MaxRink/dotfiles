@@ -1,0 +1,470 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Control Flow Mapping Schema",
+  "description": "Schema for control-flow-mapping.json - maps business processes to control flow diagram elements with source traceability",
+  "type": "object",
+  "required": [
+    "feature_name",
+    "mapping_timestamp",
+    "source_phase4",
+    "source_phase3",
+    "diagram_plan",
+    "flow_diagram",
+    "business_processes",
+    "stakeholder_interaction",
+    "summary"
+  ],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Feature name from workflow context"
+    },
+    "mapping_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when mapping was created"
+    },
+    "source_phase4": {
+      "type": "string",
+      "description": "Path to Phase 4 business-process.json (primary source)"
+    },
+    "source_phase3": {
+      "type": "string",
+      "description": "Path to Phase 3 ruletable.json (decision logic source)"
+    },
+    "diagram_plan": {
+      "type": "object",
+      "description": "Diagram creation strategy and plan",
+      "required": ["strategy", "total_diagrams", "diagrams"],
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["single_diagram", "master_plus_detailed", "detailed_per_process"],
+          "description": "Diagram complexity strategy"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Why this strategy was chosen"
+        },
+        "total_diagrams": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Total number of diagrams to create"
+        },
+        "diagrams": {
+          "type": "array",
+          "description": "List of diagrams to create",
+          "items": {
+            "type": "object",
+            "required": ["diagram_file", "diagram_type", "scope"],
+            "properties": {
+              "diagram_file": {
+                "type": "string",
+                "description": "Filename for diagram (e.g., control-flow-diagram-auth.puml)"
+              },
+              "diagram_type": {
+                "type": "string",
+                "enum": ["single", "master", "detailed"],
+                "description": "Type of diagram"
+              },
+              "scope": {
+                "type": "string",
+                "description": "What this diagram covers"
+              },
+              "processes_included": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Business process IDs included in this diagram"
+              },
+              "flow_nodes_count": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of flow nodes in diagram"
+              },
+              "decision_points_count": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of decision points in diagram"
+              },
+              "swimlanes_count": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of stakeholder swimlanes in diagram"
+              }
+            }
+          }
+        }
+      }
+    },
+    "flow_diagram": {
+      "type": "object",
+      "description": "Overall flow diagram summary",
+      "required": ["diagram_type", "primary_diagram"],
+      "properties": {
+        "diagram_type": {
+          "type": "string",
+          "enum": ["activity", "sequence", "state"],
+          "description": "PlantUML diagram type (typically 'activity' for control flow)"
+        },
+        "primary_diagram": {
+          "type": "string",
+          "description": "Main diagram filename"
+        },
+        "total_flow_nodes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total flow nodes across all diagrams"
+        },
+        "total_decision_points": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total decision points across all diagrams"
+        },
+        "total_swimlanes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total unique stakeholder swimlanes"
+        },
+        "external_systems_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total external systems referenced"
+        }
+      }
+    },
+    "business_processes": {
+      "type": "array",
+      "description": "Business processes mapped to control flow elements",
+      "items": {
+        "type": "object",
+        "required": ["process_id", "process_name", "diagram_file", "flow_nodes"],
+        "properties": {
+          "process_id": {
+            "type": "string",
+            "description": "Business process ID from Phase 4 (e.g., BP-AUTH-001)"
+          },
+          "process_name": {
+            "type": "string",
+            "description": "Business process name"
+          },
+          "diagram_file": {
+            "type": "string",
+            "description": "Which diagram file contains this process"
+          },
+          "flow_nodes": {
+            "type": "array",
+            "description": "Flow nodes representing process steps",
+            "items": {
+              "type": "object",
+              "required": ["node_id", "node_label", "node_type", "source"],
+              "properties": {
+                "node_id": {
+                  "type": "string",
+                  "description": "Unique node identifier (e.g., AUTH-FLOW-001)"
+                },
+                "node_label": {
+                  "type": "string",
+                  "description": "Display label in diagram"
+                },
+                "node_type": {
+                  "type": "string",
+                  "enum": ["start", "end", "process", "decision", "error"],
+                  "description": "Type of flow node"
+                },
+                "stakeholder": {
+                  "type": "string",
+                  "description": "Stakeholder performing this activity (swimlane)"
+                },
+                "rules_applied": {
+                  "type": "array",
+                  "items": {"type": "string"},
+                  "description": "Business rule IDs applied at this node"
+                },
+                "source": {
+                  "type": "string",
+                  "description": "Source citation (Phase 4 process step or Phase 3 rule)"
+                },
+                "external_system": {
+                  "type": "string",
+                  "description": "External system interaction at this node (optional)"
+                }
+              }
+            }
+          },
+          "decision_points": {
+            "type": "array",
+            "description": "Decision points in process flow",
+            "items": {
+              "type": "object",
+              "required": ["decision_id", "decision_label", "source", "true_path", "false_path"],
+              "properties": {
+                "decision_id": {
+                  "type": "string",
+                  "description": "Unique decision identifier (e.g., AUTH-DEC-001)"
+                },
+                "decision_label": {
+                  "type": "string",
+                  "description": "Decision condition (e.g., 'Credentials Valid?')"
+                },
+                "source": {
+                  "type": "string",
+                  "description": "Source citation (Phase 3 conditional rule)"
+                },
+                "user_correction": {
+                  "type": "string",
+                  "description": "User feedback correction note (optional)"
+                },
+                "true_path": {
+                  "type": "string",
+                  "description": "Node ID for true branch"
+                },
+                "true_path_description": {
+                  "type": "string",
+                  "description": "Description of true path outcome"
+                },
+                "false_path": {
+                  "type": "string",
+                  "description": "Node ID for false branch"
+                },
+                "false_path_description": {
+                  "type": "string",
+                  "description": "Description of false path outcome"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "technical_processes": {
+      "type": "array",
+      "description": "Technical implementation processes mapped from Phase 1/2",
+      "items": {
+        "type": "object",
+        "required": ["process_id", "process_name", "source"],
+        "properties": {
+          "process_id": {
+            "type": "string",
+            "description": "Technical process ID (e.g., TECH-AUTH-001)"
+          },
+          "process_name": {
+            "type": "string",
+            "description": "Technical process name"
+          },
+          "source": {
+            "type": "string",
+            "description": "Source citation (Phase 2 diagram or Phase 1 component)"
+          },
+          "components_involved": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Technical components involved in this process"
+          },
+          "description": {
+            "type": "string",
+            "description": "Technical implementation description"
+          }
+        }
+      }
+    },
+    "stakeholder_interaction": {
+      "type": "object",
+      "description": "Stakeholder swimlanes and interactions",
+      "required": ["swimlanes", "total_stakeholders"],
+      "properties": {
+        "swimlanes": {
+          "type": "array",
+          "description": "Stakeholder swimlanes in control flow diagrams",
+          "items": {
+            "type": "object",
+            "required": ["stakeholder_name", "stakeholder_type", "source", "activities"],
+            "properties": {
+              "stakeholder_name": {
+                "type": "string",
+                "description": "Stakeholder name (from Phase 4 stakeholder_analysis)"
+              },
+              "stakeholder_type": {
+                "type": "string",
+                "enum": ["Business Owner", "Technical Owner", "End User", "Regulatory Authority", "Affected Stakeholder"],
+                "description": "Type of stakeholder"
+              },
+              "source": {
+                "type": "string",
+                "description": "Source citation (Phase 4 stakeholder_analysis)"
+              },
+              "activities": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Activities performed by this stakeholder"
+              },
+              "interaction_nodes": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Flow node IDs where stakeholder interacts"
+              }
+            }
+          }
+        },
+        "total_stakeholders": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of stakeholder swimlanes"
+        }
+      }
+    },
+    "other_system_interaction": {
+      "type": "object",
+      "description": "External and internal system interactions",
+      "required": ["external_systems"],
+      "properties": {
+        "external_systems": {
+          "type": "array",
+          "description": "External systems referenced in control flow",
+          "items": {
+            "type": "object",
+            "required": ["system_name", "system_type", "source", "interaction_points"],
+            "properties": {
+              "system_name": {
+                "type": "string",
+                "description": "External system name"
+              },
+              "system_type": {
+                "type": "string",
+                "description": "Type of system (e.g., 'External Directory Service', 'Internal Database')"
+              },
+              "source": {
+                "type": "string",
+                "description": "Source citation (Phase 2 dependencies.puml or Phase 1 dependency-graph.json)"
+              },
+              "integration_protocol": {
+                "type": "string",
+                "description": "Integration protocol (e.g., 'LDAPS', 'REST API', 'SQL')"
+              },
+              "interaction_points": {
+                "type": "array",
+                "description": "Flow nodes where system is accessed",
+                "items": {
+                  "type": "object",
+                  "required": ["flow_node", "interaction_type", "description"],
+                  "properties": {
+                    "flow_node": {
+                      "type": "string",
+                      "description": "Flow node ID where interaction occurs"
+                    },
+                    "interaction_type": {
+                      "type": "string",
+                      "enum": ["query", "insert", "update", "delete", "call", "log", "alert"],
+                      "description": "Type of interaction"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Description of interaction"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "total_external_systems": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of external systems"
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "Summary statistics",
+      "required": [
+        "total_business_processes",
+        "total_flow_nodes",
+        "total_decision_points",
+        "total_stakeholders",
+        "total_diagrams_created"
+      ],
+      "properties": {
+        "total_business_processes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total business processes visualized"
+        },
+        "total_flow_nodes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total flow nodes across all diagrams"
+        },
+        "total_decision_points": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total decision points across all diagrams"
+        },
+        "total_stakeholders": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total unique stakeholder swimlanes"
+        },
+        "total_external_systems": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total external systems referenced"
+        },
+        "total_diagrams_created": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Total PlantUML diagrams generated"
+        },
+        "user_validation_completed": {
+          "type": "boolean",
+          "description": "Whether user validation was completed"
+        },
+        "rework_iterations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Number of rework iterations performed"
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Recommendations for next phases or improvements"
+    },
+    "user_validation": {
+      "type": "object",
+      "description": "User validation tracking",
+      "properties": {
+        "validation_completed": {
+          "type": "boolean",
+          "description": "Whether user validation completed"
+        },
+        "validation_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When user validated diagrams"
+        },
+        "feedback_incorporated": {
+          "type": "boolean",
+          "description": "Whether user feedback was incorporated"
+        },
+        "rework_iterations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Number of rework cycles"
+        },
+        "user_approval_status": {
+          "type": "string",
+          "enum": ["Approved", "Pending", "Rejected"],
+          "description": "Final user approval status"
+        },
+        "user_comments": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "User feedback comments"
+        }
+      }
+    }
+  }
+}

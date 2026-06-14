@@ -1,0 +1,331 @@
+@startmindmap PDA_Process_Overview
+title ITEX-PDA Portierungsdatenaustausch - Process Overview\n(Based on ITEX-PDA Specification 20.0.0)
+
+!define PRIMARY_COLOR #4A90E2
+!define SECONDARY_COLOR #7B68EE
+!define SUCCESS_COLOR #50C878
+!define WARNING_COLOR #FFA500
+!define CORRECTION_COLOR #FF6B6B
+!define RNB_COLOR #9370DB
+!define INFO_COLOR #20B2AA
+
+* <size:18><b>PDA Verfahren</b></size>\n<size:12>(Portierungsdatenaustausch)</size>
+legend right
+  |= Symbol |= Bedeutung |
+  | <back:PRIMARY_COLOR>   </back> | Hauptprozesse |
+  | <back:SUCCESS_COLOR>   </back> | Regelmeldungen |
+  | <back:CORRECTION_COLOR>   </back> | Korrekturverfahren |
+  | <back:RNB_COLOR>   </back> | RNB-Verfahren |
+  | <back:INFO_COLOR>   </back> | Informationsdateien |
+endlegend
+
+left side
+
+** <back:PRIMARY_COLOR><color:white> 1. REGELVERFAHREN </color></back>\n<size:10>(Standard Porting Procedures)</size>
+*** <back:SUCCESS_COLOR><color:white> 1.1 Portierung (P+L) </color></back>\n<size:9>Paired Messages Required</size>
+**** **Szenario 1a**\nErstportierung\n(First-time Porting)
+***** TNB A → TNB B
+***** Eigentümer = Abgebend
+***** L-Meldung (TNB A)
+***** P-Meldung (TNB B)
+***** Paarbildung erforderlich
+**** **Szenario 1b**\nZweitportierung\n(Second Porting)
+***** TNB B → TNB C
+***** Weiterportierung
+***** L-Meldung (TNB B)
+***** P-Meldung (TNB C)
+***** Löschung alter P/L
+**** **Szenario 1c**\nRückportierung\n(nach Erstportierung)
+***** TNB B → TNB A
+***** Zurück zum Eigentümer
+***** L-Meldung (TNB B)
+***** P-Meldung (TNB A)
+**** **Szenario 1d**\nRückportierung\n(nach Mehrfachportierung)
+***** Nach mehreren Portierungen
+***** Beliebiger Rückweg
+***** Komplexe Historie
+**** **Szenario 1e**\nSpezialfälle
+***** Interne Portierung
+***** Mehrere PK
+***** Fusionen
+
+*** <back:SUCCESS_COLOR><color:white> 1.2 Rückgabe (P+Z) </color></back>\n<size:9>Return after 65 AT</size>
+**** **Szenario 2a**\nStandard-Rückfall
+***** Nach 65 AT Freischaltung
+***** Z-Meldung (Letzter Besitzer)
+***** P-Meldung (Eigentümer)
+***** RUZ: 2 Monate
+***** Routing-Anpassung
+**** **Szenario 2b**\nSpezielle Rückgaben
+***** Kündigung durch Endkunde
+***** Automatischer Rückfall
+***** Fristen beachten
+***** 65 AT + 1 KT Regel
+
+*** <back:PRIMARY_COLOR><color:white> 1.3 Fristen & Business Rules </color></back>
+**** **Portierungsfristen**
+***** Tägliche Veröffentlichung
+***** Tag nach Portierung
+***** Keine Zukunftsmeldungen
+***** Paarbildung zwingend
+**** **Rückgabefristen**
+***** 65 AT nach Freischaltung
+***** RUZ: 2 Monate
+***** 5 AT Sicherheitsfrist
+**** **Business Rules**
+***** Eindeutige PK-Zuordnung
+***** Portierungsdatum = identisch
+***** Keine rückwirkende Korrektur
+***** Historisierung
+
+right side
+
+** <back:CORRECTION_COLOR><color:white> 2. KORREKTURVERFAHREN </color></back>\n<size:10>(K-Dateien)</size>
+*** <back:CORRECTION_COLOR><color:white> 2.1 Rücknahme-Codes </color></back>\n<size:9>(2XXX)</size>
+**** **Code 2000-2400**\nEigene Meldung zurücknehmen
+***** 2000: Rücknahme P-Meldung
+***** 2100: Rücknahme L-Meldung
+***** 2200: Rücknahme Z-Meldung
+***** 2300: Rücknahme K-Meldung
+***** 2400: Rücknahme E-Meldung
+***** Keine Bestätigung nötig
+**** **Code 2500-2599**\nWiderspruch fremde Meldung
+***** 2500: Widerspruch P
+***** 2501: Widerspruch L
+***** 2502: Widerspruch Z
+***** 2503: Blockgröße falsch
+***** 2504-2599: Weitere Fehler
+***** Keine Bestätigung nötig
+
+*** <back:CORRECTION_COLOR><color:white> 2.2 Korrektur-Codes </color></back>\n<size:9>(0XXX-1XXX)</size>
+**** **Code 0XXX**\nEinfache Korrekturen
+***** 0100: PK aufnehmend ändern
+***** 0200: PK abgebend ändern
+***** 0300: Portierungsdatum ändern
+***** 0400: Mehrfachänderung
+***** Bestätigung erforderlich
+**** **Code 1XXX**\nLöschung & Status
+***** Spezielle Löschszenarien
+***** Statusänderungen
+
+*** <back:CORRECTION_COLOR><color:white> 2.3 Struktur-Codes </color></back>\n<size:9>(4XXX)</size>
+**** **Code 4100**\nZusammenführung
+***** Bereiche zusammenführen
+***** Zusammenführungsdatum
+***** 10 AT Widerspruchsfrist
+***** Routing-Update nötig
+**** **Code 4200**\nErweiterung
+***** Rufnummernbereich erweitern
+***** Zusätzliche Rufnummern
+***** Blockgröße ändern
+**** **Code 4300**\nAufteilung
+***** Bereich aufteilen
+***** Neue Teilbereiche
+***** Mitwirkung Eigentümer
+**** **Code 4400**\nKombination
+***** Einzelrufnummer + Bereich
+***** Komplexe Strukturen
+**** **Code 4500**\nAltbestand
+***** Erweiterung Altbestand
+***** Ohne Basismeldung
+**** **Code 4600-4730**\nSperrungen
+***** 4600: Einzelsperre
+***** 4610: Bereichssperre
+***** 4700: Rechtliche Sperre
+***** 4710: Technische Sperre
+***** 4720: BNetzA-Anordnung
+***** 4730: Aufhebung Sperre
+
+*** <back:CORRECTION_COLOR><color:white> 2.4 Nachträglich-Codes </color></back>\n<size:9>(3XXX & 6XXX)</size>
+**** **Code 30XX**\nNachträgliche Korrektur\nvalidierter Meldungen
+***** 3000-3099: Verschiedene
+***** 3025: Falsche Zuteilung
+***** Nach Paarbildung
+**** **Code 6XXX**\nSinglemeldungen
+***** 6000: Single P-Meldung
+***** 6100: Single L-Meldung
+***** 6200: Single Z-Meldung
+***** Nach 61 AT automatisch
+***** Fristen beachten
+
+** <back:RNB_COLOR><color:white> 3. RNB-VERFAHREN </color></back>\n<size:10>(Rufnummernblock-Austausch)</size>
+*** <back:RNB_COLOR><color:white> 3.1 1E-Datei </color></back>\n<size:10>(Meldungen mit Status E,P,L,R)</size>
+**** **Einrichtung (E-Meldung)**
+***** **E-Meldung**\nRNB-Einrichtung
+****** Neuer Block von BNetzA
+****** Originäre Zuteilung
+****** enthält Einrichtungsdatum
+****** hat Veröffentlichungsdatum
+****** Status E (Standalone, nicht gepaart)
+****** an alle TNB
+****** bewirkt Routingänderung
+***** **Fristen**
+****** Veröffentlichungsdatum >= 5 AT vor Einrichtungsdatum (AKNN 7.1.3.2)
+**** **Rückgabe (R-Meldung)**
+***** **R-Meldung**\nRNB-Rückgabe an BNetzA
+****** Freier RNB an BNetzA
+****** Status R (Standalone, nicht gepaart)
+****** enthält Einrichtungsdatum (=Rückgabedatum)
+****** hat Veröffentlichungsdatum
+****** Nach: D000 (BNetzA)
+****** an alle TNB
+****** Routing als "nicht beschaltet"
+****** Auslösung mit Signalisierung
+***** **Fristen**
+****** Veröffentlichungsdatum >= 20 AT vor Einrichtungsdatum (AKNN 7.1.3.3)
+**** **Übernahme (P+L-Meldung)**
+***** **RNB-Übernahme**\nEigentümerwechsel TNB->TNB
+****** Von TNB zu TNB
+****** BNetzA-Genehmigung erforderlich
+****** Verfahren wie Portierung (AKNN 7.4.2)
+****** P + L Paarbildung erforderlich
+***** **Fristen**
+****** Veröffentlichungsdatum P-Meldung >= 5 AT vor Einrichtungsdatum (AKNN 7.3.6.1)
+****** Veröffentlichungsdatum L-Meldung >= 5 AT vor Einrichtungsdatum (AKNN 7.3.6.1)
+****** P- und L-Meldung gepaart >= 5 AT vor Einrichtungsdatum (AKNN 7.3.5.4)
+***** **Szenarien**
+****** Fusion/Übernahme
+****** Vertragsübertragung
+****** Geschäftsaufgabe
+***** **Ablauf**
+****** Info Dateien 1I, 2I (AKNN 10.4.1, 10.4.2)
+****** Übernahme-Datei (BNetzA) (AKNN 7.3.4)
+****** Alter TNB: L-Meldung
+****** Neuer TNB: P-Meldung
+****** Koordination beider TNB
+****** Auswirkungen auf RN-Portierungen (AKNN 7.3.5.2, 7.3.5.3)
+
+*** <back:RNB_COLOR><color:white> 3.2 1C-Datei </color></back>\n<size:10>(Korrekturdatensätze)</size>
+**** **Allgemeine Regeln**\nKorrekturdatensätze
+***** Korrektur von E,P,L oder R-Meldungen
+***** Ähnlich K-Dateien
+***** Für RNB-spezifisch
+***** Haben Korrekturcode, U-Teil und K-Teil
+***** U-Teil: Ursprungsmeldung
+***** K-Teil: korrigierte Meldung
+**** **RNB-Korrektur-Codes**
+***** **Code 20**\nRücknahme einer P- Meldung
+****** Frist: Veröffentlichungsdatum >= 2 AT \nvor Einrichtungsdatum
+***** **Code 21**\nRücknahme einer L- Meldung
+****** Frist: Veröffentlichungsdatum >= 2 AT \nvor Einrichtungsdatum
+***** **Code 22**\nRücknahme einer R- Meldung
+****** Frist: Veröffentlichungsdatum <= 6 Monate \nnach Einrichtungsdatum (Rückgabedatum)
+***** **Code 25**\nWiderspruch
+****** Frist: Veröffentlichungsdatum >= 2 AT \nvor Einrichtungsdatum
+****** letzter möglicher Datensatz
+****** veröffentlichender TNB darf ungleich \naufnehmender und abgebender TNB sein
+***** **Code 26**\nRücknahme einer E- Meldung
+****** Frist: Veröffentlichungsdatum <= 6 Monate \nnach Einrichtungsdatum
+****** Rücknahme für teilbelegte Blöcke ist nicht zulässig
+***** **Code 60**\nAusbleibender L-Datensatz\nSingle-Meldung
+****** Voraussetzung, Frist: \nVeröffentlichungsdatum der P-Meldung >= 10 AT vor \nVeröffentlichungsdatum der Single-Meldung
+****** Voraussetzung, Frist: \nEinrichtungsdatum in P-Meldung >= 20 AT nach \nVeröffentlichungsdatum der Single-Meldung
+****** Voraussetzung: kein Widerspruch zur P-Meldung liegt vor
+****** wird nur vom aufnehmenden TNB gesendet
+***** **Code 61**\nAusbleibender P-Datensatz\nSingle-Meldung
+****** Voraussetzung, Frist: \nVeröffentlichungsdatum der L-Meldung >= 10 AT vor \nVeröffentlichungsdatum der Single-Meldung
+****** Voraussetzung, Frist: \nEinrichtungsdatum in L-Meldung >= 20 AT nach \nVeröffentlichungsdatum der Single-Meldung
+****** Voraussetzung: kein Widerspruch zur L-Meldung liegt vor
+****** wird nur vom abgebenden TNB gesendet
+
+*** <back:RNB_COLOR><color:white> 3.3 RNB Business Rules </color></back>
+**** **Migration**\nMassenmeldungen
+***** Max 20.000 RN/Tag
+***** Vorabstimmung nötig
+***** Max 100.000 RN/Tag mit Zustimmung
+***** Max 100 RNB/Tag über alle TNB
+***** I-Datei Ankündigung (1I), Beendigung (2I)
+**** **Zuständigkeit**
+***** Eigentümer-TNB verantwortlich
+***** BNetzA-Koordination
+***** Alle TNB informiert
+**** **Portierungen aus RNB**
+***** Erst nach Einrichtung
+***** Mindestens 1 KT später
+***** P-Datum >= E-Datum
+
+** <back:INFO_COLOR><color:white> 4. SUPPORT-PROZESSE </color></back>
+*** <back:INFO_COLOR><color:white> 4.1 Info-Dateien (I) </color></back>
+**** **3i-Datei**\nAnsprechpartner
+***** Info-Kennung 01: Fachlich
+***** Info-Kennung 02: Fachlich detailliert
+***** Info-Kennung 03: Technisch
+***** Aktualisierung täglich
+***** Clearing-Kontakte
+**** **4i-Datei**\nPK-Beziehungen
+***** HPK zu PK Zuordnung
+***** Mehrere PK pro HPK
+***** Fusionen abbilden
+***** Hierarchie darstellen
+**** **Weitere Info-Kennungen**
+***** 05: Migrations-Ankündigung
+***** Spezielle Informationen
+
+*** <back:INFO_COLOR><color:white> 4.2 Datenabfragen (DR) </color></back>
+**** **Request-File**
+***** Abfrage bei anderen TNB
+***** Request = Anfrage
+***** Zeitraum: aktuell
+**** **Response-File**
+***** Antwort mit Bestand
+***** Alle P/L/Z-Paare
+***** Letzten 2 Monate K-Dateien
+***** RNB-E-Dateien
+**** **Default-File**
+***** Kompletter Bestand
+***** Ohne Anfrage
+***** Initialisierung
+***** Datenbankabgleich
+
+*** <back:INFO_COLOR><color:white> 4.3 Ausbleibende Meldungen </color></back>
+**** **Singlemeldungen**\nNach 61 AT
+***** Automatische Validierung
+***** Code 6000 (P single)
+***** Code 6100 (L single)
+***** Code 6200 (Z single)
+***** Nur wenn keine Gegenpartei
+**** **Fristen**
+***** 61 AT Wartezeit
+***** Dann Single-Freigabe
+***** Widerspruch möglich
+***** 10 AT Widerspruchsfrist
+**** **Clearing**
+***** Kommunikation TNB-TNB
+***** E-Mail mit Standard-Betreff
+***** Eskalation
+***** Arbeitshandbuch Clearing
+
+*** <back:INFO_COLOR><color:white> 4.4 PK-Abschaltung </color></back>
+**** **PK-Abschaltemeldung**
+***** TNB beendet Betrieb
+***** Alle PK deaktivieren
+***** Ankündigung erforderlich
+***** Widerspruch möglich
+**** **Aktionscodes**
+***** Abschaltung ankündigen
+***** Widerspruch einlegen
+***** Abschaltung bestätigen
+**** **Auswirkungen**
+***** RNB-Übernahme nötig
+***** Portierungen umleiten
+***** Routing anpassen
+
+*** <back:INFO_COLOR><color:white> 4.5 Technische Infrastruktur </color></back>
+**** **Übertragung**
+***** SSH/SFTP
+***** Täglicher Austausch
+***** Komprimierung (gzip)
+***** Verschlüsselung
+**** **Verzeichnisstruktur**
+***** Home-Directories
+***** Login-Konzept
+***** Mehrere PK-Support
+**** **Dateinamen**
+***** 1Dyymmdd.txt (Default)
+***** 1Ryymmdd.txt (Response)
+***** 1Kyymmdd.txt (Korrektur)
+***** 1Eyymmdd.txt (RNB)
+***** 1Cyymmdd.txt (RNB-Korrektur)
+***** 1Iyymmdd.txt (Info)
+
+@endmindmap

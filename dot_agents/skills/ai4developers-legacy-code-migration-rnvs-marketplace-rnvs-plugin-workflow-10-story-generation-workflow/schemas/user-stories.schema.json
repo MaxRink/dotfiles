@@ -1,0 +1,236 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "user-stories.schema.json",
+  "title": "Phase 10 User Stories Schema",
+  "description": "JSON schema for structured story metadata generated in Phase 10",
+  "type": "object",
+  "required": ["feature_name", "phase", "timestamp", "story_generation_metadata", "epics", "stories"],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Feature identifier (e.g., 'FNPORT', 'PDA-Import')"
+    },
+    "phase": {
+      "type": "integer",
+      "const": 10,
+      "description": "Phase number (always 10 for story generation)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of generation"
+    },
+    "workflow_mode": {
+      "type": "string",
+      "enum": ["NEW", "CHANGE"],
+      "description": "Workflow mode used for generation"
+    },
+    "story_generation_metadata": {
+      "type": "object",
+      "required": ["total_stories", "implementation_stories", "test_stories", "story_points_excluded", "sprint_excluded"],
+      "properties": {
+        "total_stories": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Total number of stories generated"
+        },
+        "implementation_stories": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of implementation stories"
+        },
+        "test_stories": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of test stories"
+        },
+        "epics": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of epics created"
+        },
+        "story_id_prefix": {
+          "type": "string",
+          "description": "Prefix used for story IDs (e.g., 'FNPORT')"
+        },
+        "story_points_excluded": {
+          "type": "boolean",
+          "const": true,
+          "description": "Story points are NOT included (user requirement)"
+        },
+        "sprint_excluded": {
+          "type": "boolean",
+          "const": true,
+          "description": "Sprint planning is NOT included (user requirement)"
+        },
+        "gaps_processed": {
+          "type": "integer",
+          "description": "Number of Phase 9 gaps converted to stories"
+        },
+        "gaps_excluded": {
+          "type": "integer",
+          "description": "Number of gaps excluded (P3, INFRA-*, etc.)"
+        }
+      }
+    },
+    "epics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["epic_id", "epic_name", "story_count"],
+        "properties": {
+          "epic_id": {
+            "type": "string",
+            "pattern": "^EPIC-[A-Z]+$",
+            "description": "Epic identifier (e.g., 'EPIC-FCPM')"
+          },
+          "epic_name": {
+            "type": "string",
+            "description": "Human-readable epic name"
+          },
+          "epic_summary": {
+            "type": "string",
+            "description": "Brief description of epic scope"
+          },
+          "microservice": {
+            "type": "string",
+            "description": "Associated microservice (if applicable)"
+          },
+          "story_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of stories in this epic"
+          }
+        }
+      }
+    },
+    "stories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["story_id", "epic", "story_type", "priority", "summary", "description"],
+        "properties": {
+          "story_id": {
+            "type": "string",
+            "description": "Story identifier (e.g., 'FNPORT-001', 'FNPORT-T001')"
+          },
+          "epic": {
+            "type": "string",
+            "description": "Parent epic ID"
+          },
+          "story_type": {
+            "type": "string",
+            "enum": ["Implementation", "Test"],
+            "description": "Type of story"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["P1", "P2", "Critical", "High"],
+            "description": "Story priority"
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Concise story title"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 500,
+            "description": "Full story description with business and technical context"
+          },
+          "acceptance_criteria": {
+            "type": "array",
+            "minItems": 10,
+            "items": {
+              "type": "string"
+            },
+            "description": "List of acceptance criteria (10-13 items)"
+          },
+          "technical_design_notes": {
+            "type": "string",
+            "description": "Implementation guidance and technology recommendations"
+          },
+          "references": {
+            "type": "object",
+            "properties": {
+              "phase3_business_rules": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Referenced BR-XXX IDs"
+              },
+              "phase5_workflows": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Referenced WF-XXX IDs"
+              },
+              "api_endpoints": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "API endpoints from Phase 7/7.1"
+              },
+              "database_tables": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Database tables from Phase 7/7.1"
+              },
+              "message_topics": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Message Bus topics from Phase 7/7.1"
+              },
+              "phase9_gap_analysis": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Source gap IDs (GAP-XXX)"
+              }
+            }
+          },
+          "dependencies": {
+            "type": "object",
+            "properties": {
+              "blocked_by": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Story IDs that must complete before this story"
+              },
+              "blocks": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Story IDs that depend on this story"
+              }
+            }
+          },
+          "labels": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Tags for Jira import"
+          },
+          "business_scope": {
+            "type": "string",
+            "description": "Business context identifier"
+          },
+          "test_data": {
+            "type": "object",
+            "description": "Test data for test stories"
+          },
+          "test_steps": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Execution steps for test stories"
+          },
+          "expected_result": {
+            "type": "string",
+            "description": "Expected outcome for test stories"
+          },
+          "story_link": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Linked implementation stories (for test stories)"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "title": "Order Processing Sequence",
+  "participants": [
+    "Customer",
+    "OrderService",
+    "InventoryService",
+    "PaymentService",
+    "PaymentGateway",
+    "NotificationQueue"
+  ],
+  "interactions": [
+    {
+      "from": "Customer",
+      "to": "OrderService",
+      "message": "POST /orders (create order)",
+      "type": "sync"
+    },
+    {
+      "from": "OrderService",
+      "to": "InventoryService",
+      "message": "checkAvailability(productId, quantity)",
+      "type": "sync"
+    },
+    {
+      "from": "InventoryService",
+      "to": "OrderService",
+      "message": "return availability status",
+      "type": "return"
+    },
+    {
+      "from": "OrderService",
+      "to": "InventoryService",
+      "message": "reserveStock(productId, quantity)",
+      "type": "sync"
+    },
+    {
+      "from": "InventoryService",
+      "to": "OrderService",
+      "message": "return reservation ID",
+      "type": "return"
+    },
+    {
+      "from": "OrderService",
+      "to": "PaymentService",
+      "message": "authorizePayment(amount, paymentMethod)",
+      "type": "sync"
+    },
+    {
+      "from": "PaymentService",
+      "to": "PaymentGateway",
+      "message": "POST /authorize (payment details)",
+      "type": "sync"
+    },
+    {
+      "from": "PaymentGateway",
+      "to": "PaymentService",
+      "message": "return authorization token",
+      "type": "return"
+    },
+    {
+      "from": "PaymentService",
+      "to": "OrderService",
+      "message": "return payment status",
+      "type": "return"
+    },
+    {
+      "from": "OrderService",
+      "to": "NotificationQueue",
+      "message": "publish OrderConfirmed event",
+      "type": "async"
+    },
+    {
+      "from": "OrderService",
+      "to": "Customer",
+      "message": "201 Created (order confirmation)",
+      "type": "return"
+    }
+  ]
+}

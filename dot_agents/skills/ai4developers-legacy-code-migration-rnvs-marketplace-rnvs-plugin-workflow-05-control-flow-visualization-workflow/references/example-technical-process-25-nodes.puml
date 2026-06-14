@@ -1,0 +1,193 @@
+@startuml technical-data-synchronization
+title Data Synchronization Technical Process (24 nodes - under 25 limit)
+
+' This example demonstrates a TECHNICAL PROCESS diagram with higher complexity
+' Technical processes allow up to 25 nodes (vs. 10 for business processes)
+' Audience: Developers and technical teams
+
+skinparam activityBackgroundColor #E6F3FF
+skinparam activityBorderColor #0066CC
+
+|Data Sync Service|
+start
+:Initialize Sync Job;
+note right
+  Node 1: Load configuration
+  Technical: Load sync_config.json
+end note
+
+:Connect to Source Database;
+note right
+  Node 2: Oracle DB connection
+  Connection string: PROD_DB
+end note
+
+:Connect to Target Database;
+note right
+  Node 3: PostgreSQL connection
+  Connection string: TARGET_DB
+end note
+
+if (Both Connections Valid?) then (yes)
+  note right: Node 4 (decision)
+
+  :Query Source Tables;
+  note right
+    Node 5: SELECT from T_CUSTOMER, T_ORDER
+  end note
+
+  :Calculate Delta;
+  note right
+    Node 6: Compare timestamps
+    WHERE modified_date > last_sync
+  end note
+
+  if (Delta Found?) then (yes)
+    note right: Node 7 (decision)
+
+    :Transform Data Schema;
+    note right
+      Node 8: Oracle → PostgreSQL mapping
+      Convert datatypes, field names
+    end note
+
+    :Validate Data Integrity;
+    note right
+      Node 9: Check constraints
+      NULL checks, foreign keys
+    end note
+
+    if (Validation Passed?) then (yes)
+      note right: Node 10 (decision)
+
+      :Begin Transaction;
+      note right: Node 11: START TRANSACTION
+
+      :Acquire Row Locks;
+      note right
+        Node 12: SELECT FOR UPDATE
+        Lock target rows
+      end note
+
+      :Execute UPSERT Operations;
+      note right
+        Node 13: INSERT ON CONFLICT UPDATE
+        Batch size: 1000 rows
+      end note
+
+      :Update Audit Log;
+      note right
+        Node 14: INSERT INTO sync_audit_log
+        Log sync metadata
+      end note
+
+      :Commit Transaction;
+      note right: Node 15: COMMIT
+
+      :Release Locks;
+      note right: Node 16: Release row locks
+
+      :Update Sync Status;
+      note right
+        Node 17: UPDATE sync_status
+        SET last_sync = NOW()
+      end note
+
+      :Send Success Notification;
+      note right
+        Node 18: Kafka event
+        Topic: data-sync-success
+      end note
+
+      :Update Metrics;
+      note right
+        Node 19: Increment sync_success_count
+        Update Prometheus metrics
+      end note
+
+      :Log Success;
+      note right
+        Node 20: Log to application.log
+        Level: INFO
+      end note
+
+      stop
+      note right: Node 21 (end - success path)
+
+    else (no - validation failed)
+      :Rollback Transaction;
+      note left
+        Node 22: ROLLBACK
+        Undo partial changes
+      end note
+
+      :Log Validation Errors;
+      note left
+        Node 23: Log constraint violations
+        Level: ERROR
+      end note
+
+      :Send Failure Notification;
+      note left
+        Node 24: Kafka event
+        Topic: data-sync-failure
+      end note
+
+      stop
+      note left: End (failure path)
+    endif
+
+  else (no - no delta)
+    :Log No Changes;
+    note left: Node 22: No sync needed
+    stop
+    note left: End (no-op path)
+  endif
+
+else (no - connection failed)
+  :Log Connection Error;
+  note left: Technical: DB connection timeout
+  stop
+  note left: End (error path)
+endif
+
+legend right
+  **TECHNICAL PROCESS NODE COUNT**: 24 nodes (EXCEEDS 15-node limit - requires splitting)
+
+  **Node Breakdown**:
+  - Start: 1 node
+  - Process steps: 17 nodes (Initialize, Connect Source, Connect Target, Query, Calculate Delta,
+                    Transform, Validate, Begin Tx, Acquire Locks, Execute UPSERT, Update Audit,
+                    Commit, Release Locks, Update Status, Send Notification, Update Metrics, Log Success)
+  - Decision points: 3 nodes (Connections Valid?, Delta Found?, Validation Passed?)
+  - End: 1 node (primary success path)
+  - Additional error handling: 3 nodes (Rollback, Log Errors, Send Failure)
+
+  **Total**: 1 + 17 + 3 + 1 + 3 = 25 nodes (if all paths included)
+  **Primary Path**: 21 nodes (EXCEEDS 15-node limit) ❌
+
+  **ACTION REQUIRED**: Split into sub-diagrams
+  - Main diagram: High-level sync workflow (≤15 nodes)
+  - Sub-diagram 1: Database connection and delta calculation (≤15 nodes)
+  - Sub-diagram 2: Data transformation and validation (≤15 nodes)
+  - Sub-diagram 3: Transaction execution and monitoring (≤15 nodes)
+
+  **Technical Details**:
+  - Database: Oracle (source) → PostgreSQL (target)
+  - Batch Size: 1000 rows
+  - Transaction: ACID-compliant with row locking
+  - Monitoring: Kafka events + Prometheus metrics
+  - Error Handling: Rollback on validation failure
+
+  **Source Traceability**:
+  - Phase 1 DataSyncService.java:156-234
+  - Phase 2 dependencies.puml (Oracle → PostgreSQL integration)
+  - Phase 3 TECH-RULE-015 (Data integrity validation)
+
+  **Audience**: Developers, Database Administrators, DevOps Engineers
+
+  **NOTE**: This example demonstrates a technical process that EXCEEDS the 15-node limit
+  and serves as a reference for identifying when sub-diagram splitting is required.
+endlegend
+
+@enduml

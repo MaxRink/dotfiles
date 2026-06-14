@@ -1,0 +1,3 @@
+GOFLAGS=
+GONOSUMDB=gitlab.devops.telekom.de/*
+GOPRIVATE=gitlab.devops.telekom.de/*

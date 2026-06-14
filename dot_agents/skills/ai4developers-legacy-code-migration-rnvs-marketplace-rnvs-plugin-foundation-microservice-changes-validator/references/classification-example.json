@@ -1,0 +1,40 @@
+{
+  "classified_at": "2025-01-15T10:30:05.000Z",
+  "baseline": {
+    "source": "results/FNPORT/phase6/analysis.json",
+    "service_name": "prt-fcpm-fixed-callnumber-porting-management-api",
+    "service_version": "2.4.0"
+  },
+  "requirements": {
+    "source": "results/FNPORT/phase5/control-flow-mapping.json",
+    "feature_name": "FNPORT"
+  },
+  "change_type": "ENHANCEMENT",
+  "change_description": "Moderate complexity additions with multiple new components",
+  "complexity_score": 24,
+  "is_breaking_change": false,
+  "quality_target": 75,
+  "change_summary": {
+    "api": {
+      "add": 2,
+      "modify": 1,
+      "deprecate": 0
+    },
+    "database": {
+      "tables_add": 2,
+      "columns_add": 0,
+      "indexes_add": 0
+    },
+    "events": {
+      "topics_add": 2,
+      "subscriptions_add": 1
+    },
+    "state_machines": {
+      "states_add": 2,
+      "transitions_add": 0
+    },
+    "dependencies": {
+      "services_add": 1
+    }
+  }
+}

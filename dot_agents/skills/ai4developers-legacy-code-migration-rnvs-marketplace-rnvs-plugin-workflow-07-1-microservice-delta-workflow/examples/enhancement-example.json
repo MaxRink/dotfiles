@@ -1,0 +1,67 @@
+{
+  "feature_name": "async-notifications",
+  "feature_full_name": "Asynchronous Carrier Notifications",
+  "phase": 7.1,
+  "timestamp": "2026-01-06T11:30:00Z",
+  "baseline": {
+    "source": "results/async-notifications/phase6/analysis.json",
+    "service_name": "prt-portability",
+    "service_version": "1.3.0"
+  },
+  "requirements": {
+    "source": "results/async-notifications/phase5/control-flow-mapping.json",
+    "feature_name": "async-notifications"
+  },
+  "change_type": "ENHANCEMENT",
+  "change_description": "Adding event-driven notifications to replace synchronous API calls",
+  "complexity_score": 22,
+  "is_breaking_change": false,
+  "quality_target": 75,
+  "changes": {
+    "api_changes": {
+      "endpoints_to_add": [],
+      "endpoints_to_modify": [],
+      "endpoints_to_deprecate": []
+    },
+    "database_changes": {
+      "tables_to_add": [],
+      "columns_to_add": [],
+      "indexes_to_add": []
+    },
+    "event_changes": {
+      "topics_to_add": [
+        {
+          "topic_name": "prt.portability-request.validated",
+          "description": "Published when portability request passes validation",
+          "partitioning_key": "request_id",
+          "replication_factor": 3,
+          "retention_days": 30
+        }
+      ],
+      "subscriptions_to_add": [
+        {
+          "topic_name": "prt.portability-request.validated",
+          "source_service": "prt-portability-service",
+          "consumer_group": "notification-service.prt.validated.notifier",
+          "description": "Notification service sends carrier notifications asynchronously",
+          "idempotency_strategy": {
+            "method": "event_id deduplication",
+            "implementation": "event_processing_log table"
+          }
+        }
+      ]
+    },
+    "state_machine_changes": {
+      "new_states": [],
+      "new_transitions": []
+    },
+    "dependency_changes": {
+      "new_internal_dependencies": []
+    }
+  },
+  "validation_report": {
+    "overall_status": "COMPLETE",
+    "overall_quality_score": 78,
+    "validation_method": "MOCK"
+  }
+}

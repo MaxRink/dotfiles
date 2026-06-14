@@ -1,0 +1,319 @@
+{
+  "computed_at": "2025-01-15T10:30:00.000Z",
+  "baseline": {
+    "source": "results/FNPORT/phase6/analysis.json",
+    "service_name": "prt-fcpm-fixed-callnumber-porting-management-api",
+    "service_version": "2.4.0"
+  },
+  "requirements": {
+    "source": "results/FNPORT/phase5/control-flow-mapping.json",
+    "feature_name": "FNPORT"
+  },
+  "changes": {
+    "api_changes": {
+      "endpoints_to_add": [
+        {
+          "path": "/porting-requests/{portingId}/validation",
+          "method": "POST",
+          "description": "Validate porting request before submission to carrier. Checks number ownership, customer consent, and carrier eligibility.",
+          "request": {
+            "path_params": {
+              "portingId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier of the porting request"
+              }
+            },
+            "body": {
+              "schema": {
+                "type": "object",
+                "required": ["validation_type"],
+                "properties": {
+                  "validation_type": {
+                    "type": "string",
+                    "enum": ["PRE_CHECK", "FINAL_VALIDATION"],
+                    "description": "Type of validation to perform"
+                  },
+                  "customer_consent": {
+                    "type": "boolean",
+                    "description": "Customer consent for porting"
+                  }
+                }
+              }
+            }
+          },
+          "response": {
+            "200": {
+              "description": "Validation completed successfully",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "validation_id": { "type": "string" },
+                  "status": { "type": "string" },
+                  "validation_result": { "type": "string" }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid request parameters",
+              "error_code": "VAL_001"
+            },
+            "404": {
+              "description": "Porting request not found",
+              "error_code": "VAL_002"
+            },
+            "500": {
+              "description": "Internal server error during validation",
+              "error_code": "VAL_999"
+            }
+          },
+          "business_rules_enforced": ["BR-FNPORT-001", "BR-FNPORT-002"],
+          "maps_from": "RNVS RNVManager.validatePortingRequest() - Pre-validation before KCODE 14 submission"
+        },
+        {
+          "path": "/porting-requests/{portingId}/carrier-notification",
+          "method": "POST",
+          "description": "Send notification to donor/recipient carrier about porting status. Maps to RNVS carrier notification procedures.",
+          "request": {
+            "path_params": {
+              "portingId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier of the porting request"
+              }
+            },
+            "body": {
+              "schema": {
+                "type": "object",
+                "required": ["notification_type", "carrier_tnb"],
+                "properties": {
+                  "notification_type": {
+                    "type": "string",
+                    "enum": ["INITIATION", "COMPLETION", "CANCELLATION"],
+                    "description": "Type of carrier notification"
+                  },
+                  "carrier_tnb": {
+                    "type": "string",
+                    "description": "TNB code of the carrier"
+                  }
+                }
+              }
+            }
+          },
+          "response": {
+            "200": {
+              "description": "Carrier notification sent successfully",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "notification_id": { "type": "string" },
+                  "sent_at": { "type": "string", "format": "date-time" }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid notification parameters",
+              "error_code": "NOTIFY_001"
+            },
+            "500": {
+              "description": "Failed to send carrier notification",
+              "error_code": "NOTIFY_999"
+            }
+          },
+          "business_rules_enforced": ["BR-FNPORT-003"],
+          "maps_from": "RNVS p_send_carrier_notification() stored procedure"
+        }
+      ],
+      "endpoints_to_modify": [
+        {
+          "path": "/porting-requests",
+          "method": "POST",
+          "description": "Add new field 'expedited_processing' to support fast-track porting (RNVS requirement from T_RNVS_CONFIG.fast_track_enabled)",
+          "schema_changes": "Add 'expedited_processing' boolean field to request body",
+          "response": {
+            "200": {
+              "description": "Porting request created successfully (with expedited flag)",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "request_id": { "type": "string" },
+                  "expedited_processing": { "type": "boolean" }
+                }
+              }
+            },
+            "400": {
+              "description": "Invalid request",
+              "error_code": "PORT_REQ_001"
+            },
+            "500": {
+              "description": "Internal server error",
+              "error_code": "PORT_REQ_999"
+            }
+          },
+          "maps_from": "RNVS T_RNVS_CONFIG.fast_track_enabled configuration flag"
+        }
+      ],
+      "endpoints_to_deprecate": []
+    },
+    "database_changes": {
+      "tables_to_add": [
+        {
+          "table_name": "porting_validations",
+          "purpose": "Stores validation results for each porting request to support audit trail and debugging. Tracks pre-checks and final validations with timestamps.",
+          "ddl": "CREATE TABLE porting_validations (\n  validation_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  porting_request_id UUID NOT NULL REFERENCES porting_requests(id) ON DELETE CASCADE,\n  validation_type VARCHAR(50) NOT NULL CHECK (validation_type IN ('PRE_CHECK', 'FINAL_VALIDATION')),\n  validation_result VARCHAR(20) NOT NULL CHECK (validation_result IN ('PASSED', 'FAILED', 'PENDING')),\n  validation_details JSONB,\n  validated_by VARCHAR(100),\n  version INTEGER NOT NULL DEFAULT 0,\n  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n);",
+          "indexes": [
+            "CREATE INDEX idx_porting_validations_request ON porting_validations(porting_request_id);",
+            "CREATE INDEX idx_porting_validations_created ON porting_validations(created_at);"
+          ],
+          "source": "Inferred from Phase 5 database operations - RNVS T_RNVS_VALIDATION equivalent"
+        },
+        {
+          "table_name": "carrier_notifications",
+          "purpose": "Logs all carrier notifications sent during porting process for compliance and troubleshooting. Required for regulatory audit.",
+          "ddl": "CREATE TABLE carrier_notifications (\n  notification_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  porting_request_id UUID NOT NULL REFERENCES porting_requests(id) ON DELETE CASCADE,\n  notification_type VARCHAR(50) NOT NULL,\n  carrier_tnb VARCHAR(20) NOT NULL,\n  notification_status VARCHAR(20) NOT NULL DEFAULT 'PENDING',\n  sent_at TIMESTAMP,\n  error_message TEXT,\n  version INTEGER NOT NULL DEFAULT 0,\n  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n);",
+          "indexes": [
+            "CREATE INDEX idx_carrier_notifications_request ON carrier_notifications(porting_request_id);",
+            "CREATE INDEX idx_carrier_notifications_tnb ON carrier_notifications(carrier_tnb);"
+          ],
+          "source": "Inferred from Phase 5 database operations - RNVS T_CARRIER_NOTIFY equivalent"
+        }
+      ],
+      "columns_to_add": [],
+      "indexes_to_add": []
+    },
+    "event_changes": {
+      "topics_to_add": [
+        {
+          "topic_name": "prt.porting.validation-completed",
+          "description": "Event for FNPORT functionality - published when porting validation completes (success or failure). Enables downstream systems to react to validation outcomes.",
+          "partitioning_key": "porting_request_id",
+          "replication_factor": 3,
+          "retention_days": 30,
+          "avro_schema": {
+            "type": "record",
+            "name": "PortingValidationCompleted",
+            "namespace": "com.telekom.vnrm.porting.events",
+            "fields": [
+              {
+                "name": "event_id",
+                "type": "string",
+                "doc": "Unique event identifier (UUID)"
+              },
+              {
+                "name": "event_timestamp",
+                "type": "long",
+                "logicalType": "timestamp-millis",
+                "doc": "Timestamp when event was generated"
+              },
+              {
+                "name": "correlation_id",
+                "type": "string",
+                "doc": "Correlation ID for distributed tracing"
+              },
+              {
+                "name": "porting_request_id",
+                "type": "string",
+                "doc": "ID of the porting request that was validated"
+              },
+              {
+                "name": "validation_id",
+                "type": "string",
+                "doc": "ID of the validation record"
+              },
+              {
+                "name": "validation_type",
+                "type": "string",
+                "doc": "Type of validation performed"
+              },
+              {
+                "name": "validation_result",
+                "type": "string",
+                "doc": "Result of validation (PASSED/FAILED/PENDING)"
+              }
+            ]
+          },
+          "source": "Inferred from Phase 5 events - maps to RNVS validation trigger"
+        },
+        {
+          "topic_name": "prt.porting.carrier-notified",
+          "description": "Event for FNPORT functionality - published when carrier notification is sent. Enables audit tracking and downstream processing.",
+          "partitioning_key": "porting_request_id",
+          "replication_factor": 3,
+          "retention_days": 30,
+          "avro_schema": {
+            "type": "record",
+            "name": "CarrierNotified",
+            "namespace": "com.telekom.vnrm.porting.events",
+            "fields": [
+              {
+                "name": "event_id",
+                "type": "string",
+                "doc": "Unique event identifier (UUID)"
+              },
+              {
+                "name": "event_timestamp",
+                "type": "long",
+                "logicalType": "timestamp-millis",
+                "doc": "Timestamp when event was generated"
+              },
+              {
+                "name": "correlation_id",
+                "type": "string",
+                "doc": "Correlation ID for distributed tracing"
+              },
+              {
+                "name": "porting_request_id",
+                "type": "string",
+                "doc": "ID of the porting request"
+              },
+              {
+                "name": "notification_id",
+                "type": "string",
+                "doc": "ID of the notification record"
+              },
+              {
+                "name": "notification_type",
+                "type": "string",
+                "doc": "Type of notification sent"
+              },
+              {
+                "name": "carrier_tnb",
+                "type": "string",
+                "doc": "TNB code of the notified carrier"
+              }
+            ]
+          },
+          "source": "Inferred from Phase 5 events - maps to RNVS notification trigger"
+        }
+      ],
+      "subscriptions_to_add": [
+        {
+          "topic_name": "num.numberblock.assigned",
+          "source_service": "num-nbmi-number-block-inventory-management-api",
+          "consumer_group": "prt-fcpm-porting-consumer",
+          "description": "Subscription needed for FNPORT - listen for number assignments to trigger porting eligibility checks",
+          "idempotency": "Use event_id field for deduplication. Store processed event IDs in porting_event_log table for 30 days.",
+          "source": "Inferred from Phase 5 control flow - RNVS number assignment trigger"
+        }
+      ]
+    },
+    "state_machine_changes": {
+      "new_states": [
+        "VALIDATING",
+        "CARRIER_NOTIFIED"
+      ],
+      "new_transitions": []
+    },
+    "dependency_changes": {
+      "new_internal_dependencies": [
+        {
+          "target_service": "num-cnrm-callnumber-resource-mngmt-api",
+          "communication_pattern": "REST API",
+          "description": "Required for FNPORT integration - query number resource status before porting. Checks number ownership and availability.",
+          "purpose": "Validate number resource eligibility for porting",
+          "source": "Inferred from Phase 5 service dependencies"
+        }
+      ]
+    }
+  }
+}

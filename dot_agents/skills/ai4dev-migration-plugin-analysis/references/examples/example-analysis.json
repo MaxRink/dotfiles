@@ -1,0 +1,485 @@
+{
+  "feature_name": "user-authentication",
+  "feature_description": "Handles user login, session management, and access control. Users authenticate via username/password or LDAP. Successful authentication creates a server-side session with role-based permissions. Sessions expire after 30 minutes of inactivity or 8 hours absolute. Failed login attempts are tracked and accounts lock after 5 consecutive failures.",
+
+  "business_rules": [
+    {
+      "id": "BR001",
+      "summary": "Account locks after 5 consecutive failed login attempts",
+      "type": "validation",
+      "location": {
+        "file": "src/auth/LoginService.java",
+        "line_start": 87,
+        "line_end": 105,
+        "function": "authenticate",
+        "class": "LoginService"
+      },
+      "confidence": "high",
+      "details": "Each failed login increments a counter on the user record. When the counter reaches 5, the account status is set to LOCKED and all subsequent login attempts are rejected regardless of correct credentials. The counter resets to 0 on successful login. Locked accounts require admin intervention to unlock — there is no automatic unlock timer.",
+      "pseudocode": "ON failed_login(user):\n  user.failed_attempts = user.failed_attempts + 1\n  IF user.failed_attempts >= 5 THEN\n    user.status = LOCKED\n  SAVE user\n\nON login_attempt(user):\n  IF user.status == LOCKED THEN\n    REJECT \"Account is locked. Contact administrator.\"",
+      "related_rules": ["BR002"],
+      "test_oracle": {
+        "type": "unit-tests",
+        "location": "src/test/java/com/example/auth/LoginServiceTest.java",
+        "test_methods": [
+          "testAccountLocksAfter5FailedAttempts",
+          "testLockedAccountRejectsLoginWithCorrectPassword"
+        ],
+        "behavioral_contracts": [
+          "GIVEN a user with 4 failed attempts WHEN login fails THEN account status is set to LOCKED",
+          "GIVEN a locked account WHEN login attempted with correct password THEN login is rejected",
+          "GIVEN a user with 0 failed attempts WHEN login fails 4 times THEN account remains ACTIVE"
+        ],
+        "edge_cases": [
+          "Concurrent login attempts reaching threshold simultaneously",
+          "Failed attempt counter at exactly 5 (boundary)",
+          "User already locked receives additional failed attempts"
+        ]
+      }
+    },
+    {
+      "id": "BR002",
+      "summary": "Failed login counter resets on successful authentication",
+      "type": "transformation",
+      "location": {
+        "file": "src/auth/LoginService.java",
+        "line_start": 112,
+        "line_end": 118,
+        "function": "authenticate",
+        "class": "LoginService"
+      },
+      "confidence": "high",
+      "details": "On successful password verification, the failed_attempts field is set to 0 and last_login timestamp is updated. This happens before session creation, so a user who was at 4 failed attempts and then logs in successfully starts fresh.",
+      "pseudocode": "ON successful_login(user):\n  user.failed_attempts = 0\n  user.last_login = NOW()\n  SAVE user",
+      "related_rules": ["BR001"],
+      "test_oracle": {
+        "type": "unit-tests",
+        "location": "src/test/java/com/example/auth/LoginServiceTest.java",
+        "test_methods": [
+          "testFailedAttemptsResetsOnSuccessfulLogin"
+        ],
+        "behavioral_contracts": [
+          "GIVEN a user with 4 failed attempts WHEN login succeeds THEN failed_attempts is 0",
+          "GIVEN a successful login WHEN checking last_login THEN timestamp is updated to current time"
+        ],
+        "edge_cases": [
+          "Reset during concurrent failed attempt from another session",
+          "Database failure during reset (partial write: counter reset but last_login not updated)"
+        ]
+      }
+    },
+    {
+      "id": "BR003",
+      "summary": "Sessions expire after 30 minutes idle or 8 hours absolute",
+      "type": "decision",
+      "location": {
+        "file": "src/auth/SessionFilter.java",
+        "line_start": 45,
+        "line_end": 60,
+        "function": "doFilter",
+        "class": "SessionFilter"
+      },
+      "confidence": "high",
+      "details": "Two independent expiry checks: (1) idle timeout — if last_activity is more than 30 minutes ago, session is invalid; (2) absolute timeout — if session_created is more than 8 hours ago, session is invalid regardless of activity. Both are checked on every authenticated request via the SessionFilter.",
+      "pseudocode": "FUNCTION is_session_valid(session):\n  IF (now - session.last_activity) > 30 MINUTES THEN\n    RETURN false  // idle timeout\n  IF (now - session.created_at) > 8 HOURS THEN\n    RETURN false  // absolute timeout\n  RETURN true",
+      "related_rules": [],
+      "test_oracle": {
+        "type": "manual-integration",
+        "location": "No tests found for SessionFilter timeout logic",
+        "test_methods": [],
+        "behavioral_contracts": [
+          "GIVEN a session idle for 31 minutes WHEN request arrives THEN session is invalid",
+          "GIVEN a session idle for 29 minutes WHEN request arrives THEN session is valid",
+          "GIVEN a session created 8 hours 1 second ago WHEN request arrives THEN session is invalid regardless of activity"
+        ],
+        "edge_cases": [
+          "Session at exactly 30 minutes idle (boundary)",
+          "Session at exactly 8 hours absolute (boundary)",
+          "Clock skew between servers"
+        ]
+      }
+    }
+  ],
+
+  "components": [
+    {
+      "name": "AuthController",
+      "path": "src/auth/AuthController.java",
+      "type": "controller",
+      "description": "REST endpoint for authentication operations. Handles login requests and delegates to LoginService.",
+      "functions": [
+        {
+          "name": "login",
+          "line_start": 34,
+          "line_end": 52,
+          "returns": "ResponseEntity<LoginResponse>",
+          "description": "Accept login credentials and return session token on success."
+        },
+        {
+          "name": "logout",
+          "line_start": 58,
+          "line_end": 75,
+          "returns": "ResponseEntity<Void>",
+          "description": "Invalidate an existing session."
+        }
+      ],
+      "dependencies": ["LoginService", "SessionManager"],
+      "business_rules": []
+    },
+    {
+      "name": "LoginService",
+      "path": "src/auth/LoginService.java",
+      "type": "service",
+      "description": "Core authentication logic. Handles account lockout, auth source routing, and credential verification.",
+      "functions": [
+        {
+          "name": "authenticate",
+          "line_start": 52,
+          "line_end": 140,
+          "returns": "AuthResult",
+          "description": "Main entry point: verify credentials, handle lockout, route to correct auth provider."
+        }
+      ],
+      "dependencies": ["UserRepository", "LdapAuthProvider", "SessionManager"],
+      "business_rules": ["BR001", "BR002"]
+    },
+    {
+      "name": "SessionManager",
+      "path": "src/auth/SessionManager.java",
+      "type": "service",
+      "description": "Manages server-side sessions. Creates sessions with role-resolved permissions and handles session lookup/invalidation.",
+      "functions": [
+        {
+          "name": "createSession",
+          "line_start": 45,
+          "line_end": 95,
+          "returns": "Session",
+          "description": "Create a new session with fully resolved permissions from user's roles."
+        },
+        {
+          "name": "getSession",
+          "line_start": 100,
+          "line_end": 108,
+          "returns": "Optional<Session>",
+          "description": "Look up a session by token."
+        }
+      ],
+      "dependencies": ["RoleRepository"],
+      "business_rules": []
+    },
+    {
+      "name": "SessionFilter",
+      "path": "src/auth/SessionFilter.java",
+      "type": "validator",
+      "description": "HTTP filter that validates session tokens on every authenticated request. Enforces idle and absolute timeouts.",
+      "functions": [
+        {
+          "name": "doFilter",
+          "line_start": 28,
+          "line_end": 80,
+          "returns": "void",
+          "description": "Intercept requests, validate session, enforce timeout rules."
+        }
+      ],
+      "dependencies": ["SessionManager"],
+      "business_rules": ["BR003"]
+    }
+  ],
+
+  "control_flows": [
+    {
+      "id": "CF001",
+      "summary": "User login with lockout and auth routing",
+      "type": "request-processing",
+      "entry_point": {
+        "component": "AuthController",
+        "function": "login",
+        "line": 34
+      },
+      "steps": [
+        {
+          "step": 1,
+          "action": "Validate request body contains username and password",
+          "component": "AuthController",
+          "function": "login",
+          "decision": "If request body missing required fields, return 400 Bad Request."
+        },
+        {
+          "step": 2,
+          "action": "Look up user by username in the database",
+          "component": "LoginService",
+          "function": "authenticate",
+          "decision": "If user not found, return authentication failure."
+        },
+        {
+          "step": 3,
+          "action": "Check if account is locked",
+          "component": "LoginService",
+          "function": "authenticate",
+          "decision": "If user.failed_attempts >= 5, reject login with 'Account locked' message."
+        },
+        {
+          "step": 4,
+          "action": "Route to appropriate auth provider",
+          "component": "LoginService",
+          "function": "authenticate",
+          "decision": "If user.auth_source == 'LDAP', use LDAP bind. Otherwise, use bcrypt compare."
+        },
+        {
+          "step": 5,
+          "action": "On success: reset counter and create session",
+          "component": "LoginService",
+          "function": "authenticate",
+          "decision": "Set failed_attempts to 0, update last_login, create session with resolved permissions."
+        },
+        {
+          "step": 6,
+          "action": "Return session token to client",
+          "component": "AuthController",
+          "function": "login",
+          "decision": "Return 200 with session token and user profile."
+        }
+      ],
+      "business_rules": ["BR001", "BR002"],
+      "affected_by_migration": false,
+      "migration_impact": "No direct changes. Login flow logic remains unchanged during migration."
+    },
+    {
+      "id": "CF002",
+      "summary": "Session validation on authenticated requests",
+      "type": "request-processing",
+      "entry_point": {
+        "component": "SessionFilter",
+        "function": "doFilter",
+        "line": 28
+      },
+      "steps": [
+        {
+          "step": 1,
+          "action": "Extract session token from Authorization header",
+          "component": "SessionFilter",
+          "function": "doFilter",
+          "decision": "If no Authorization header present, return 401 Unauthorized."
+        },
+        {
+          "step": 2,
+          "action": "Look up session in session store",
+          "component": "SessionManager",
+          "function": "getSession",
+          "decision": "If session not found, return 401 Unauthorized."
+        },
+        {
+          "step": 3,
+          "action": "Check idle and absolute timeout",
+          "component": "SessionFilter",
+          "function": "doFilter",
+          "decision": "If idle > 30 min or absolute > 8 hours, invalidate session and return 401."
+        },
+        {
+          "step": 4,
+          "action": "Update last_activity and continue request",
+          "component": "SessionFilter",
+          "function": "doFilter",
+          "decision": "Set session.last_activity to now, attach user context, proceed with filter chain."
+        }
+      ],
+      "business_rules": ["BR003"],
+      "affected_by_migration": true,
+      "migration_impact": "Session storage will move from in-memory to distributed cache. Session validation must handle cache misses and replica lag."
+    }
+  ],
+
+  "entities": [
+    {
+      "name": "User",
+      "description": "Core user account representing a person who can authenticate. Stores credentials, authentication state (failed attempts, lockout), and auth source routing.",
+      "attributes": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "description": "Primary key, auto-generated"
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR(50)",
+          "description": "Login identifier, unique across the system"
+        },
+        {
+          "name": "password_hash",
+          "type": "VARCHAR(255)",
+          "description": "Bcrypt-hashed password. NULL for LDAP-only users."
+        },
+        {
+          "name": "auth_source",
+          "type": "VARCHAR(20)",
+          "description": "Authentication provider: LOCAL or LDAP"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "description": "Account status: ACTIVE, LOCKED, or DISABLED"
+        },
+        {
+          "name": "failed_attempts",
+          "type": "INT",
+          "description": "Consecutive failed login count. Resets on success, locks at 5."
+        },
+        {
+          "name": "last_login",
+          "type": "TIMESTAMP",
+          "description": "When the user last successfully authenticated"
+        }
+      ],
+      "storage_location": "PostgreSQL 'users' table",
+      "related_rules": ["BR001", "BR002"]
+    },
+    {
+      "name": "Session",
+      "description": "Server-side session object holding authenticated user context. Contains resolved permissions from all user roles. Used for authorization checks on every request.",
+      "attributes": [
+        {
+          "name": "token",
+          "type": "String (UUID)",
+          "description": "Unique session identifier sent to client"
+        },
+        {
+          "name": "userId",
+          "type": "Long",
+          "description": "Reference to the authenticated user"
+        },
+        {
+          "name": "permissions",
+          "type": "Set<String>",
+          "description": "Flattened set of permission strings from all user roles"
+        },
+        {
+          "name": "createdAt",
+          "type": "Instant",
+          "description": "When this session was created (for absolute timeout)"
+        },
+        {
+          "name": "lastActivity",
+          "type": "Instant",
+          "description": "Last request timestamp (for idle timeout)"
+        }
+      ],
+      "storage_location": "In-memory ConcurrentHashMap (single instance)",
+      "related_rules": ["BR003"]
+    }
+  ],
+
+  "dependencies": {
+    "internal": [
+      {
+        "from": "AuthController",
+        "to": "LoginService",
+        "type": "service-dependency",
+        "description": "AuthController delegates authentication logic to LoginService."
+      },
+      {
+        "from": "LoginService",
+        "to": "SessionManager",
+        "type": "service-dependency",
+        "description": "LoginService calls SessionManager.createSession() after successful authentication."
+      },
+      {
+        "from": "SessionFilter",
+        "to": "SessionManager",
+        "type": "service-dependency",
+        "description": "SessionFilter uses SessionManager.getSession() for session lookup on every request."
+      }
+    ],
+    "external": [
+      {
+        "name": "Corporate LDAP Directory",
+        "type": "external-service",
+        "description": "Used for authenticating LDAP-sourced users via bind operation. No fallback if unreachable.",
+        "affected_components": ["LoginService"]
+      },
+      {
+        "name": "PostgreSQL Database",
+        "type": "infrastructure",
+        "description": "Stores user accounts, roles, and permissions. Used for credential verification and session permission resolution.",
+        "affected_components": ["LoginService", "SessionManager"]
+      }
+    ]
+  },
+
+  "test_coverage_summary": {
+    "total_tests": 8,
+    "coverage_percentage": 67,
+    "test_framework": "JUnit 5 + Mockito",
+    "test_command": "mvn test",
+    "tests_by_module": [
+      {
+        "module": "auth-service",
+        "test_count": 5,
+        "test_files": [
+          "LoginServiceTest.java",
+          "PasswordValidatorTest.java"
+        ],
+        "coverage_notes": "Good coverage for login logic and password validation. Missing tests for LDAP authentication path."
+      },
+      {
+        "module": "session-management",
+        "test_count": 0,
+        "test_files": [],
+        "coverage_notes": "CRITICAL GAP: No tests for SessionFilter timeout logic or SessionManager session creation."
+      },
+      {
+        "module": "controllers",
+        "test_count": 3,
+        "test_files": [
+          "AuthControllerTest.java"
+        ],
+        "coverage_notes": "Basic request/response tests. Mocks LoginService."
+      }
+    ],
+    "critical_test_gaps": [
+      {
+        "component": "SessionFilter",
+        "gap": "No tests for idle timeout (30 min) or absolute timeout (8 hours)",
+        "risk": "High - Core session security rule untested"
+      },
+      {
+        "component": "SessionManager",
+        "gap": "No tests for permission resolution during session creation",
+        "risk": "Medium - Role permission loading could silently break"
+      }
+    ],
+    "recommended_test_additions": [
+      "Integration tests for SessionFilter with mocked time to verify timeout boundaries",
+      "Unit tests for SessionManager.createSession() with multiple roles and permissions",
+      "Integration tests for LDAP authentication path",
+      "Concurrency tests for simultaneous login attempts near lockout threshold"
+    ]
+  },
+
+  "migration_notes": {
+    "primary_changes": [
+      "Session storage will move from in-memory ConcurrentHashMap to distributed cache (Redis/Memcached)",
+      "SessionFilter will need to handle cache misses and network failures gracefully",
+      "Session serialization format will need to be defined for distributed storage"
+    ],
+    "preserved_behavior": [
+      "Account lockout after 5 failed attempts (BR001)",
+      "Failed attempt counter reset on success (BR002)",
+      "30-minute idle timeout and 8-hour absolute timeout (BR003)",
+      "LDAP authentication routing (no fallback to local)",
+      "Password complexity validation rules"
+    ],
+    "testing_strategy": [
+      "Run existing 8 unit tests against new session storage implementation",
+      "Add integration tests for distributed session with Redis",
+      "Test session timeout boundaries with clock manipulation",
+      "Test concurrent session access from multiple nodes",
+      "Load test session creation/validation at target throughput"
+    ],
+    "rollback_plan": [
+      "Keep in-memory session store as fallback configuration",
+      "Feature flag to switch between in-memory and distributed session storage",
+      "Monitor session miss rate — rollback if >5% miss rate in first hour",
+      "Rollback procedure: update configuration and restart instances"
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+@startuml
+' Layout optimization
+!pragma layout smetana
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 100
+!theme plain
+title Example Component Diagram
+
+' Color scheme
+skinparam component {
+  BackgroundColor<<business>> #E1F5C4
+  BackgroundColor<<database>> #EDE7B1
+  BackgroundColor<<external>> #FAA0A0
+  BackgroundColor<<integration>> #A9D0F5
+}
+
+' Components
+[Manager] <<business>>
+note right of [Manager]
+  Business logic manager
+  Handles core operations
+end note
+
+[Factory] <<integration>>
+note right of [Factory]
+  Data access factory
+  CRUD operations
+end note
+
+database "T_DATA" <<database>>
+note right of [T_DATA]
+  Primary data table
+end note
+
+[ExternalAPI] <<external>>
+note right of [ExternalAPI]
+  Third-party service
+end note
+
+' Dependencies
+[Manager] --> [Factory] : uses
+[Factory] --> [T_DATA] : CRUD
+[Manager] --> [ExternalAPI] : calls
+
+legend right
+  |<back:#E1F5C4>   </back>| Business |
+  |<back:#EDE7B1>   </back>| Database |
+  |<back:#FAA0A0>   </back>| External |
+  |<back:#A9D0F5>   </back>| Integration |
+endlegend
+
+@enduml

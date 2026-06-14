@@ -1,0 +1,82 @@
+{
+  "title": "Business Logic Validation Report",
+  "description": "Validation report produced by the business-logic-validation skill.",
+  "type": "object",
+  "required": ["feature", "overall_status", "checks"],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "description": "Feature name from plan.json."
+    },
+    "overall_status": {
+      "type": "string",
+      "enum": ["PASS", "PASS_WITH_WARNINGS", "FAIL"],
+      "description": "PASS = no critical issues and check_1 coverage_pct = 100. PASS_WITH_WARNINGS = no critical issues and coverage_pct >= 80. FAIL = any critical issue or coverage_pct < 80."
+    },
+    "checks": {
+      "type": "object",
+      "required": [
+        "check_1_business_rules",
+        "check_2_reverse_traceability",
+        "check_3_risk_mitigation",
+        "check_4_success_criteria",
+        "check_5_constraints"
+      ],
+      "properties": {
+        "check_1_business_rules": {
+          "type": "object",
+          "required": ["status", "total_rules", "implemented", "partial", "missing", "code_coverage_pct", "traceability_matrix_path"],
+          "properties": {
+            "status": { "$ref": "#/$defs/check_status" },
+            "total_rules": { "type": "integer", "minimum": 0 },
+            "implemented":  { "type": "integer", "minimum": 0 },
+            "partial":     { "type": "integer", "minimum": 0 },
+            "missing":     { "type": "integer", "minimum": 0 },
+            "code_coverage_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Code-level coverage: implemented / total_rules * 100. Measures implementation correctness, not documentation completeness."
+            },
+            "traceability_matrix_path": {
+              "type": "string",
+              "description": "Path to the enriched traceability-matrix.json — single source of truth for per-BR findings."
+            }
+          }
+        },
+        "check_2_reverse_traceability": { "$ref": "#/$defs/simple_check" },
+        "check_3_risk_mitigation":      { "$ref": "#/$defs/simple_check" },
+        "check_4_success_criteria":     { "$ref": "#/$defs/simple_check" },
+        "check_5_constraints":          { "$ref": "#/$defs/simple_check" }
+      }
+    },
+  },
+  "$defs": {
+    "check_status": {
+      "type": "string",
+      "enum": ["PASS", "PASS_WITH_WARNINGS", "FAIL"]
+    },
+    "simple_check": {
+      "type": "object",
+      "required": ["status", "issues"],
+      "properties": {
+        "status": { "$ref": "#/$defs/check_status" },
+        "issues": {
+          "type": "array",
+          "description": "Issues detected by this check. Source of truth for this check's findings.",
+          "items": { "$ref": "#/$defs/issue" }
+        }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "required": ["severity", "description"],
+      "properties": {
+        "severity":    { "type": "string", "enum": ["critical", "warning", "info"] },
+        "description": { "type": "string" },
+        "evidence":    { "type": "string", "description": "File path with line number or quoted value. Required when available." },
+        "remediation": { "type": "string", "description": "Recommended fix. Required when available." }
+      }
+    }
+  }
+}

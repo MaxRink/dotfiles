@@ -1,0 +1,127 @@
+@startuml control-flow-diagram-auth
+title User Authentication and Session Lifecycle - Control Flow
+
+' Color scheme
+skinparam activityBackgroundColor #FEFECE
+skinparam activityBorderColor #A80036
+skinparam activityDiamondBackgroundColor #FEFECE
+skinparam activityDiamondBorderColor #A80036
+
+' Swimlanes for stakeholders
+|Customer (End User)|
+start
+:Enter Username and Password;
+note right
+  User initiates login request
+  Input: username, password
+end note
+
+|Authentication Services Team|
+:Receive Login Request;
+:Validate Credentials;
+note right
+  Rules: AUTH-BR-001, AUTH-BR-002
+  Source: Phase 4 BP-AUTH-001 Step 1
+  Owner: IT Security Department
+
+  External System: Enterprise LDAP Server
+  Protocol: LDAPS (port 636)
+end note
+
+if (Credentials Valid?) then (yes)
+  :Create Session Token;
+  note right
+    Rule: AUTH-BR-010
+    Source: Phase 4 BP-AUTH-001 Step 2
+
+    Session Duration: 30 minutes
+    Storage: Session Database (T_SESSION)
+  end note
+
+  :Log Successful Authentication;
+  note right
+    External System: Audit Logging System
+    Event: AUTH_SUCCESS
+  end note
+
+  |Customer (End User)|
+  :Display Dashboard;
+  note right
+    Transition to BP-PROFILE-001
+    User Profile Loading Process
+  end note
+  stop
+
+else (no)
+  :Increment Failed Attempt Counter;
+  note right
+    Track failed attempts per user
+    Storage: Local cache or T_USER table
+  end note
+
+  if (Failed Attempts ≥ 5?) then (yes)
+    :Lock Account for 15 minutes;
+    note right
+      Rule: AUTH-BR-001 (Failed Login Lockout)
+      Source: Phase 3 AUTH-BR-001 conditional threshold
+
+      Business Objective: Prevent brute-force attacks
+      Regulatory: NIST SP 800-63B Section 5.2.2
+    end note
+
+    :Log Security Event;
+    note right
+      External System: Audit Logging System
+      Event: ACCOUNT_LOCKED
+      Alert: IT Security Dashboard
+    end note
+
+    |IT Security Department|
+    :Monitor Lockout Event;
+    note right
+      Review lockout patterns
+      Identify potential security threats
+    end note
+
+    |Customer Service|
+    :Handle Unlock Requests (Optional);
+    note right
+      User-added stakeholder
+      Manual account unlock capability
+      Requires identity verification
+    end note
+
+    |Customer (End User)|
+    :Display Account Locked Message;
+    note right
+      Message: "Account locked for 15 minutes due to multiple failed login attempts"
+      Alternative: Request password reset
+    end note
+    stop
+
+  else (no)
+    |Customer (End User)|
+    :Display Invalid Credentials Error;
+    note right
+      Message: "Invalid username or password. Please try again."
+      Attempts Remaining: (5 - current_attempts)
+    end note
+
+    :Retry Login;
+    note right
+      Loop back to Enter Credentials
+      User can retry until lockout threshold
+    end note
+    stop
+  endif
+endif
+
+legend right
+  |= Symbol |= Meaning |
+  | Rectangle | Process Step |
+  | Diamond | Decision Point |
+  | Note | Business Rule or System Detail |
+  | Swimlane | Stakeholder Interaction |
+endlegend
+
+@enduml

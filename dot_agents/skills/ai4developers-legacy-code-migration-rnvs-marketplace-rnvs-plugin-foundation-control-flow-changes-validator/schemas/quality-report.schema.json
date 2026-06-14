@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "quality-report.schema.json",
+  "title": "Control Flow Changes Quality Report Schema",
+  "description": "Schema for Phase 8.1 validation quality report output",
+  "type": "object",
+  "required": ["overall_status", "overall_quality_score", "quality_target", "gates_passed", "validation_gates"],
+  "properties": {
+    "overall_status": {
+      "type": "string",
+      "enum": ["COMPLETE", "PARTIAL", "INCOMPLETE"],
+      "description": "Overall validation status"
+    },
+    "overall_quality_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Total quality score (0-100)"
+    },
+    "quality_target": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Target quality score from classification"
+    },
+    "gates_passed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Number of validation gates passed"
+    },
+    "total_gates": {
+      "type": "integer",
+      "const": 5,
+      "description": "Total number of validation gates"
+    },
+    "validation_gates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/validationGate"
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "errors": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "All validation errors"
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "All validation warnings"
+    },
+    "recommendations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Actionable improvement recommendations"
+    },
+    "validated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Validation timestamp"
+    }
+  },
+  "definitions": {
+    "validationGate": {
+      "type": "object",
+      "required": ["gate_name", "weight", "score", "max_score", "passed"],
+      "properties": {
+        "gate_name": {
+          "type": "string",
+          "enum": ["Completeness", "PlantUML Quality", "Documentation Quality", "Traceability", "Schema Validation"]
+        },
+        "weight": {
+          "type": "integer",
+          "description": "Gate weight percentage"
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Actual score achieved"
+        },
+        "max_score": {
+          "type": "integer",
+          "description": "Maximum possible score for this gate"
+        },
+        "passed": {
+          "type": "boolean",
+          "description": "Whether gate passed threshold"
+        },
+        "errors": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "details": {
+          "type": "object",
+          "description": "Gate-specific validation details"
+        }
+      }
+    }
+  }
+}

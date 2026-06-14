@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "plugin-tools": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/servers/tools.js"],
+      "env": {
+        "CONFIG_PATH": "${CLAUDE_PLUGIN_ROOT}/config/settings.json",
+        "LOG_LEVEL": "${LOG_LEVEL:-info}"
+      }
+    },
+    "plugin-db": {
+      "command": "python",
+      "args": ["-m", "plugin_db_server"],
+      "env": {
+        "DB_URL": "${DB_URL:-sqlite:///local.db}",
+        "PYTHONPATH": "${CLAUDE_PLUGIN_ROOT}/lib"
+      },
+      "cwd": "${CLAUDE_PLUGIN_ROOT}"
+    }
+  }
+}
