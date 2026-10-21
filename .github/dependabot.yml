@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /dot_agents/skills/ai4developers-legacy-code-migration-rnvs-marketplace-rnvs-plugin-foundation-spectral-linter/resources
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      routine-updates:
+        patterns:
+        - '*'
+        update-types:
+        - minor
+        - patch
+  - package-ecosystem: pip
+    directories:
+    - /dot_agents/skills/psa-portal-soc-capture
+    - /dot_agents/skills/tcaas-soc-analysis
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      routine-updates:
+        patterns:
+        - '*'
+        update-types:
+        - minor
+        - patch
